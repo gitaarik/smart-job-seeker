@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const countMcpCall = vi.fn();
-vi.mock('$lib/server/mcp/usage', () => ({
+vi.mock('#lib/server/mcp/usage.ts', () => ({
 	countMcpCall: (...a: unknown[]) => countMcpCall(...a)
 }));
 

@@ -27,11 +27,11 @@
 
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { profile_document_projects } from '$lib/server/db/schema';
-import { contentDisposition, getFile } from '$lib/server/files';
-import { parseIntParam, requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
+import { profile_document_projects } from '#lib/server/db/schema.ts';
+import { contentDisposition, getFile } from '#lib/server/files.ts';
+import { parseIntParam, requireAuth, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
 
 /**
  * Types that may render in place. Raster only: each is decoded by an image

@@ -10,13 +10,13 @@
  * platform in its ranking.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { job_platforms } from '$lib/server/db/schema';
+import { job_platforms } from '#lib/server/db/schema.ts';
 import {
 	SEARCH_FILTER_DEFINITIONS,
 	type SearchFilterName
-} from '$lib/job-platforms/search-filters';
+} from '#lib/job-platforms/search-filters.ts';
 
 export type UnsupportedFilters = Partial<Record<SearchFilterName, string[]>>;
 

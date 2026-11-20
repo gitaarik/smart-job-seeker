@@ -67,7 +67,7 @@ export interface ImportTaskReadinessInput {
 	fetchMode?: string | null;
 	/**
 	 * `job_platforms.status`. `paused` is a board we have stopped reading, so
-	 * none of its tasks run (`$lib/job-platforms/taxonomy`).
+	 * none of its tasks run (`#lib/job-platforms/taxonomy.ts`).
 	 */
 	platformStatus?: string | null;
 }

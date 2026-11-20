@@ -25,9 +25,9 @@
  * must return "" and ask a question when they do not.
  */
 
-import { runProfileAiChat } from '$lib/server/ai-chat/job-utils';
-import { buildDocumentBlob, type SummarizableFile } from '$lib/server/documents/summarize';
-import { normalizeSkill } from '$lib/skills';
+import { runProfileAiChat } from '#lib/server/ai-chat/job-utils.ts';
+import { buildDocumentBlob, type SummarizableFile } from '#lib/server/documents/summarize.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 /**
  * Rewrite third-person stand-ins into first person.

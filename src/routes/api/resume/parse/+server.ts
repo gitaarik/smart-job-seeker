@@ -6,7 +6,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	extractTextFromFile,
 	getFormatName,
@@ -14,10 +14,10 @@ import {
 	mapJsonResumeToInternal,
 	parseResumeWithLLM,
 	validateJsonResume
-} from '$lib/server/resume';
-import { uploadFile } from '$lib/server/files';
-import { logImportEvent } from '$lib/server/import-log';
-import { requireCredits } from '$lib/server/billing/require-credits';
+} from '#lib/server/resume/index.ts';
+import { uploadFile } from '#lib/server/files.ts';
+import { logImportEvent } from '#lib/server/import-log.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);

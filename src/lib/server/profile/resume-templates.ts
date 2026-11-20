@@ -14,7 +14,7 @@ import {
 	type DocumentSections,
 	type ResumeTemplate,
 	type ResumeTemplateConfig
-} from '$lib/resume-templates';
+} from '#lib/resume-templates.ts';
 import {
 	loadTemplateOfKind,
 	loadTemplatesOfKind,

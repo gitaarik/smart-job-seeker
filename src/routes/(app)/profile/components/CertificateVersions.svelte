@@ -2,10 +2,10 @@
 	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTags } from '@fortawesome/free-solid-svg-icons';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { arraysEqual, autoSaveField } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import VersionTagsPopup from '$lib/components/VersionTagsPopup.svelte';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
+	import { arraysEqual, autoSaveField } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import VersionTagsPopup from '#lib/components/VersionTagsPopup.svelte';
 
 	/**
 	 * Which resumes and CVs print one certificate, in its expanded card.

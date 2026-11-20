@@ -23,17 +23,17 @@
  * than by deleting the evidence on a timer.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, count, desc, eq, inArray } from 'drizzle-orm';
-import { capability_requests } from '$lib/server/db/schema';
+import { capability_requests } from '#lib/server/db/schema.ts';
 import {
 	CAPABILITIES,
 	executeCapability,
 	type Capability,
 	type CapabilityActor,
 	type CapabilityTarget
-} from '$lib/server/ai-chat/capabilities';
-import { getEnv } from '$lib/tools/get-env';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 

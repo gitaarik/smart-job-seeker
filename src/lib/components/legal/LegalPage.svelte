@@ -15,7 +15,7 @@
 
 <main class="min-h-screen bg-[var(--dash-bg)] px-6 py-16 text-[var(--dash-text)] transition-colors">
 	<div class="mx-auto max-w-3xl">
-		<a href={resolve('/')} class="text-sm text-[var(--dash-primary)] hover:underline"
+		<a href={resolve('/(auth)')} class="text-sm text-[var(--dash-primary)] hover:underline"
 			>← Smart Job Seeker</a
 		>
 		{#if draft}

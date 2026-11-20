@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { users } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;

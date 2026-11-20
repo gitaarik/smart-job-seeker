@@ -7,10 +7,10 @@
  */
 
 import crypto from 'crypto';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { api_keys } from '$lib/server/db/schema';
-import { getErrorMessage } from '$lib/server/utils/errors';
+import { api_keys } from '#lib/server/db/schema.ts';
+import { getErrorMessage } from '#lib/server/utils/errors.ts';
 import { decryptCredential, encryptCredential } from './crypto';
 
 /** API key prefix for identification */

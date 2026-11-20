@@ -21,7 +21,7 @@
 
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { is, sql, type SQL } from 'drizzle-orm';
-import * as schema from '$lib/server/db/schema';
+import * as schema from '#lib/server/db/schema.ts';
 
 export interface RenditionReference {
 	table: string;

@@ -12,7 +12,7 @@ const state = {
 const mockSelect = vi.fn();
 const mockCreate = vi.fn();
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const chain = {
 		from: () => chain,
 		innerJoin: () => chain,

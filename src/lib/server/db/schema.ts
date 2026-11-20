@@ -945,7 +945,7 @@ export const job_matches = pgTable(
 		/**
 		 * Why the job has no real score: it failed the eligibility check before any
 		 * model saw it. Null for a scored match, whose recommendation word is read
-		 * off `score` (`$lib/match-recommendation.ts`) rather than stored.
+		 * off `score` (`#lib/match-recommendation.ts`) rather than stored.
 		 */
 		skip_reason: varchar({ length: 32 }).$type<SkipReason>(),
 		job_date_updated_when_matched: timestamp({
@@ -1099,7 +1099,7 @@ export const search_task_runs = pgTable(
 		jobs_found: integer(),
 		error_message: text(),
 		// Machine-readable cause of a terminal failure — one of FAILURE_KINDS
-		// (`$lib/import-tasks/failure-kinds`). error_message is the prose
+		// (`#lib/import-tasks/failure-kinds.ts`). error_message is the prose
 		// a user reads and is free to be reworded; this is what code branches
 		// on, so policies never depend on message wording. Null on runs that
 		// didn't fail, and on rows written before the column existed.
@@ -3026,7 +3026,7 @@ export const applications = pgTable(
 		status_step: varchar({ length: 255 }),
 		/**
 		 * The interview process so far, one entry per round, in order. See
-		 * `InterviewRound` in `$lib/application-status`.
+		 * `InterviewRound` in `#lib/application-status.ts`.
 		 *
 		 * There is no next-action column beside it any more. `status_action` held
 		 * either the default for its stage or interview dates moved along by hand
@@ -3149,7 +3149,7 @@ export const applications = pgTable(
 		 * so a list that accumulated would hold every superseded figure with no way
 		 * to say which is current. See $lib/application-details.ts for the shape and
 		 * the reasoning; the type is inlined here because drizzle-kit runs outside
-		 * Vite and cannot resolve `$lib`.
+		 * Vite and cannot resolve `#lib`.
 		 */
 		context_details: jsonb()
 			.$type<
@@ -4594,7 +4594,7 @@ export const application_records = pgTable(
 		 *
 		 * A projection of `content`, like the application's own details: rewritten
 		 * whole when the text changes, never edited. The type is inlined because
-		 * drizzle-kit runs outside Vite and cannot resolve `$lib`; see
+		 * drizzle-kit runs outside Vite and cannot resolve `#lib`; see
 		 * $lib/application-details.ts for the fact shape.
 		 */
 		digest: jsonb().$type<{

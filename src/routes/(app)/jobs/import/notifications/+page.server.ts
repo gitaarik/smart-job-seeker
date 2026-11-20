@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles, users } from '$lib/server/db/schema';
-import { readPayFilter } from '$lib/server/salary/pay-fit-store';
+import { profiles, users } from '#lib/server/db/schema.ts';
+import { readPayFilter } from '#lib/server/salary/pay-fit-store.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { profileId, user } = await parent();

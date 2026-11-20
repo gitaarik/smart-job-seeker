@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockQFindFirst = vi.fn();
 const mockCreateAndGenerate = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			application_questions: { findFirst: (...a: unknown[]) => mockQFindFirst(...a) }
@@ -23,19 +23,19 @@ vi.mock('drizzle-orm', () => ({
 	eq: vi.fn((_c: unknown, v: unknown) => v)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	application_questions: { id: 'aq.id' }
 }));
 
-vi.mock('$lib/server/ai-chat/utils', () => ({
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({
 	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/application-question', () => ({
+vi.mock('#lib/server/ai-chat/application-question.ts', () => ({
 	QUESTION_PROFILE_FIELDS: []
 }));
 
-vi.mock('$lib/server/billing/require-credits', () => ({
+vi.mock('#lib/server/billing/require-credits.ts', () => ({
 	requireCredits: vi.fn().mockResolvedValue(undefined)
 }));
 

@@ -29,7 +29,7 @@ const state = {
 
 // The real schema, since `resources.ts` reads every table off it and a stub
 // would have to list all fifteen sections' tables to get past the import.
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: { query: { profiles: { findFirst: () => Promise.resolve(state.profileRow) } } },
 	dbDirect: {
 		query: { profiles: { findFirst: () => Promise.resolve(state.profileRow) } }

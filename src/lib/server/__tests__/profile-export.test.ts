@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the database
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			profiles: {
@@ -27,7 +27,7 @@ vi.mock('remove-markdown', () => ({
 }));
 
 import { exportProfile } from '../profile/export';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { findFirst, asMock } from './db-mocks';
 
 describe('exportProfile', () => {

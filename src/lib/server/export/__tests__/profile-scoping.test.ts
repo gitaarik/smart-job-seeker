@@ -38,7 +38,7 @@ function recorder(table: string, result: unknown) {
 const PROFILE_ID = 7;
 const OTHER_PROFILE_ID = 99;
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const tables = [
 		'profiles',
 		'project_stories',

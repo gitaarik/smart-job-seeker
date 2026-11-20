@@ -13,7 +13,7 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	interface Props {
 		taskId: number;

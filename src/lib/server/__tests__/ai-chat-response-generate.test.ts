@@ -11,7 +11,7 @@ const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 // Mock dependencies
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			ai_chats: {
@@ -25,7 +25,7 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn((key: string, defaultValue = '') => {
 		const envVars: Record<string, string> = {
 			SJS_LLM_API_KEY_GROQ: 'test-groq-api-key-12345'
@@ -69,7 +69,7 @@ vi.mock('drizzle-orm', () => ({
 	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	ai_chats: { id: 'ai_chats.id' },
 	profiles: { id: 'profiles.id' }
 }));

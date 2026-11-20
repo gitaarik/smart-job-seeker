@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import SkillCategoriesEditor from './SkillCategoriesEditor.svelte';
 import type { CategoryItem } from './SkillCategoriesEditor.svelte';
-import { translations } from '$lib/stores/translations.svelte';
+import { translations } from '#lib/stores/translations.svelte.ts';
 
 /**
  * The editor's per-row state, across a removal.

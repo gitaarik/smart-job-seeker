@@ -12,10 +12,10 @@
  */
 
 import { APIError } from 'better-auth/api';
-import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
-import { autoApproveSignups, registrationOpen } from '$lib/server/auth/registration';
-import { isDisposableEmail } from '$lib/server/auth/disposable-email';
-import { termsVersion } from '$lib/server/legal/texts';
+import { verifyTurnstileToken } from '#lib/server/auth/turnstile.ts';
+import { autoApproveSignups, registrationOpen } from '#lib/server/auth/registration.ts';
+import { isDisposableEmail } from '#lib/server/auth/disposable-email.ts';
+import { termsVersion } from '#lib/server/legal/texts.ts';
 
 const TERMS_MESSAGE =
 	'Please accept the terms of service and privacy policy. If you already did, reload the page: they have changed since it loaded.';
@@ -47,7 +47,7 @@ export interface SignupGateContext {
 export async function guardSignup(ctx: SignupGateContext): Promise<void> {
 	// Both gates below exist to stop *strangers* registering. Our own
 	// server-side code mints accounts through this same endpoint — the
-	// demo-template account and each demo user (`$lib/server/demo`) — and it was
+	// demo-template account and each demo user (`#lib/server/demo`) — and it was
 	// already authorized before it got here: an admin session, or a valid
 	// unexpired invite link. Gating those is not defence, it just breaks the
 	// feature, which is exactly what it did between v0.19.0 and this fix: with

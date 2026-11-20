@@ -14,8 +14,8 @@ import {
 	type CapabilityActor,
 	fieldsFromChanges,
 	type LiveCapability
-} from '$lib/server/ai-chat/capabilities';
-import { traceStep } from '$lib/server/monitoring/telemetry';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { traceStep } from '#lib/server/monitoring/telemetry.ts';
 
 /** A validated proposal, ready to store against the assistant turn. */
 export type StoredProposal = {

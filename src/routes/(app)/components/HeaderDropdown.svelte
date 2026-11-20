@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { sidebarState, overlayState } from './sidebar-state.svelte';
 
@@ -16,7 +16,7 @@
 
 	// Close on navigation
 	$effect(() => {
-		void $page.url;
+		void page.url;
 		untrack(() => close());
 	});
 

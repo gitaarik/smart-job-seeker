@@ -9,10 +9,10 @@
 		faTrash,
 		faUserMinus
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { portalToBody } from '$lib/actions/portal';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { portalToBody } from '#lib/actions/portal.ts';
 	import LoginModeChooser from './LoginModeChooser.svelte';
-	import { toLoginMode } from '$lib/import-tasks/sign-in';
+	import { toLoginMode } from '#lib/import-tasks/sign-in.ts';
 
 	/**
 	 * An account on the platform: the email address or username the user signs
@@ -484,7 +484,7 @@
 					<div class="py-6 text-center">
 						<p class="text-sm text-[var(--dash-text-secondary)]">
 							No contacts yet. <a
-								href={resolve('/contacts')}
+								href={resolve('contacts')}
 								class="text-[var(--dash-primary)] hover:underline">Add contacts</a
 							> to share accounts.
 						</p>

@@ -25,8 +25,12 @@
  */
 import { createHash } from 'node:crypto';
 import { promptTemplates } from './prompt-templates.js';
-import type { ScoreQuestion, SystemOneRequest, SystemOneResponse } from '$lib/server/llm/typesafe';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type {
+	ScoreQuestion,
+	SystemOneRequest,
+	SystemOneResponse
+} from '#lib/server/llm/typesafe.ts';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 
 export const MATCH_SCORE_PROMPT = 'score_job_match';
 

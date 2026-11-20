@@ -20,7 +20,7 @@ let storedRow: Record<string, unknown> | undefined;
 const mockUpdateWhere = vi.fn().mockResolvedValue(undefined);
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const selectChain = {
 		from: () => selectChain,
 		innerJoin: () => selectChain,
@@ -40,7 +40,7 @@ vi.mock('drizzle-orm', () => ({
 	and: vi.fn((...a: unknown[]) => a)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	agent_conversations: { id: 'ac.id', user_id: 'ac.user_id' },
 	agent_messages: {
 		id: 'am.id',
@@ -62,11 +62,11 @@ vi.mock('$lib/server/db/schema', () => ({
 const mockExecute = vi.fn();
 const mockScore = vi.fn();
 
-vi.mock('$lib/server/monitoring/product-scores', () => ({
+vi.mock('#lib/server/monitoring/product-scores.ts', () => ({
 	scoreGeneration: (...a: unknown[]) => mockScore(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/capabilities', () => ({
+vi.mock('#lib/server/ai-chat/capabilities.ts', () => ({
 	// Only what the route itself touches: the registry, to reject a stored
 	// capability name that no longer exists, and the write path.
 	CAPABILITIES: { edit_job_details: { title: "Edit the job's details" } },
@@ -74,7 +74,7 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 }));
 
 let currentUser: Record<string, unknown> | null = { id: 'user-1' };
-vi.mock('$lib/server/utils/api-helpers', () => ({
+vi.mock('#lib/server/utils/api-helpers.ts', () => ({
 	requireAuth: () => {
 		if (!currentUser) throw new Error('unauthenticated');
 		return currentUser;

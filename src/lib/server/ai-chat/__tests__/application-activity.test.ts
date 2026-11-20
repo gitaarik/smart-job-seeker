@@ -15,7 +15,7 @@ import {
 	RECORD_WEIGHTS,
 	truncateKeepingEnds
 } from '../application-activity';
-import { recordTypeValues } from '$lib/application-records';
+import { recordTypeValues } from '#lib/application-records.ts';
 
 let nextId = 1;
 

@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc, count, type SQL } from 'drizzle-orm';
-import { sent_emails } from '$lib/server/db/schema';
+import { sent_emails } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const typeFilter = url.searchParams.get('type') || '';

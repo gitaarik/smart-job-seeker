@@ -13,7 +13,7 @@ const mockHistoryRows = vi.fn().mockResolvedValue([]);
 const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			application_letters: { findFirst: vi.fn() },
@@ -33,11 +33,11 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/ai-chat/create-followup', () => ({
+vi.mock('#lib/server/ai-chat/create-followup.ts', () => ({
 	createFollowupAiChat: vi.fn()
 }));
 
-vi.mock('$lib/server/ai-chat/entity-versions', () => ({
+vi.mock('#lib/server/ai-chat/entity-versions.ts', () => ({
 	LETTER_VERSIONS: { fkName: 'letter', table: {}, fk: {}, id: {} },
 	QUESTION_VERSIONS: { fkName: 'question', table: {}, fk: {}, id: {} },
 	STORY_VERSIONS: { fkName: 'story', table: {}, fk: {}, id: {} },
@@ -46,7 +46,7 @@ vi.mock('$lib/server/ai-chat/entity-versions', () => ({
 	ensureBaselineVersion: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock('$lib/server/ai-chat/application-activity', () => ({
+vi.mock('#lib/server/ai-chat/application-activity.ts', () => ({
 	applicationActivityText: vi.fn().mockResolvedValue('')
 }));
 
@@ -58,7 +58,7 @@ vi.mock('drizzle-orm', () => ({
 	isNotNull: vi.fn()
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	application_letters: {},
 	letter_versions: {},
 	application_questions: {},
@@ -69,8 +69,8 @@ vi.mock('$lib/server/db/schema', () => ({
 	cheat_sheet_versions: {}
 }));
 
-import { db } from '$lib/server/db';
-import { createFollowupAiChat } from '$lib/server/ai-chat/create-followup';
+import { db } from '#lib/server/db/index.ts';
+import { createFollowupAiChat } from '#lib/server/ai-chat/create-followup.ts';
 import { createApplicationLetterFollowup } from '../ai-chat/application-letter-followup';
 import { createApplicationQuestionFollowup } from '../ai-chat/application-question-followup';
 import { createProfileStoryFollowup } from '../ai-chat/profile-story-followup';

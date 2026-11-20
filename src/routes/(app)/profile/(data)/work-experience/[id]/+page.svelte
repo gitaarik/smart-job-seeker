@@ -2,26 +2,26 @@
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { armOn } from '$lib/actions/arm-on';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faBriefcase, faTrash } from '@fortawesome/free-solid-svg-icons';
-	import MediaUpload from '$lib/components/MediaUpload.svelte';
-	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import FieldVariants from '$lib/components/FieldVariants.svelte';
-	import type { FieldVariant } from '$lib/field-variants';
-	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
-	import { sectionRows } from '$lib/components/section-rows.svelte';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
+	import MediaUpload from '#lib/components/MediaUpload.svelte';
+	import { autoSaveField, patchBody, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
+	import FieldVariants from '#lib/components/FieldVariants.svelte';
+	import type { FieldVariant } from '#lib/field-variants.ts';
+	import AchievementsList, { type AchievementItem } from '#lib/components/AchievementsList.svelte';
+	import { sectionRows } from '#lib/components/section-rows.svelte.ts';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
 	import WorkExperienceProjects from '../../../components/WorkExperienceProjects.svelte';
 	import TechnologyChips from '../../../components/TechnologyChips.svelte';
-	import VersionTags from '$lib/components/VersionTags.svelte';
-	import FeaturedSwitch from '$lib/components/FeaturedSwitch.svelte';
-	import { shownOnTemplate } from '$lib/profile-visibility';
+	import VersionTags from '#lib/components/VersionTags.svelte';
+	import FeaturedSwitch from '#lib/components/FeaturedSwitch.svelte';
+	import { shownOnTemplate } from '#lib/profile-visibility.ts';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import Card from '../../../../components/Card.svelte';
-	import { WORK_MODE_OPTIONS } from '$lib/work-mode';
+	import { WORK_MODE_OPTIONS } from '#lib/work-mode.ts';
 
 	let { data }: { data: PageData } = $props();
 
@@ -397,7 +397,7 @@
 	<!-- Header -->
 	<div class="flex items-center gap-4">
 		<a
-			href={resolve('/profile/work-experience')}
+			href={resolve('profile/work-experience')}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getInterpolatedPrompts } from '../ai-chat/utils';
 
 // Mock the Drizzle db module
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			ai_chats: {
@@ -20,7 +20,7 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { findFirst } from './db-mocks';
 
 describe('getInterpolatedPrompts', () => {

@@ -1,15 +1,15 @@
 import type { LayoutServerLoad } from './$types';
-import { requireAuth } from '$lib/server/auth/guards';
+import { requireAuth } from '#lib/server/auth/guards.ts';
 import { redirect } from '@sveltejs/kit';
-import { getProfilesByUserId } from '$lib/server/profile/user-profiles';
-import { getBalance } from '$lib/server/billing/credits';
-import { getPaymentIssue } from '$lib/server/billing/subscription';
-import { getUnreadCount } from '$lib/server/notifications';
-import { dbDirect as db } from '$lib/server/db';
+import { getProfilesByUserId } from '#lib/server/profile/user-profiles.ts';
+import { getBalance } from '#lib/server/billing/credits.ts';
+import { getPaymentIssue } from '#lib/server/billing/subscription.ts';
+import { getUnreadCount } from '#lib/server/notifications.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { users } from '$lib/server/db/schema';
-import { resolveTimeFormat } from '$lib/format-date';
-import { mustAcceptTerms } from '$lib/server/legal/gate';
+import { users } from '#lib/server/db/schema.ts';
+import { resolveTimeFormat } from '#lib/format-date.ts';
+import { mustAcceptTerms } from '#lib/server/legal/gate.ts';
 
 export const load: LayoutServerLoad = async (event) => {
 	// Require authentication - redirects to /login?redirect=<current-path>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDiff } from '$lib/resume-diff';
+	import type { FieldDiff } from '#lib/resume-diff.ts';
 
 	interface Props {
 		diff: FieldDiff;

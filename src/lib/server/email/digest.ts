@@ -5,9 +5,9 @@
  */
 
 import { sendEmail } from './index';
-import { getScoreGradient } from '$lib/score-colors';
-import { formatWorkLocation, formatJobType, formatExperienceLevel } from '$lib/format';
-import { PAY_VERDICT_LABELS, type PayVerdict } from '$lib/salary/pay-fit';
+import { getScoreGradient } from '#lib/score-colors.ts';
+import { formatWorkLocation, formatJobType, formatExperienceLevel } from '#lib/format.ts';
+import { PAY_VERDICT_LABELS, type PayVerdict } from '#lib/salary/pay-fit.ts';
 
 export interface DigestJob {
 	id: number;

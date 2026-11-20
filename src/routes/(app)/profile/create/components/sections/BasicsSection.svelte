@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp, faUser } from '@fortawesome/free-solid-svg-icons';
-	import type { ResumeBasics } from '$lib/server/resume/types';
+	import type { ResumeBasics } from '#lib/server/resume/types.ts';
 	import Card from '../../../../components/Card.svelte';
 
 	interface Props {

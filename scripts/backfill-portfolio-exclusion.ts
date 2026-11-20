@@ -26,14 +26,14 @@
  *   docker compose exec app node dist-scripts/backfill-portfolio-exclusion.mjs --apply
  */
 
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import { sql } from 'drizzle-orm';
 import {
 	BASE_TEMPLATE_TAGS,
 	isHiddenFromDocuments,
 	setShownOn,
 	shownOnTemplate
-} from '$lib/profile-visibility';
+} from '#lib/profile-visibility.ts';
 
 const APPLY = process.argv.includes('--apply');
 

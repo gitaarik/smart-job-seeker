@@ -35,19 +35,19 @@
  * planning/PROJECT-RETRIEVAL-FUSION.md.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { side_projects, work_experiences } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { side_projects, work_experiences } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import { type EmbeddableUnit, projectKey, semanticScoreProjects } from './project-embeddings';
-import { expandForRetrieval } from '$lib/server/job/skill-ontology';
-import { normalizeSkill } from '$lib/skills';
-import { profile_document_projects } from '$lib/server/db/schema';
+import { expandForRetrieval } from '#lib/server/job/skill-ontology.ts';
+import { normalizeSkill } from '#lib/skills.ts';
+import { profile_document_projects } from '#lib/server/db/schema.ts';
 import {
 	type FusionOptions,
 	reciprocalRankFusion,
 	RRF_DEFAULT_K
-} from '$lib/server/search/rank-fusion';
+} from '#lib/server/search/rank-fusion.ts';
 import type { RankerKind, RetrievalItem, RetrievalVia, RetrievedBlock } from './retrieval-record';
 
 export interface JobLike {

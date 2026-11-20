@@ -27,25 +27,25 @@
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq, gt, isNotNull, lt, or, sql } from 'drizzle-orm';
-import { job_platforms, match_config, search_tasks } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { job_platforms, match_config, search_tasks } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import { getSelectedProfileId } from '../../../../(app)/profile/utils';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
-import { SUGGEST_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
-import { suggestImportTasksSchema } from '$lib/server/schemas/ai-prompt-schemas';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
+import { SUGGEST_PROFILE_FIELDS } from '#lib/server/ai-chat/profile-fields.ts';
+import { suggestImportTasksSchema } from '#lib/server/schemas/ai-prompt-schemas.ts';
 import {
 	SEARCH_FILTER_DEFINITIONS,
 	type SearchFilterName,
 	type SearchFilterValue
-} from '$lib/job-platforms/search-filters';
+} from '#lib/job-platforms/search-filters.ts';
 import {
 	preferencesToFilters,
 	stripUnsupportedFilters,
 	unsupportedOverlap
-} from '$lib/job-platforms/preferences-to-filters';
-import type { Place } from '$lib/data/places';
+} from '#lib/job-platforms/preferences-to-filters.ts';
+import type { Place } from '#lib/data/places.ts';
 
 type SuggestablePlatform = {
 	id: number;

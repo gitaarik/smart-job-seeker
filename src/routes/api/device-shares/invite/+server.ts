@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { createDeviceInvite } from '$lib/server/device-shares';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { createDeviceInvite } from '#lib/server/device-shares.ts';
 
 /**
  * POST /api/device-shares/invite — Mint a single-use device-invite link.

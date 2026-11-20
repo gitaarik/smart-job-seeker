@@ -38,7 +38,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: Object.assign(() => ({ op: 'sql' }), { raw: () => ({ op: 'raw' }) })
 }));
 
-vi.mock('$lib/server/db/schema', () => {
+vi.mock('#lib/server/db/schema.ts', () => {
 	const names = [
 		'account_deletions',
 		'api_keys',
@@ -73,7 +73,7 @@ let usersRow: Record<string, unknown> | undefined = { id: 'u1', deletion_request
 let ownedProfiles: { id: number }[] = [{ id: 11 }, { id: 12 }];
 let dueUsers: { id: string }[] = [];
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	return {
 		dbDirect: {
 			update: (t: { __table: string }) => ({
@@ -110,7 +110,7 @@ vi.mock('$lib/server/db', () => {
 });
 
 let cancelFails = false;
-vi.mock('$lib/server/billing/subscription', () => ({
+vi.mock('#lib/server/billing/subscription.ts', () => ({
 	cancelSubscriptionsForAccount: (userId: string) => {
 		marks.push(`cancelSubscriptions:${userId}`);
 		return cancelFails
@@ -119,14 +119,14 @@ vi.mock('$lib/server/billing/subscription', () => ({
 	}
 }));
 
-vi.mock('$lib/server/profile/delete', () => ({
+vi.mock('#lib/server/profile/delete.ts', () => ({
 	deleteProfile: (id: number) => {
 		marks.push(`deleteProfile:${id}`);
 		return Promise.resolve({ profileId: id, reaped: {} });
 	}
 }));
 
-vi.mock('$lib/server/uploads/reap', () => ({
+vi.mock('#lib/server/uploads/reap.ts', () => ({
 	collectUserFileRefs: () => {
 		marks.push('collect');
 		return Promise.resolve({ fileIds: ['f1'], mediaPaths: ['profiles/a.jpg'] });

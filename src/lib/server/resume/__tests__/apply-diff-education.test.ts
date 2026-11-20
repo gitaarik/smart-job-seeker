@@ -38,7 +38,7 @@ function render(where: unknown): Rendered {
 	return { sql: query.sql, params: query.params };
 }
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const dbMock = {
 		query: {
 			profiles: { findFirst: () => Promise.resolve({ id: 1 }) },
@@ -60,7 +60,7 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-const { education } = await import('$lib/server/db/schema');
+const { education } = await import('#lib/server/db/schema.ts');
 const { applyDiffToProfile } = await import('../apply-diff');
 
 /** Apply an education-only payload as profile 1's owner. */

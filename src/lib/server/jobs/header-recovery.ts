@@ -22,7 +22,7 @@
  * per job.
  */
 
-import { runProfileAiChat } from '$lib/server/ai-chat/job-utils';
+import { runProfileAiChat } from '#lib/server/ai-chat/job-utils.ts';
 import {
 	type ExtractedHeader,
 	type GroundedHeaderResponse,

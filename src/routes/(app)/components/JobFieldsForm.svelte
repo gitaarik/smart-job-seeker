@@ -4,7 +4,7 @@
 	 *
 	 * Kept as strings (rather than the column types) so they map straight onto
 	 * inputs and post back unchanged — the server does the coercion, in
-	 * `$lib/server/jobs/job-fields`. The three taxonomy fields are the exception:
+	 * `#lib/server/jobs/job-fields.ts`. The three taxonomy fields are the exception:
 	 * checkbox groups need real arrays.
 	 */
 	export type JobFields = {
@@ -44,7 +44,7 @@
 
 <script lang="ts">
 	import Card from './Card.svelte';
-	import { EXPERIENCE_LEVELS, JOB_TYPES, WORK_LOCATIONS } from '$lib/data/job-taxonomy';
+	import { EXPERIENCE_LEVELS, JOB_TYPES, WORK_LOCATIONS } from '#lib/data/job-taxonomy.ts';
 
 	/**
 	 * The job fields every hand-entry surface shares: the create form at

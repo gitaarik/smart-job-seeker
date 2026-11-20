@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, desc, count } from 'drizzle-orm';
-import { ai_chats } from '$lib/server/db/schema';
+import { ai_chats } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	await parent();

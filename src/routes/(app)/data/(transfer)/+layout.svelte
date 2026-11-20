@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import {
 		faDownload,
 		faFileImport,
@@ -21,7 +21,7 @@
 	];
 
 	function isTabActive(href: string): boolean {
-		return $page.url.pathname.startsWith(href);
+		return page.url.pathname.startsWith(href);
 	}
 </script>
 

@@ -10,7 +10,7 @@
  * See resume-translations.ts for the translatable-field vocabulary.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
 import {
 	education,
@@ -24,7 +24,7 @@ import {
 	work_experience_achievements,
 	work_experience_projects,
 	work_experiences
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	BASE_LOCALE,
 	fieldsForEntity,
@@ -32,9 +32,9 @@ import {
 	type TranslatableGroup,
 	type TranslatableRow,
 	translationKey
-} from '$lib/resume-translations';
-import { localizeLanguageName } from '$lib/resume-template-labels';
-import { variantFieldLabel } from '$lib/field-variants';
+} from '#lib/resume-translations.ts';
+import { localizeLanguageName } from '#lib/resume-template-labels.ts';
+import { variantFieldLabel } from '#lib/field-variants.ts';
 
 export interface Translator {
 	locale: string;

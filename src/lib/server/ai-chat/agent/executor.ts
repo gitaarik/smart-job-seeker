@@ -17,16 +17,16 @@
  * with the cut stated; the three sliced reads return a slice already and say
  * where to continue, so they are left as they are.
  */
-import type { ToolCall } from '$lib/server/llm';
+import type { ToolCall } from '#lib/server/llm/index.ts';
 import {
 	CAPABILITIES,
 	type CapabilityActor,
 	type LiveCapability
-} from '$lib/server/ai-chat/capabilities';
-import { readTool, type ReadActor } from '$lib/server/mcp/call';
-import { targetingFor } from '$lib/server/mcp/entities';
-import { isMcpCapability, isReadTool } from '$lib/server/mcp/tools';
-import { type Identity, leadsToApplicant } from '$lib/server/profile/anonymity';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { readTool, type ReadActor } from '#lib/server/mcp/call.ts';
+import { targetingFor } from '#lib/server/mcp/entities.ts';
+import { isMcpCapability, isReadTool } from '#lib/server/mcp/tools.ts';
+import { type Identity, leadsToApplicant } from '#lib/server/profile/anonymity.ts';
 import { CHAT_SLICE_CHARS } from './tools';
 import {
 	type DroppedProposal,

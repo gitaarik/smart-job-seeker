@@ -1,7 +1,7 @@
 <script lang="ts" module>
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
-	import type { Place } from '$lib/data/places';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
+	import type { SearchFilterValue } from '#lib/job-platforms/search-filters.ts';
+	import type { Place } from '#lib/data/places.ts';
 
 	export type Suggestion = {
 		platform_id: number;
@@ -62,7 +62,7 @@
 		faMagicWandSparkles,
 		faPlus
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import FilterPicker from './FilterPicker.svelte';
 
 	let {

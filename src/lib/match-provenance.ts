@@ -1,9 +1,9 @@
 /**
  * How a job's skill came to count as matched.
  *
- * Lives outside `$lib/server` because both sides need it: the matcher writes it
+ * Lives outside `#lib/server` because both sides need it: the matcher writes it
  * and `SkillPill` renders it, and SvelteKit refuses a client import of anything
- * under `$lib/server` — a type-only import would be erased, but relying on that
+ * under `#lib/server` — a type-only import would be erased, but relying on that
  * makes the module boundary depend on a compiler detail rather than on where the
  * file sits.
  *

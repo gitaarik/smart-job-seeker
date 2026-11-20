@@ -27,7 +27,7 @@
 			{/if}
 		</p>
 		<a
-			href={resolve('/login')}
+			href={resolve('login')}
 			class="inline-block font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 		>
 			Go to login

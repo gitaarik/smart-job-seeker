@@ -29,7 +29,7 @@
  * getVersionCoverage below and planning/TAILORED-VERSIONS.md § Phase 1.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq, isNull, or } from 'drizzle-orm';
 import {
 	profile_versions,
@@ -37,18 +37,18 @@ import {
 	tech_skills,
 	work_experience_technologies,
 	work_experiences
-} from '$lib/server/db/schema';
-import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
-import { DOCUMENT_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
-import { documentSectionsFor } from '$lib/server/profile/resume-templates';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+} from '#lib/server/db/schema.ts';
+import { createProfileFilter } from '#lib/components/ProfileDisplay/profile-filter.ts';
+import { DOCUMENT_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '#lib/profile-visibility.ts';
+import { documentSectionsFor } from '#lib/server/profile/resume-templates.ts';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
 import {
 	carrierOf,
 	hiddenSkillsKey,
 	type HiddenSkill,
 	type VersionCoverage
-} from '$lib/version-coverage';
-import { versionChain, wordsToPrint, type SkillWord } from '$lib/server/profile/skill-words';
+} from '#lib/version-coverage.ts';
+import { versionChain, wordsToPrint, type SkillWord } from '#lib/server/profile/skill-words.ts';
 
 // The shapes and the ranking live in $lib/version-coverage so the card can rank
 // as the applicant flips between Resume and CV without asking the server again.

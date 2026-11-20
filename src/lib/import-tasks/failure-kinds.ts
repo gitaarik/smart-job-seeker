@@ -15,7 +15,7 @@
  * because historical rows carry them.
  *
  * Lives in oss rather than next to the scraper in the cloud tree, and outside
- * `$lib/server` rather than in it, because it has three readers in three
+ * `#lib/server` rather than in it, because it has three readers in three
  * places: the scraper that writes kinds, the policy that reads them, and the
  * UI that has to explain one to a user. Same reasoning as its neighbour
  * `readiness.ts` — pure and dependency-free, so it can run anywhere.

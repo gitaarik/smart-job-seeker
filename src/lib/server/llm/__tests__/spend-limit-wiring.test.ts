@@ -6,11 +6,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AIMessage } from '@langchain/core/messages';
 
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn(() => 'test-api-key')
 }));
 
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		geminiApiKey: 'test-gemini-key',
 		geminiThinkingLevel: 'MEDIUM',

@@ -12,8 +12,8 @@
  */
 
 import { and, desc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { platform_profiles, profiles, search_tasks } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { platform_profiles, profiles, search_tasks } from '#lib/server/db/schema.ts';
 import { _runSuggester } from '../src/routes/api/jobs/import/suggest/+server';
 
 function parseArgs(argv: string[]): {

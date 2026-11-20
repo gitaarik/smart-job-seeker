@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -20,7 +20,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import ConfirmModal from './ConfirmModal.svelte';
-	import { type ApplicationRecordSource, applicationRecordSource } from '$lib/document-sources';
+	import { type ApplicationRecordSource, applicationRecordSource } from '#lib/document-sources.ts';
 
 	interface DocRow {
 		id: number;
@@ -160,7 +160,7 @@
 				return;
 			}
 			closeNote();
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			error = 'Could not save the note.';
 		} finally {
@@ -272,7 +272,7 @@
 			}
 			const errs: Array<{ filename: string; error: string }> = body?.errors ?? [];
 			error = errs.length > 0 ? errs.map((e) => `${e.filename}: ${e.error}`).join('; ') : null;
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			error = 'Upload failed.';
 		} finally {
@@ -306,7 +306,7 @@
 			importMessage = body?.unchanged
 				? 'Already scanned at this commit — nothing to re-read.'
 				: null;
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			error = 'Could not scan the repository.';
 		} finally {
@@ -327,7 +327,7 @@
 				error = body?.message ?? 'Could not regenerate notes.';
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			error = 'Could not regenerate notes.';
 		} finally {
@@ -343,7 +343,7 @@
 			const res = await fetch(`/api/profile/${profileId}/documents/${id}`, {
 				method: 'DELETE'
 			});
-			if (res.ok) await invalidateAll();
+			if (res.ok) await refreshAll();
 			else error = 'Could not delete document.';
 		} catch {
 			error = 'Could not delete document.';

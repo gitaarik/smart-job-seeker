@@ -9,8 +9,8 @@
  * for a slot the library fills.
  */
 
-import { createMediaItem } from '$lib/server/media/items';
-import { assignEntitySlot, resolveEntitySlot } from '$lib/server/media/slots';
+import { createMediaItem } from '#lib/server/media/items.ts';
+import { assignEntitySlot, resolveEntitySlot } from '#lib/server/media/slots.ts';
 import { slotKey } from './import-media-library';
 import type { MediaFile } from './types';
 

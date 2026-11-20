@@ -14,7 +14,7 @@
  * deliberately deleted, which is invisible until you inspect the job row —
  * hence the coverage here.
  *
- * The merge itself now lives in `$lib/server/applications/create.ts`, shared
+ * The merge itself now lives in `#lib/server/applications/create.ts`, shared
  * with `add_application` over MCP. These stay end-to-end through the action on
  * purpose: what they assert is the behaviour a person submitting the form gets,
  * and asserting instead that the action called the writer would leave the two
@@ -56,7 +56,7 @@ const mockTriggerMatchForImport = vi.fn().mockResolvedValue(undefined);
 // `dbDirect` is the route convention, `db` the one every shared writer under
 // $lib/server uses. Mocking only the first is how this suite failed when the
 // inserts moved: nineteen tests, all reporting that `insert` was undefined.
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const handle = {
 		query: {
 			job_platforms: {
@@ -73,7 +73,7 @@ vi.mock('drizzle-orm', () => ({
 	or: vi.fn((...a: unknown[]) => a)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	applications: { __table: 'applications' },
 	application_status_log: { __table: 'application_status_log' },
 	job_importers: { __table: 'job_importers' },
@@ -84,19 +84,19 @@ vi.mock('$lib/server/db/schema', () => ({
 vi.mock('../../../profile/utils', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
-vi.mock('$lib/server/jobs/parse-job-description', () => ({
+vi.mock('#lib/server/jobs/parse-job-description.ts', () => ({
 	parseJobDescription: (...a: unknown[]) => mockParseJobDescription(...a)
 }));
-vi.mock('$lib/server/jobs/parse-cache', () => ({
+vi.mock('#lib/server/jobs/parse-cache.ts', () => ({
 	parseCacheKey: (...a: unknown[]) => mockParseCacheKey(...a),
 	recallParse: (...a: unknown[]) => mockRecallParse(...a)
 }));
-vi.mock('$lib/server/job/match-trigger', () => ({
+vi.mock('#lib/server/job/match-trigger.ts', () => ({
 	triggerMatchForImport: (...a: unknown[]) => mockTriggerMatchForImport(...a)
 }));
 
 import { actions } from '../+page.server';
-import { applications, jobs } from '$lib/server/db/schema';
+import { applications, jobs } from '#lib/server/db/schema.ts';
 
 const TOKEN = 'matching-token';
 

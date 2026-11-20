@@ -16,7 +16,7 @@ const state = {
 	written: [] as { resource: string; id: number; tags: string[] | null }[]
 };
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profile_versions: {
@@ -26,8 +26,8 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/profile/write', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/write')>()),
+vi.mock('#lib/server/profile/write.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/write.ts')>()),
 	readOwnedRow: (_resource: string, _actor: unknown, id: number) =>
 		Promise.resolve({ id, sort: 0, status: null, tags: state.tags }),
 	setRowTags: (resource: string, _actor: unknown, id: number, tags: string[] | null) => {
@@ -38,7 +38,7 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => ({
 
 const { TAG_CAPABILITIES, TAG_CAPABILITY_NAMES, checkTags, isTagCapability, whereItPrints } =
 	await import('../tag-capabilities');
-const { HIDEABLE_RESOURCES } = await import('$lib/server/profile/resources');
+const { HIDEABLE_RESOURCES } = await import('#lib/server/profile/resources.ts');
 const { verbsFor } = await import('../profile-capabilities');
 const { pickCapabilityFields } = await import('../capabilities');
 

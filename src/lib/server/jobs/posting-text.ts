@@ -21,7 +21,7 @@
  * stripped, plain text is tidied and keeps its lines.
  */
 
-import { stripHtmlForLlm } from '$lib/server/html/strip';
+import { stripHtmlForLlm } from '#lib/server/html/strip.ts';
 
 const TAG_LIKE = /<\/?[a-z][a-z0-9-]*(?:\s[^<>]*)?\/?>/gi;
 const DOCUMENT_TAG = /<(?:!doctype|html|body)\b/i;

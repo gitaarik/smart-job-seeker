@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { createApiKey, listApiKeys } from '$lib/server/auth/api-key';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { createApiKey, listApiKeys } from '#lib/server/auth/api-key.ts';
 
 /**
  * GET /api/api-keys — List API keys for the logged-in user.

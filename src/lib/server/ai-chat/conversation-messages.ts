@@ -21,7 +21,7 @@
  * marked as such — that is the specific signal that was missing — and any draft
  * the system prompt already carries in full is replaced by a pointer to it.
  */
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
 import {
 	AIMessage,
@@ -30,7 +30,7 @@ import {
 	mergeMessageRuns,
 	trimMessages
 } from '@langchain/core/messages';
-import type { ChatMessage } from '$lib/server/llm';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
 import type { VersionBinding } from './entity-versions';
 
 /** One version row, as much of it as the replay needs. */

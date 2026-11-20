@@ -1,11 +1,11 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles, applications } from '$lib/server/db/schema';
+import { profiles, applications } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
-import { getFxRates } from '$lib/server/salary/fx';
-import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import { getFxRates } from '#lib/server/salary/fx.ts';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

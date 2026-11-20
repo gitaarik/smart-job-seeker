@@ -2,8 +2,13 @@
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCircleNotch } from '@fortawesome/free-solid-svg-icons';
-	import { sameWording, variantPreview, wordingText, type WordingState } from '$lib/field-variants';
-	import type { DocType } from '$lib/utils/profile-doc-url';
+	import {
+		sameWording,
+		variantPreview,
+		wordingText,
+		type WordingState
+	} from '#lib/field-variants.ts';
+	import type { DocType } from '#lib/utils/profile-doc-url.ts';
 
 	/**
 	 * What this job's document says for one field that can be worded more than

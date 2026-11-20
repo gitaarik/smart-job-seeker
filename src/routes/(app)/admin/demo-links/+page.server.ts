@@ -1,10 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { api_keys, profiles } from '$lib/server/db/schema';
-import { createDemoLink, listDemoLinks, revokeDemoLink } from '$lib/server/demo/links';
-import { getTemplateStatus, seedDemoTemplateFromProfile } from '$lib/server/demo/template';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { api_keys, profiles } from '#lib/server/db/schema.ts';
+import { createDemoLink, listDemoLinks, revokeDemoLink } from '#lib/server/demo/links.ts';
+import { getTemplateStatus, seedDemoTemplateFromProfile } from '#lib/server/demo/template.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const userId = event.locals.user!.id;

@@ -5,7 +5,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faExclamationTriangle, faTrash, faUserSlash } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -97,7 +97,7 @@
 
 					<p class="mt-3 text-sm text-[var(--dash-text-secondary)]">
 						If you only want a copy of your data, use
-						<a class="underline" href={resolve('/data/profile-export')}>Profile export</a>
+						<a class="underline" href={resolve('data/profile-export')}>Profile export</a>
 						first — you cannot get it afterwards.
 					</p>
 				</div>

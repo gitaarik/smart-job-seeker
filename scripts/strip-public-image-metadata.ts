@@ -41,9 +41,9 @@ import { readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import sharp from 'sharp';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { files, media_renditions, presentation_template_assets } from '$lib/server/db/schema';
-import { stripImageMetadata } from '$lib/server/uploads/public-image';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { files, media_renditions, presentation_template_assets } from '#lib/server/db/schema.ts';
+import { stripImageMetadata } from '#lib/server/uploads/public-image.ts';
 
 const APPLY = process.argv.includes('--apply');
 const UPLOADS_DIR = join(process.cwd(), 'uploads');

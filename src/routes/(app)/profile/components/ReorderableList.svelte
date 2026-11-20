@@ -9,7 +9,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dragHandle, dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import Card from '../../components/Card.svelte';
 
 	interface Props {
@@ -86,7 +86,7 @@
 			formData.append(key, value);
 		}
 		await fetch(`?/${action}`, { method: 'POST', body: formData });
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function confirmReorder() {

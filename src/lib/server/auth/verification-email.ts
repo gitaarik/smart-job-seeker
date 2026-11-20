@@ -13,7 +13,7 @@
  * option (1.7.5 has no trace of it), so from then on a change got the generic
  * "Verify your email address" mail, which never says what is being changed.
  */
-import type { EmailType } from '$lib/server/email';
+import type { EmailType } from '#lib/server/email/index.ts';
 
 export interface VerificationMail {
 	to: string;

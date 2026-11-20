@@ -18,7 +18,7 @@ import {
 	summaryHash,
 	type SummarySource
 } from '../application-summary';
-import type { ApplicationDetail } from '$lib/application-details';
+import type { ApplicationDetail } from '#lib/application-details.ts';
 import type { AheadRound } from '../entry-digest';
 
 function entry(over: Partial<SummarySource> = {}): SummarySource {

@@ -13,7 +13,7 @@ import {
 } from './repo-metadata';
 
 const h = vi.hoisted(() => ({ config: { githubToken: '' } }));
-vi.mock('$lib/server/config', () => ({ config: h.config }));
+vi.mock('#lib/server/config.ts', () => ({ config: h.config }));
 
 describe('parseGitHubRepoUrl', () => {
 	it('accepts the forms that turn up in the repo URL field', () => {

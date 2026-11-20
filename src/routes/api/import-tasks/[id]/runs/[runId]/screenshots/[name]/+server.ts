@@ -1,9 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { search_task_runs } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { search_task_runs } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 

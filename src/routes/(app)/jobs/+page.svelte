@@ -7,7 +7,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { navigating } from '$app/stores';
+	import { navigating } from '$app/state';
 	import { tick } from 'svelte';
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -30,13 +30,13 @@
 		faTimes,
 		faUser
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import SectionHeader from '../profile/components/SectionHeader.svelte';
 	import EmptyState from '../profile/components/EmptyState.svelte';
 	import JobCard from './components/JobCard.svelte';
 	import SkillPill from './components/SkillPill.svelte';
-	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
-	import { payBadge } from '$lib/salary/pay-fit';
+	import { adjacentFor, provenanceFor } from '#lib/match-provenance.ts';
+	import { payBadge } from '#lib/salary/pay-fit.ts';
 	import ConfirmModal from '../profile/components/ConfirmModal.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -1087,7 +1087,7 @@
 
 	<!-- Results Count -->
 	<div class="text-sm text-[var(--dash-text-secondary)]">
-		{#if $navigating && jobs.length === 0}
+		{#if navigating.to && jobs.length === 0}
 			<span class="flex items-center gap-2">
 				<Spinner size="w-4 h-4" />
 				Loading...
@@ -1249,7 +1249,7 @@
 	{#if hasMore}
 		<div use:infiniteScroll class="h-1" aria-hidden="true"></div>
 	{/if}
-	{#if loadingMore || $navigating}
+	{#if loadingMore || navigating.to}
 		<div class="flex items-center justify-center py-4">
 			<Spinner size="w-5 h-5" />
 		</div>

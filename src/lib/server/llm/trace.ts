@@ -18,18 +18,18 @@
  */
 
 import { startActiveObservation, updateActiveObservation } from '@langfuse/tracing';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
 import {
 	glance,
 	isInTrace,
 	isTelemetryEnabled,
 	startTrace
-} from '$lib/server/monitoring/telemetry';
+} from '#lib/server/monitoring/telemetry.ts';
 import {
 	resolvePrompt,
 	type PromptLink,
 	type PromptRef
-} from '$lib/server/ai-chat/prompt-registry';
+} from '#lib/server/ai-chat/prompt-registry.ts';
 import type { ChatMessage, CompletionResult, TokenUsage } from './langchain';
 
 /** The matcher's calls: the bulk of the volume, so sampled. See telemetry.ts. */

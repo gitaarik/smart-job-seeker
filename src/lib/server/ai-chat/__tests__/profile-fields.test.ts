@@ -5,7 +5,10 @@ import {
 	LETTER_PROFILE_FIELDS,
 	SUGGEST_PROFILE_FIELDS
 } from '../profile-fields';
-import { EXPORTED_PROFILE_KEYS, PROFILE_SNAPSHOT_COLUMN_NAMES } from '$lib/server/profile/export';
+import {
+	EXPORTED_PROFILE_KEYS,
+	PROFILE_SNAPSHOT_COLUMN_NAMES
+} from '#lib/server/profile/export.ts';
 import { STORY_PROFILE_FIELDS } from '../profile-story';
 import { CHEATSHEET_PROFILE_FIELDS } from '../profile-cheatsheet';
 import { QUESTION_PROFILE_FIELDS } from '../application-question';

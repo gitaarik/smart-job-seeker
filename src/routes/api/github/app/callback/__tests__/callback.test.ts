@@ -22,15 +22,15 @@ const state = {
 	saved: [] as { userId: string; installationId: number }[]
 };
 
-vi.mock('$lib/server/utils/api-helpers', () => ({
+vi.mock('#lib/server/utils/api-helpers.ts', () => ({
 	requireAuth: () => ({ id: state.userId })
 }));
 
-vi.mock('$lib/server/github/app-state', () => ({
+vi.mock('#lib/server/github/app-state.ts', () => ({
 	verifyInstallState: () => state.verified
 }));
 
-vi.mock('$lib/server/github/app-auth', () => ({
+vi.mock('#lib/server/github/app-auth.ts', () => ({
 	isGitHubAppConfigured: () => true,
 	createAppJwt: () => 'jwt',
 	exchangeUserCode: async () => state.userToken,

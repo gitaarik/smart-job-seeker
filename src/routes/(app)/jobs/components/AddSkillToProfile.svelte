@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCircleNotch, faEyeSlash, faPlus } from '@fortawesome/free-solid-svg-icons';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import SkillPill from './SkillPill.svelte';
-	import { SKILL_LEVELS } from '$lib/data/field-labels';
-	import { clickOutside, keepInView } from '$lib/actions/popover';
-	import type { ProfileSkillRef } from '$lib/profile-visibility';
-	import { adjacencyExplanation, matchExplanation, type MatchVia } from '$lib/match-provenance';
+	import { SKILL_LEVELS } from '#lib/data/field-labels.ts';
+	import { clickOutside, keepInView } from '#lib/actions/popover.ts';
+	import type { ProfileSkillRef } from '#lib/profile-visibility.ts';
+	import { adjacencyExplanation, matchExplanation, type MatchVia } from '#lib/match-provenance.ts';
 
 	/**
 	 * A job's skill pill, which doubles as the shortest path between noticing a
@@ -186,7 +186,7 @@
 			// Re-read from the server rather than patching local state: the pill's
 			// whole appearance derives from the profile row, and a duplicate add
 			// resolves to an existing row this component never saw.
-			await invalidateAll();
+			await refreshAll();
 		} catch (e) {
 			error = e instanceof Error ? e.message : "Couldn't save the skill.";
 		} finally {

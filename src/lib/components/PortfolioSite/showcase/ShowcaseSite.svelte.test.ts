@@ -4,7 +4,7 @@ import { render } from '@testing-library/svelte';
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/p/alex/portfolio') } }));
 
 import ShowcaseSite from './ShowcaseSite.svelte';
-import type { PortfolioBusiness } from '$lib/server/profile/portfolio-business';
+import type { PortfolioBusiness } from '#lib/server/profile/portfolio-business.ts';
 
 // jsdom has no matchMedia; the layout reads it on mount for the system scheme.
 vi.stubGlobal('matchMedia', () => ({

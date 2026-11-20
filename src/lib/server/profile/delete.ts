@@ -13,14 +13,14 @@
  * changes the answer to.
  *
  * For a single file whose owner is known, use `deleteFile` in
- * `$lib/server/files` instead — this path exists for the bulk case where
+ * `#lib/server/files.ts` instead — this path exists for the bulk case where
  * ownership has to be established by reachability.
  */
 
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
-import { collectProfileFileRefs, reapFileRefs, type ReapResult } from '$lib/server/uploads/reap';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
+import { collectProfileFileRefs, reapFileRefs, type ReapResult } from '#lib/server/uploads/reap.ts';
 
 export interface DeleteProfileResult {
 	profileId: number;

@@ -39,8 +39,8 @@
  */
 
 import { inArray, max } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { application_records, application_status_log } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { application_records, application_status_log } from '#lib/server/db/schema.ts';
 
 /**
  * The columns this reads off the row itself. Loose on purpose: a caller with a

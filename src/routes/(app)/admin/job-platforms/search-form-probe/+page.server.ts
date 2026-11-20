@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { desc, eq } from 'drizzle-orm';
-import { job_platforms, search_form_probe_runs } from '$lib/server/db/schema';
+import { job_platforms, search_form_probe_runs } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async () => {
 	const runs = await db

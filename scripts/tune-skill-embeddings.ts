@@ -18,15 +18,15 @@
  * Pass --backfill to embed + persist distinct job skills first.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { skill_embeddings } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { skill_embeddings } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import {
 	cosineSimilarity,
 	isEmbeddingConfigured,
 	truncateVector
-} from '$lib/server/llm/embeddings';
-import { backfillSkillVocabulary } from '$lib/server/job/skill-embeddings';
+} from '#lib/server/llm/embeddings.ts';
+import { backfillSkillVocabulary } from '#lib/server/job/skill-embeddings.ts';
 
 const args = process.argv.slice(2);
 const doBackfill = args.includes('--backfill');

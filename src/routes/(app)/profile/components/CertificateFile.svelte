@@ -12,7 +12,7 @@
 		CERTIFICATE_FILE_ACCEPT,
 		MAX_CERTIFICATE_FILE_BYTES,
 		formatFileSize
-	} from '$lib/certificate-files';
+	} from '#lib/certificate-files.ts';
 	import ConfirmModal from './ConfirmModal.svelte';
 
 	/**

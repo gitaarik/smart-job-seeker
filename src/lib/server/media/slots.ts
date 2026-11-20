@@ -9,8 +9,8 @@
  */
 
 import { and, eq, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { media_items, presentation_template_assets } from '$lib/server/db/schema';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { media_items, presentation_template_assets } from '#lib/server/db/schema.ts';
 import {
 	centredCrop,
 	clampCrop,
@@ -23,7 +23,7 @@ import {
 	type MediaSlotSpec,
 	type OutputFormat,
 	type ThemeMediaSlot
-} from '$lib/media-library';
+} from '#lib/media-library.ts';
 import { deleteUnusedRenditions, ensureRendered, findOrCreateRendition } from './renditions';
 
 /** Where each entity slot lives: the column naming its rendition. */

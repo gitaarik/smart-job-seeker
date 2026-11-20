@@ -5,7 +5,7 @@ import {
 	LEGACY_TEMPLATE_SECTIONS,
 	TEMPLATE_DEFAULT_SECTIONS,
 	withSections
-} from '$lib/resume-templates';
+} from '#lib/resume-templates.ts';
 
 /**
  * What a document prints in a template (documentSections): the one answer the

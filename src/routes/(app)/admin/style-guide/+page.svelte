@@ -2,8 +2,8 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { asset, resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { getAllIcons } from '$lib/data/job-icons';
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
+	import { getAllIcons } from '#lib/data/job-icons.ts';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
 	import Checkbox from '../../components/Checkbox.svelte';
 	import RadioGroup from '../../components/RadioGroup.svelte';
 	import ToggleSwitch from '../../components/ToggleSwitch.svelte';
@@ -115,7 +115,7 @@
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import Card from '../../components/Card.svelte';
 	import CopyButton from '../../components/CopyButton.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	// Group icons by category for display
 	const iconGroups: { label: string; icons: { name: string; icon: IconDefinition }[] }[] = [
@@ -635,12 +635,12 @@
 			<h3 class="mb-2 text-sm font-medium text-[var(--dash-text)]">SVG Assets</h3>
 			<div class="flex flex-wrap gap-4 text-xs text-[var(--dash-text-secondary)]">
 				<a
-					href={asset('/brand/logo-indigo.svg')}
+					href={asset('brand/logo-indigo.svg')}
 					target="_blank"
 					class="text-[var(--dash-primary)] hover:underline">/brand/logo-indigo.svg</a
 				>
 				<a
-					href={asset('/brand/logo-white.svg')}
+					href={asset('brand/logo-white.svg')}
 					target="_blank"
 					class="text-[var(--dash-primary)] hover:underline">/brand/logo-white.svg</a
 				>
@@ -1303,7 +1303,7 @@
 					<div
 						class="overflow-x-auto rounded bg-[var(--dash-bg)] p-3 font-mono text-xs text-[var(--dash-text-secondary)]"
 					>
-						import CategoryPill from "$lib/components/CategoryPill.svelte";
+						import CategoryPill from "#lib/components/CategoryPill.svelte";
 					</div>
 					<div
 						class="overflow-x-auto rounded bg-[var(--dash-bg)] p-3 font-mono text-xs text-[var(--dash-text-secondary)]"

@@ -11,7 +11,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockGenerate = vi.hoisted(() => vi.fn());
-vi.mock('$lib/server/ai-chat/utils', () => ({ createAndGenerateAiChat: mockGenerate }));
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({ createAndGenerateAiChat: mockGenerate }));
 
 const mockWhere = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 // Typed on the way in: the assertions below read what `.set()` was called with,
@@ -22,9 +22,9 @@ const mockSet = vi.hoisted(() =>
 	}))
 );
 const mockUpdate = vi.hoisted(() => vi.fn(() => ({ set: mockSet })));
-vi.mock('$lib/server/db', () => ({ dbDirect: { update: mockUpdate } }));
+vi.mock('#lib/server/db/index.ts', () => ({ dbDirect: { update: mockUpdate } }));
 vi.mock('drizzle-orm', () => ({ eq: (c: unknown, v: unknown) => ({ eq: [c, v] }) }));
-vi.mock('$lib/server/db/schema', () => ({ jobs: { id: 'jobs.id' } }));
+vi.mock('#lib/server/db/schema.ts', () => ({ jobs: { id: 'jobs.id' } }));
 
 const { COMPACT_THRESHOLD_CHARS, promptJobDescription } = await import('../compact-description');
 

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faChevronDown, faPlus, faUser } from '@fortawesome/free-solid-svg-icons';
-	import type { ProfileSummary } from '$lib/server/profile/user-profiles';
+	import type { ProfileSummary } from '#lib/server/profile/user-profiles.ts';
 	import HeaderDropdown from './HeaderDropdown.svelte';
 
 	interface Props {
@@ -14,7 +14,7 @@
 
 	let { profiles, selectedProfile }: Props = $props();
 	let dropdown: HeaderDropdown;
-	let isCreatePage = $derived($page.url.pathname.startsWith('/profile/create'));
+	let isCreatePage = $derived(page.url.pathname.startsWith('/profile/create'));
 
 	function selectProfile(profile: ProfileSummary) {
 		dropdown.close();
@@ -22,7 +22,7 @@
 		// expression typed ResolvedPathname, and appending a query makes it a
 		// plain string. resolve() takes no query of its own.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${resolve('/home')}?profile=${profile.id}`);
+		goto(`${resolve('home')}?profile=${profile.id}`);
 	}
 </script>
 
@@ -71,7 +71,7 @@
 
 		<div class="mt-2 border-t border-[var(--dash-border)] pt-2">
 			<a
-				href={resolve('/profile/create')}
+				href={resolve('profile/create')}
 				onclick={() => dropdown.close()}
 				class="flex w-full items-center gap-2 px-3 py-2 text-left text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 			>

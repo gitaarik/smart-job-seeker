@@ -1,6 +1,6 @@
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, isNull, count, desc } from 'drizzle-orm';
-import { notifications } from '$lib/server/db/schema';
+import { notifications } from '#lib/server/db/schema.ts';
 
 export interface CreateNotification {
 	userId: string;

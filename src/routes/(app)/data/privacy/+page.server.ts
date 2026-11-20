@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { users } from '#lib/server/db/schema.ts';
 
 /**
  * The one privacy choice the app leaves to the person: whether our own

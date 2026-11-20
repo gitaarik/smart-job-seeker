@@ -7,15 +7,15 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, desc, eq } from 'drizzle-orm';
-import { profile_versions, tech_skill_categories, tech_skills } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { profile_versions, tech_skill_categories, tech_skills } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	parseBody,
 	techSkillQuickAddSchema,
 	techSkillUpdateSchema
-} from '$lib/server/validation/api-schemas';
+} from '#lib/server/validation/api-schemas.ts';
 import {
 	BASE_TEMPLATE_TAGS,
 	setBaseTemplates,
@@ -23,8 +23,8 @@ import {
 	setVersions,
 	SHOW_ON_ALL,
 	tagsForShowOn
-} from '$lib/profile-visibility';
-import { SKILL_LEVELS } from '$lib/data/field-labels';
+} from '#lib/profile-visibility.ts';
+import { SKILL_LEVELS } from '#lib/data/field-labels.ts';
 import { getSelectedProfileId, touchProfile } from '../../profile/utils';
 
 /** Category used when a profile has none yet. */

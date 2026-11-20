@@ -19,7 +19,7 @@
  *   npx dotenvx run -f /app/.env -- npx tsx scripts/verify-mcp-texts.ts <profileId>
  */
 import { and, asc, eq, gte, inArray, sql } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import {
 	application_letters,
 	application_questions,
@@ -37,13 +37,17 @@ import {
 	project_stories,
 	question_versions,
 	story_versions
-} from '$lib/server/db/schema';
-import { serializeStarMarkdown } from '$lib/interview/star';
-import { QUESTION_MAX, listProfileTexts, readProfileText } from '$lib/server/texts/profile-texts';
-import { callTool } from '$lib/server/mcp/call';
-import { createMcpKey } from '$lib/server/mcp/keys';
-import { toolsFor } from '$lib/server/mcp/tools';
-import type { VerifiedMcpKey } from '$lib/server/mcp/keys';
+} from '#lib/server/db/schema.ts';
+import { serializeStarMarkdown } from '#lib/interview/star.ts';
+import {
+	QUESTION_MAX,
+	listProfileTexts,
+	readProfileText
+} from '#lib/server/texts/profile-texts.ts';
+import { callTool } from '#lib/server/mcp/call.ts';
+import { createMcpKey } from '#lib/server/mcp/keys.ts';
+import { toolsFor } from '#lib/server/mcp/tools.ts';
+import type { VerifiedMcpKey } from '#lib/server/mcp/keys.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {

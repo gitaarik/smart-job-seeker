@@ -1,15 +1,15 @@
 import type { LayoutServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
-import { today } from '$lib/application-records';
+import { today } from '#lib/application-records.ts';
 import {
 	application_records,
 	application_status_log,
 	applications,
 	letter_versions
-} from '$lib/server/db/schema';
-import { LETTER_ORDER, QUESTION_ORDER } from '$lib/server/texts/text-order';
+} from '#lib/server/db/schema.ts';
+import { LETTER_ORDER, QUESTION_ORDER } from '#lib/server/texts/text-order.ts';
 
 export const load: LayoutServerLoad = async ({ parent, params }) => {
 	const layoutData = await parent();

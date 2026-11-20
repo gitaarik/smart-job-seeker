@@ -14,9 +14,9 @@
 
 import { json } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { failOpen } from '$lib/server/queue/redis-fail-open';
-import { HEARTBEAT_MAX_AGE_MS, workerHeartbeatAgeMs } from '$lib/server/ops/heartbeat';
+import { db } from '#lib/server/db/index.ts';
+import { failOpen } from '#lib/server/queue/redis-fail-open.ts';
+import { HEARTBEAT_MAX_AGE_MS, workerHeartbeatAgeMs } from '#lib/server/ops/heartbeat.ts';
 import type { RequestHandler } from './$types';
 
 const DB_TIMEOUT_MS = 3000;

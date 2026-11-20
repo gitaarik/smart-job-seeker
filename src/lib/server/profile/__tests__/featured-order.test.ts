@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 // Only the pure planning is under test; the writes need a database.
-vi.mock('$lib/server/db', () => ({ dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ dbDirect: {} }));
 
 const { planFeaturedOrder } = await import('../featured-order');
 

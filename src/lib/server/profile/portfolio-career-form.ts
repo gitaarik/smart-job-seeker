@@ -14,7 +14,7 @@ import {
 	DEFAULT_ACHIEVEMENTS_PER_ROLE,
 	DEFAULT_BRIEF_ROLES_AFTER_YEARS,
 	type PortfolioThemeConfig
-} from '$lib/portfolio-themes';
+} from '#lib/portfolio-themes.ts';
 
 /** A select's value as the option it names, or null when it names none of them. */
 function option<T extends number | string>(raw: FormDataEntryValue | null, options: readonly T[]) {

@@ -122,28 +122,28 @@ const {
 	};
 });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: dbMock,
 	queryRaw: (query: SQL) => mockQueryRaw(query)
 }));
-vi.mock('$lib/server/profile/default', () => ({
+vi.mock('#lib/server/profile/default.ts', () => ({
 	getProfileByIdentifier: (...args: unknown[]) => mockGetProfile(...args)
 }));
-vi.mock('$lib/server/ai-chat/utils', () => ({ createAndGenerateAiChat: vi.fn() }));
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({ createAndGenerateAiChat: vi.fn() }));
 // The wording library and the write that sets a version's wording are tested
 // against the database in field-variants-writes.test.ts. Here they are stand-ins,
 // so what is under test is what the job's page asks of them.
-vi.mock('$lib/server/profile/field-variants', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/field-variants')>()),
+vi.mock('#lib/server/profile/field-variants.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/field-variants.ts')>()),
 	listFieldVariants: (...args: unknown[]) => mockListVariants(...args),
 	createFieldVariant: (...args: unknown[]) => mockCreateVariant(...args),
 	setVersionWording: (...args: unknown[]) => mockSetVersionWording(...args)
 }));
-vi.mock('$lib/server/documents/content-embeddings', () => ({
+vi.mock('#lib/server/documents/content-embeddings.ts', () => ({
 	semanticScoreUnits: (...args: unknown[]) => mockSemantic(...args),
 	poolKey: (type: string, id: number) => `${type}:${id}`
 }));
-vi.mock('$lib/server/documents/content-retrieval', () => ({
+vi.mock('#lib/server/documents/content-retrieval.ts', () => ({
 	scoreUnitAgainstQuery: (...args: unknown[]) => mockLexical(...args)
 }));
 
@@ -152,10 +152,10 @@ import {
 	profile_version_overrides,
 	profile_version_skill_words,
 	profile_versions
-} from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import type { Candidate } from '$lib/tailoring';
+} from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+import type { Candidate } from '#lib/tailoring.ts';
 import {
 	addSkillWordForApplication,
 	describeOverrides,

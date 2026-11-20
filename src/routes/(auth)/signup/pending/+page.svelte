@@ -68,7 +68,7 @@
 			{:else}
 				<p class="text-[var(--dash-text-secondary)]">
 					Once you've clicked it, <a
-						href={resolve('/login')}
+						href={resolve('login')}
 						class="font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 						>sign in</a
 					> and you're in.
@@ -77,7 +77,7 @@
 		</div>
 
 		<a
-			href={resolve('/')}
+			href={resolve('/(auth)')}
 			class="inline-block text-sm font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 			>Back to homepage</a
 		>

@@ -49,8 +49,8 @@
 
 import { CAPABILITIES, type Capability } from './capabilities';
 import { PROFILE_CAPABILITY_NAMES, verbsFor } from './profile-capabilities';
-import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
-import { targetingFor } from '$lib/server/mcp/entities';
+import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '#lib/server/profile/resources.ts';
+import { targetingFor } from '#lib/server/mcp/entities.ts';
 import { isTextCapability } from './text-version-capabilities';
 import { isTextCommitCapability } from './text-commit-capabilities';
 import { isTextCreateCapability } from './text-create-capabilities';
@@ -60,7 +60,7 @@ import { isTagCapability } from './tag-capabilities';
 import { isVersionCapability } from './version-capabilities';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from './match-config-capability';
 import { isBasicInfoCapability } from './basic-info-capability';
-import { BASIC_INFO_PAGE } from '$lib/server/profile/basic-info';
+import { BASIC_INFO_PAGE } from '#lib/server/profile/basic-info.ts';
 import { DIRECTIVE_CAPABILITY_NAMES, DIRECTIVES_PAGE } from './directive-capability';
 
 /** One area of the app, as the navigation names it. */

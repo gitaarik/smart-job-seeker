@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { formatTime } from '$lib/format-date';
-	import type { TimeFormat } from '$lib/format-date';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { formatTime } from '#lib/format-date.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 
 	interface LogEntry {
 		id: number | string;

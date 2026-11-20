@@ -1,5 +1,5 @@
 import { asc, sql, type SQL } from 'drizzle-orm';
-import { application_letters, application_questions } from '$lib/server/db/schema';
+import { application_letters, application_questions } from '#lib/server/db/schema.ts';
 
 /**
  * `compareTexts` from $lib/texts/text-order.ts as SQL, one table at a time, for

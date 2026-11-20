@@ -8,9 +8,9 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faScaleBalanced, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
-	import { formatCurrency, type FxRates } from '$lib/salary/conversion';
-	import type { EmployedSettings, FreelanceSettings } from '$lib/salary/settings';
-	import { compareAsks } from '$lib/salary/take-home';
+	import { formatCurrency, type FxRates } from '#lib/salary/conversion.ts';
+	import type { EmployedSettings, FreelanceSettings } from '#lib/salary/settings.ts';
+	import { compareAsks } from '#lib/salary/take-home.ts';
 	import BreakdownBar, { type BarSegment } from './BreakdownBar.svelte';
 	import { periodLabel, unitLabel } from './salary-ui';
 

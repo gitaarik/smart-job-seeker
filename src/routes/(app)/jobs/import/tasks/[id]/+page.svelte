@@ -1,32 +1,32 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import { armOn } from '$lib/actions/arm-on';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { onDestroy, onMount, untrack } from 'svelte';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import Card from '../../../../components/Card.svelte';
 	import ImportTaskBlockerList from '../../components/ImportTaskBlockerList.svelte';
 	import AuthBlockNotice from '../../components/AuthBlockNotice.svelte';
-	import { computeImportTaskBlockers } from '$lib/import-tasks/readiness';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { autoSaveField } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import { portalToBody } from '$lib/actions/portal';
-	import PlatformLogo from '$lib/components/PlatformLogo.svelte';
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
+	import { computeImportTaskBlockers } from '#lib/import-tasks/readiness.ts';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { autoSaveField } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import { portalToBody } from '#lib/actions/portal.ts';
+	import PlatformLogo from '#lib/components/PlatformLogo.svelte';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
 	import ScoreBadge from '../../../components/ScoreBadge.svelte';
 	import SkillPill from '../../../components/SkillPill.svelte';
-	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
+	import { adjacentFor, provenanceFor } from '#lib/match-provenance.ts';
 	import SearchTaskFields from '../../../components/SearchTaskFields.svelte';
 	import SourceEditor from '../../components/SourceEditor.svelte';
 	import TaskWhereEditor from '../../components/TaskWhereEditor.svelte';
 	import FilterEditor from '../../components/FilterEditor.svelte';
-	import { formatSalaryRange, searchTaskDisplayName, timeAgo } from '$lib/format';
-	import { page } from '$app/stores';
-	import { formatDateTime, formatMonthDay, formatTime as fmtTime } from '$lib/format-date';
-	import type { TimeFormat } from '$lib/format-date';
+	import { formatSalaryRange, searchTaskDisplayName, timeAgo } from '#lib/format.ts';
+	import { page } from '$app/state';
+	import { formatDateTime, formatMonthDay, formatTime as fmtTime } from '#lib/format-date.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 	import {
 		faArrowLeft,
 		faBuilding,
@@ -74,7 +74,7 @@
 	 * task (its runs, its Start and Stop, its note) under the new task's URL.
 	 *
 	 * Keyed on the id rather than on `data`, so a reload of the same task (the
-	 * `invalidateAll` after a run ends) keeps this object: the editors below
+	 * `refreshAll` after a run ends) keeps this object: the editors below
 	 * reset from it, and would wipe what is being typed into them.
 	 */
 	function taskState(task: PageData['searchTask']) {
@@ -167,7 +167,7 @@
 				method: 'DELETE'
 			});
 			if (res.ok) {
-				goto(resolve('/jobs/import/tasks'));
+				goto(resolve('jobs/import/tasks'));
 			}
 		} finally {
 			isDeleting = false;
@@ -756,8 +756,8 @@
 		if (screenshotSrc) URL.revokeObjectURL(screenshotSrc);
 	});
 
-	const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
-	const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
+	const tz = $derived((page.data as { userTimezone: string | null }).userTimezone || undefined);
+	const tf = $derived((page.data as { timeFormat: TimeFormat }).timeFormat);
 
 	function formatDate(date: Date | string | null): string {
 		return formatDateTime(date, tf, {
@@ -1238,7 +1238,7 @@
 					stopPolling();
 					showBrowser = false;
 					// Invalidate so overview page shows fresh status on navigation
-					invalidateAll();
+					refreshAll();
 				}
 			} catch (err) {
 				console.error('Failed to poll status:', err);
@@ -1280,7 +1280,7 @@
 				stopPolling();
 				showBrowser = false;
 				await loadRuns();
-				await invalidateAll();
+				await refreshAll();
 			} else if (result.status === 'cancellation_requested') {
 				// Worker is still running, transition to "stopping" state
 				searchTask.status = 'stopping';
@@ -1337,7 +1337,7 @@
 			stopPolling();
 			showBrowser = false;
 			await loadRuns();
-			await invalidateAll();
+			await refreshAll();
 		} catch (err) {
 			errorMessage = 'Failed to force stop';
 			console.error(err);
@@ -2154,7 +2154,7 @@
 	<!-- Header -->
 	<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
 		<a
-			href={resolve('/jobs/import/tasks')}
+			href={resolve('jobs/import/tasks')}
 			class="flex shrink-0 items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
@@ -2523,7 +2523,7 @@
 						{/if}
 					{:else}
 						No device connected — <a
-							href={resolve('/jobs/import/devices')}
+							href={resolve('jobs/import/devices')}
 							class="underline hover:text-amber-700">Setup guide</a
 						>
 					{/if}

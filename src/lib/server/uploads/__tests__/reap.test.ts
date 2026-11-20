@@ -22,7 +22,7 @@ import type { SQL } from 'drizzle-orm';
 const mockQuery = vi.fn();
 const mockDeleteUpload = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	queryRawDirect: (q: SQL) => mockQuery(q)
 }));
 vi.mock('../index', () => ({

@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc, count, type SQL } from 'drizzle-orm';
-import { inbound_emails } from '$lib/server/db/schema';
+import { inbound_emails } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const statusFilter = url.searchParams.get('status') || '';

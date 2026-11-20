@@ -39,16 +39,16 @@
  */
 
 import { and, asc, eq, inArray } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profile_document_projects, work_experience_projects } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_document_projects, work_experience_projects } from '#lib/server/db/schema.ts';
 import {
 	HIDEABLE_RESOURCES,
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
-import { deleteRow, readOwnedRow } from '$lib/server/profile/write';
-import { parseTranslationField } from '$lib/server/profile/section-translations';
+} from '#lib/server/profile/resources.ts';
+import { deleteRow, readOwnedRow } from '#lib/server/profile/write.ts';
+import { parseTranslationField } from '#lib/server/profile/section-translations.ts';
 import { describeFieldChanges } from './field-changes';
 import { descendantCounts, PROFILE_CAPABILITIES } from './profile-capabilities';
 import type { CapabilityActor, CapabilityDef, ProposedChange } from './capabilities';

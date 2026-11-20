@@ -4,7 +4,7 @@
 	 * highlightHtml escapes &, <, >, " and ' before it injects any markup: the
 	 * only live tags in its output are the <span> wrappers it adds itself.
 	 */
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import SearchFormProbeRunCard from '../../components/SearchFormProbeRunCard.svelte';
@@ -131,7 +131,7 @@
 			>
 		{:else}
 			<a
-				href={resolve('/admin/job-platforms/search-form-probe')}
+				href={resolve('admin/job-platforms/search-form-probe')}
 				class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]"
 				>← All discovery runs</a
 			>

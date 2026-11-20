@@ -1,9 +1,9 @@
 import type { PageServerLoad } from './$types';
-import { requireAuth } from '$lib/server/auth/guards';
-import { dbDirect as db } from '$lib/server/db';
+import { requireAuth } from '#lib/server/auth/guards.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { users } from '$lib/server/db/schema';
-import { termsVersion } from '$lib/server/legal/texts';
+import { users } from '#lib/server/db/schema.ts';
+import { termsVersion } from '#lib/server/legal/texts.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const user = requireAuth(event);

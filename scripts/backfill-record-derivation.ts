@@ -28,11 +28,11 @@
  *   … --apply --limit 20        # cap the spend on a first run
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, eq, isNull } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
-import { deriveRecordMetadata, shouldDerive } from '$lib/server/ai-chat/record-derivation';
-import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
+import { application_records, applications } from '#lib/server/db/schema.ts';
+import { deriveRecordMetadata, shouldDerive } from '#lib/server/ai-chat/record-derivation.ts';
+import { summarizeApplication } from '#lib/server/ai-chat/application-summary.ts';
 
 const APPLY = process.argv.includes('--apply');
 const LIMIT = (() => {

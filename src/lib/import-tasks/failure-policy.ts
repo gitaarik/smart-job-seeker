@@ -45,7 +45,7 @@
  *   genuinely stuck rather than briefly challenged.
  *
  * No DB or LLM imports: everything here is a deterministic function of its
- * inputs, and the orchestration lives in `$lib/server/import-tasks/auth-block`.
+ * inputs, and the orchestration lives in `#lib/server/import-tasks/auth-block.ts`.
  */
 
 import { isInfrastructureFailure, needsHumanIntervention, type FailureKind } from './failure-kinds';

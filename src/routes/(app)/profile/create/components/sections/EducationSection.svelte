@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { OpenRows } from '$lib/components/open-rows';
+	import { OpenRows } from '#lib/components/open-rows.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -8,7 +8,7 @@
 		faPlus,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { Education } from '$lib/server/resume/types';
+	import type { Education } from '#lib/server/resume/types.ts';
 	import Card from '../../../../components/Card.svelte';
 
 	interface Props {

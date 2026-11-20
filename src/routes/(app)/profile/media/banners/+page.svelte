@@ -1,19 +1,19 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { deserialize, enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { faPanorama } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import Card from '../../../components/Card.svelte';
-	import MediaPicker from '$lib/components/media/MediaPicker.svelte';
+	import MediaPicker from '#lib/components/media/MediaPicker.svelte';
 	import {
 		BANNER_MEDIA_SLOTS,
 		presetName,
 		type BannerMediaSlot,
 		type Crop
-	} from '$lib/media-library';
-	import { BANNER_ALIGNMENTS } from '$lib/banner-templates';
+	} from '#lib/media-library.ts';
+	import { BANNER_ALIGNMENTS } from '#lib/banner-templates.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -39,7 +39,7 @@
 		if (result.type === 'failure' || result.type === 'error') {
 			throw new Error('Could not use that picture');
 		}
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function presetLabel(id: number | null) {

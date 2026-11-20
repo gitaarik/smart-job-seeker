@@ -1,12 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { ai_chats } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { parseBody, followupRequestSchema } from '$lib/server/validation/api-schemas';
-import { createFollowupAiChat } from '$lib/server/ai-chat/create-followup';
-import { requireCredits } from '$lib/server/billing/require-credits';
+import { ai_chats } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { parseBody, followupRequestSchema } from '#lib/server/validation/api-schemas.ts';
+import { createFollowupAiChat } from '#lib/server/ai-chat/create-followup.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

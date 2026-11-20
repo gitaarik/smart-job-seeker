@@ -5,19 +5,19 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	extractTextFromFile,
 	isSupportedMimeType,
 	mapJsonResumeToInternal,
 	parseResumeWithLLM,
 	validateJsonResume
-} from '$lib/server/resume';
-import { getFile } from '$lib/server/files';
-import { logImportEvent } from '$lib/server/import-log';
-import { dbDirect as db } from '$lib/server/db';
+} from '#lib/server/resume/index.ts';
+import { getFile } from '#lib/server/files.ts';
+import { logImportEvent } from '#lib/server/import-log.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { import_logs } from '$lib/server/db/schema';
+import { import_logs } from '#lib/server/db/schema.ts';
 
 const FORMAT_TO_MIME: Record<string, string> = {
 	PDF: 'application/pdf',

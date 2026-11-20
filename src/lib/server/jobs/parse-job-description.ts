@@ -24,14 +24,14 @@
 import { prepareJobTextForLlm } from './posting-text';
 import { type ExtractedHeader, sanitizeExtractedHeader } from './extracted-header';
 import { recoverPostingHeader } from './header-recovery';
-import { profileOwnerId, runProfileAiChat } from '$lib/server/ai-chat/job-utils';
+import { profileOwnerId, runProfileAiChat } from '#lib/server/ai-chat/job-utils.ts';
 import {
 	glance,
 	isInTrace,
 	isTelemetryEnabled,
 	startTrace
-} from '$lib/server/monitoring/telemetry';
-import { isValidJobPostingDate, parseRelativeDate } from '$lib/tools/date-utils';
+} from '#lib/server/monitoring/telemetry.ts';
+import { isValidJobPostingDate, parseRelativeDate } from '#lib/tools/date-utils.ts';
 
 /**
  * Optional hints about the job we expect to find, used to disambiguate pages

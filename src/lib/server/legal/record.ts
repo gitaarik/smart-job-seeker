@@ -8,9 +8,9 @@
  * `recordTermsAcceptance` once the account exists.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { legal_acceptances, users } from '$lib/server/db/schema';
+import { legal_acceptances, users } from '#lib/server/db/schema.ts';
 import { termsVersion } from './texts';
 
 /** The `legal_acceptances.document` values. */

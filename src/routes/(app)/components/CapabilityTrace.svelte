@@ -20,8 +20,8 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp, faWrench } from '@fortawesome/free-solid-svg-icons';
-	import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
-	import type { ReadRecord } from '$lib/server/documents/retrieval-record';
+	import type { CapabilityRecord } from '#lib/server/ai-chat/capability-record.ts';
+	import type { ReadRecord } from '#lib/server/documents/retrieval-record.ts';
 
 	// `reads`: what the agent's turn read, in full (planning/ASSISTANT-AGENT.md
 	// § Records and tracing), beside why it could propose what it did. The

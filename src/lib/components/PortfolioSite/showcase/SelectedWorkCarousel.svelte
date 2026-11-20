@@ -23,7 +23,7 @@
 		faChevronDown,
 		faCircleCheck
 	} from '@fortawesome/free-solid-svg-icons';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import TechTags from './TechTags.svelte';
 	import { hasStory, SLIDE_TECHNOLOGIES, type WorkSlide } from './work-slides';
 

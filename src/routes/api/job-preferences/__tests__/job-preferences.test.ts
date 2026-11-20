@@ -19,7 +19,7 @@ const mockUpdateWhere = vi.fn().mockReturnValue({ returning: mockUpdateReturning
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profiles: { findFirst: (...a: unknown[]) => mockProfilesFindFirst(...a) },
@@ -37,7 +37,7 @@ vi.mock('drizzle-orm', () => ({
 	and: vi.fn((...args: unknown[]) => args)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
 	match_config: {
 		id: 'match_config.id',

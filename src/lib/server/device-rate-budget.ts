@@ -21,9 +21,9 @@
  * the profile owner can run a task, so that user is the sharee).
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, gt } from 'drizzle-orm';
-import { profiles, search_task_runs, search_tasks } from '$lib/server/db/schema';
+import { profiles, search_task_runs, search_tasks } from '#lib/server/db/schema.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

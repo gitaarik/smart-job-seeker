@@ -6,9 +6,9 @@
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPlug, faTrash } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { timeAgo } from '$lib/format';
-	import { formatDateTime } from '$lib/format-date';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { timeAgo } from '#lib/format.ts';
+	import { formatDateTime } from '#lib/format-date.ts';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();

@@ -17,17 +17,17 @@ import {
 } from '@langchain/core/messages';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 import { llmCache } from './cache.js';
 import { assertUnderDailyLimit, DailySpendLimitReached, recordSpend } from './spend-limit.js';
 import { callName, recordSentMessages, traceAttempt, traceLlmCall } from './trace';
-import { DEFAULT_TEMPERATURE } from '$lib/server/ai-chat/prompt-templates';
-import { promptRef } from '$lib/server/ai-chat/prompt-registry';
+import { DEFAULT_TEMPERATURE } from '#lib/server/ai-chat/prompt-templates.ts';
+import { promptRef } from '#lib/server/ai-chat/prompt-registry.ts';
 import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
 import { isSchemaEcho } from './schema-echo';
-import { isRetryableError, withRetry } from '$lib/server/utils/retry';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
-import { config } from '$lib/server/config';
+import { isRetryableError, withRetry } from '#lib/server/utils/retry.ts';
+import { errorTracker } from '#lib/server/monitoring/error-tracker.ts';
+import { config } from '#lib/server/config.ts';
 
 /**
  * Base class for LLM errors

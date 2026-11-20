@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profile_versions: { findMany: vi.fn() },
@@ -20,7 +20,7 @@ vi.mock('$lib/server/db', () => ({
 }));
 
 import { getVersionCoverage, hiddenSkillsKey } from '../hidden-required-skills';
-import type { HiddenSkill } from '$lib/version-coverage';
+import type { HiddenSkill } from '#lib/version-coverage.ts';
 
 /**
  * The hidden lists alone — a view over the coverage map, which is what the
@@ -39,7 +39,7 @@ async function getHiddenRequiredSkills(
 	}
 	return result;
 }
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { findMany } from '../../__tests__/db-mocks';
 
 const PROFILE_ONLY = ['!resume', '!cv'];

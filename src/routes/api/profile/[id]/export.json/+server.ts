@@ -1,12 +1,12 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { generateSlug } from '$lib/server/utils/slug-generator';
-import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
-import type { ExportedSalarySettings } from '$lib/server/export/types';
+import { profiles } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { generateSlug } from '#lib/server/utils/slug-generator.ts';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
+import type { ExportedSalarySettings } from '#lib/server/export/types.ts';
 
 /**
  * This endpoint's own payload shape. Deliberately not

@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { acceptContact, declineContact, removeContact } from '$lib/server/contacts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { acceptContact, declineContact, removeContact } from '#lib/server/contacts.ts';
 
 /**
  * PATCH /api/contacts/[id] — Accept or decline a contact request

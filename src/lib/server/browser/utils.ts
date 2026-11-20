@@ -8,7 +8,7 @@
 
 import { existsSync } from 'fs';
 import { type BrowserContext, chromium } from 'patchright';
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [

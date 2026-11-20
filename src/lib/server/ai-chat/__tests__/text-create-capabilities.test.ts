@@ -24,7 +24,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
 /**
  * Labels already on the profile, or on the application, per test. An object
@@ -53,7 +53,7 @@ vi.mock('../entity-versions', async (importOriginal) => ({
 	countVersions: () => Promise.resolve(versionCount)
 }));
 
-vi.mock('$lib/server/applications/profile-applications', () => ({
+vi.mock('#lib/server/applications/profile-applications.ts', () => ({
 	readProfileApplication: (id: number, profileId: number) =>
 		Promise.resolve(
 			id === OWNED_APPLICATION && profileId === 12
@@ -62,8 +62,8 @@ vi.mock('$lib/server/applications/profile-applications', () => ({
 		)
 }));
 
-vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('$lib/server/texts/profile-texts')>();
+vi.mock('#lib/server/texts/profile-texts.ts', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/texts/profile-texts.ts')>();
 
 	const stub = (kind: 'letter' | 'question' | 'story' | 'cheat_sheet') => {
 		const def = actual.TEXT_KINDS[kind];
@@ -127,7 +127,7 @@ vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
 });
 
 const { QUESTION_MAX, TEXT_CREATE_KIND_NAMES, TEXT_KINDS, TEXT_KIND_NAMES } =
-	await import('$lib/server/texts/profile-texts');
+	await import('#lib/server/texts/profile-texts.ts');
 const { TEXT_CREATE_CAPABILITIES, TEXT_CREATE_CAPABILITY_NAMES, isTextCreateCapability } =
 	await import('../text-create-capabilities');
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
-	import { LOCALES, BASE_LOCALE } from '$lib/resume-translations';
-	import { translations } from '$lib/stores/translations.svelte';
+	import AutoGrowTextarea from '#lib/components/AutoGrowTextarea.svelte';
+	import { LOCALES, BASE_LOCALE } from '#lib/resume-translations.ts';
+	import { translations } from '#lib/stores/translations.svelte.ts';
 
 	interface Props {
 		entity: string;

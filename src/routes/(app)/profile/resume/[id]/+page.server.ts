@@ -1,22 +1,22 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
-import { profile_versions, profile_version_extensions, profiles } from '$lib/server/db/schema';
+import { dbDirect as db, queryRaw, sql } from '#lib/server/db/index.ts';
+import { profile_versions, profile_version_extensions, profiles } from '#lib/server/db/schema.ts';
 import { eq, and, ne, asc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../../utils';
 import {
 	generateVersionPdfs,
 	regenerateStoredPdfs
-} from '$lib/server/profile/generate-version-pdfs';
-import { anonymityReach, anonymousThrough } from '$lib/server/profile/anonymity';
-import { versionDeleteImpact } from '$lib/server/profile/version-tags';
-import { deleteVersion, renameVersion, VersionError } from '$lib/server/profile/versions';
-import { chargeCredits } from '$lib/server/billing/credits';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { buildToggles } from '$lib/resume-contact-fields';
-import { isAnonymous, withAnonymous } from '$lib/resume-anonymity';
-import { isTailoredSlug } from '$lib/version-overrides';
-import { wordingStatesFor } from '$lib/server/profile/field-variants';
+} from '#lib/server/profile/generate-version-pdfs.ts';
+import { anonymityReach, anonymousThrough } from '#lib/server/profile/anonymity.ts';
+import { versionDeleteImpact } from '#lib/server/profile/version-tags.ts';
+import { deleteVersion, renameVersion, VersionError } from '#lib/server/profile/versions.ts';
+import { chargeCredits } from '#lib/server/billing/credits.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { buildToggles } from '#lib/resume-contact-fields.ts';
+import { isAnonymous, withAnonymous } from '#lib/resume-anonymity.ts';
+import { isTailoredSlug } from '#lib/version-overrides.ts';
+import { wordingStatesFor } from '#lib/server/profile/field-variants.ts';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();

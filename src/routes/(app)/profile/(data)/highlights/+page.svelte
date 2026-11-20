@@ -13,7 +13,7 @@
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-	import { iconFor } from '$lib/components/PortfolioSite/showcase/icons';
+	import { iconFor } from '#lib/components/PortfolioSite/showcase/icons.ts';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { htmlToMarkdown, isLikelyHtml } from '$lib/utils/html-to-markdown';
+import { htmlToMarkdown, isLikelyHtml } from '#lib/utils/html-to-markdown.ts';
 
 describe('isLikelyHtml', () => {
 	it('detects TipTap block/inline markup', () => {

@@ -5,7 +5,7 @@ import {
 	buildSettingsExport,
 	getProfileName,
 	type SettingsExportOptions
-} from '$lib/server/export';
+} from '#lib/server/export/index.ts';
 
 function parseFlag(url: URL, key: string): boolean {
 	const v = url.searchParams.get(key);

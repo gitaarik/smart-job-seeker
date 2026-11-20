@@ -10,7 +10,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../../profile/components/SectionHeader.svelte';
 	import Card from '../../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -142,7 +142,7 @@
 <div class="space-y-6">
 	<div>
 		<a
-			href={resolve('/admin/matcher')}
+			href={resolve('admin/matcher')}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

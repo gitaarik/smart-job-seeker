@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
@@ -41,7 +41,7 @@
 
 			success = true;
 			// Redirect to login after a short delay
-			setTimeout(() => goto(resolve('/login')), 2000);
+			setTimeout(() => goto(resolve('login')), 2000);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'An error occurred';
 		} finally {
@@ -75,7 +75,7 @@
 			</div>
 			<div class="text-center">
 				<a
-					href={resolve('/forgot-password')}
+					href={resolve('forgot-password')}
 					class="font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 				>
 					Request new reset link

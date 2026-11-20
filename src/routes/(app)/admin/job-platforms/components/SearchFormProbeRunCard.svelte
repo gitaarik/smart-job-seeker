@@ -16,7 +16,7 @@
 	 * now drives the search UI directly every run, so there's nothing to
 	 * "promote into a preset" from a discovery run.
 	 */
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCopy, faDesktop } from '@fortawesome/free-solid-svg-icons';

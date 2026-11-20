@@ -8,9 +8,9 @@
  * do not overwrite `answer` directly.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, isNotNull } from 'drizzle-orm';
-import { application_questions, question_versions } from '$lib/server/db/schema';
+import { application_questions, question_versions } from '#lib/server/db/schema.ts';
 import {
 	applicantMessage,
 	createEntityFollowup,

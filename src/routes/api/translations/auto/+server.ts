@@ -1,20 +1,20 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { profile_translations } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { collectTranslatable } from '$lib/server/profile/translations';
-import { touchProfile } from '$lib/server/profile/touch-profile';
+import { profile_translations } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
+import { collectTranslatable } from '#lib/server/profile/translations.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
 import {
 	CHUNK_SIZE,
 	translateFields,
 	type FieldToTranslate
-} from '$lib/server/profile/auto-translate';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { BASE_LOCALE, isKnownLocale, translationKey } from '$lib/resume-translations';
+} from '#lib/server/profile/auto-translate.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { BASE_LOCALE, isKnownLocale, translationKey } from '#lib/resume-translations.ts';
 
 /**
  * Auto-translate profile fields into a target language via the configured LLM

@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-node';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { sentrySvelteKit } from '@sentry/sveltekit/vite';
@@ -11,7 +13,11 @@ export default defineConfig({
 		// second copy beside the external packages that import them. Nothing here
 		// records spans (tracesSampleRate 0), so it would buy nothing.
 		sentrySvelteKit({ autoInstrument: false, buildTimeInstrumentation: false }),
-		sveltekit()
+		// SvelteKit 3 takes its config here; there is no svelte.config.js.
+		sveltekit({
+			preprocess: vitePreprocess(),
+			adapter: adapter()
+		})
 	],
 	ssr: {
 		// Keep CJS packages external so Node loads them natively instead of

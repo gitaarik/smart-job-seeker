@@ -11,7 +11,7 @@ import { encryptCredential } from '../crypto';
 // Mock the db module with Drizzle-style API
 const mockFindFirst = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			api_keys: {
@@ -128,7 +128,7 @@ describe('verifyApiKey', () => {
 			revoked: false,
 			expires_at: null
 		});
-		const { db } = await import('$lib/server/db');
+		const { db } = await import('#lib/server/db/index.ts');
 		await verifyApiKey('sjs_valid');
 		expect(db.update).toHaveBeenCalled();
 	});

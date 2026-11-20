@@ -17,7 +17,7 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import type { Embeddings } from '@langchain/core/embeddings';
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 import { traceEmbedding } from './trace';
 
 /** API key for the configured embedding provider, or "" if absent. */

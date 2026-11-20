@@ -13,9 +13,9 @@
  * rather than a bespoke load-function block.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { applications, jobs } from '$lib/server/db/schema';
+import { applications, jobs } from '#lib/server/db/schema.ts';
 import type {
 	ContextEntity,
 	ContextSource,
@@ -36,12 +36,12 @@ import {
 import { buildCapabilityRecord, type CapabilityRecord } from './capability-record';
 import { chatQuery } from './relevance-queries';
 import { matchProfileSections } from './profile-matching';
-import { readOwnedRow } from '$lib/server/profile/write';
+import { readOwnedRow } from '#lib/server/profile/write.ts';
 import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
+} from '#lib/server/profile/resources.ts';
 import { type ProfileCapability, resourceForCapability, verbsFor } from './profile-capabilities';
 
 /**

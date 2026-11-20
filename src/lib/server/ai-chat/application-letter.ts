@@ -3,9 +3,9 @@
  * Creates an ai_chats record with applicant context in system prompt and job context in user prompt
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { application_letters } from '$lib/server/db/schema';
+import { application_letters } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import type { ContextSource, GenerationContextOption } from './generation-context';
 import { letterQuery } from './relevance-queries';

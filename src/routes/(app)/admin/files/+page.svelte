@@ -1,6 +1,6 @@
 <script lang="ts">
 	/*
-	 * Every href here comes from buildUrl(), which calls resolve('/admin/files')
+	 * Every href here comes from buildUrl(), which calls resolve('admin/files')
 	 * itself and appends the query. The rule does not follow a function call.
 	 */
 	import type { PageData } from './$types';
@@ -75,7 +75,7 @@
 	}
 
 	function buildUrl(params: Record<string, string>): string {
-		const base = resolve('/admin/files');
+		const base = resolve('admin/files');
 		const search = new SvelteURLSearchParams();
 		const merged = { type: typeFilter, usage: usageFilter, page: '1', ...params };
 		for (const [k, v] of Object.entries(merged)) {

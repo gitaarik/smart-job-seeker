@@ -12,8 +12,8 @@
  * database; the caller decides what to apply. See `proposalsFor`.
  */
 
-import { config } from '$lib/server/config';
-import { normalizeSkill } from '$lib/skills';
+import { config } from '#lib/server/config.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 export class GitHubFetchError extends Error {
 	constructor(

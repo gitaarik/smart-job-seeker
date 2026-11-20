@@ -8,10 +8,10 @@
  */
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { application_records, applications, files } from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
+import { application_records, applications, files } from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
 import { getSelectedProfileId } from '../../../../profile/utils';
 
 export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {

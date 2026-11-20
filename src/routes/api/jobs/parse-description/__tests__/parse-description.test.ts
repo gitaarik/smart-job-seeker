@@ -12,13 +12,13 @@ const mockGetSelectedProfileId = vi.hoisted(() => vi.fn());
 const mockParseJobDescription = vi.hoisted(() => vi.fn());
 const mockRememberParse = vi.hoisted(() => vi.fn());
 
-vi.mock('$lib/server/profile/selected-profile', () => ({
+vi.mock('#lib/server/profile/selected-profile.ts', () => ({
 	getSelectedProfileId: mockGetSelectedProfileId
 }));
-vi.mock('$lib/server/jobs/parse-job-description', () => ({
+vi.mock('#lib/server/jobs/parse-job-description.ts', () => ({
 	parseJobDescription: mockParseJobDescription
 }));
-vi.mock('$lib/server/jobs/parse-cache', () => ({
+vi.mock('#lib/server/jobs/parse-cache.ts', () => ({
 	parseCacheKey: vi.fn(() => 'token-1'),
 	rememberParse: mockRememberParse
 }));

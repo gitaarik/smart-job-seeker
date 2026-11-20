@@ -21,8 +21,8 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCompass, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
-	import { summaryIsWorthWriting } from '$lib/application-records';
-	import { timeAgo } from '$lib/format';
+	import { summaryIsWorthWriting } from '#lib/application-records.ts';
+	import { timeAgo } from '#lib/format.ts';
 
 	let {
 		summary,

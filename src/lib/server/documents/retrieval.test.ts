@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const expandForRetrieval = vi.fn();
-vi.mock('$lib/server/job/skill-ontology', () => ({
+vi.mock('#lib/server/job/skill-ontology.ts', () => ({
 	expandForRetrieval: (...args: unknown[]) => expandForRetrieval(...args)
 }));
 
@@ -10,7 +10,7 @@ vi.mock('$lib/server/job/skill-ontology', () => ({
 const sideProjects = vi.fn();
 const workExperiences = vi.fn(async (): Promise<unknown[]> => []);
 const semanticScoreProjects = vi.fn();
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			side_projects: { findMany: () => sideProjects() },
@@ -23,7 +23,7 @@ vi.mock('./project-embeddings', async (importOriginal) => ({
 	semanticScoreProjects: (...args: unknown[]) => semanticScoreProjects(...args)
 }));
 
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 import {
 	buildDocEvidence,
 	type DocRow,

@@ -1,22 +1,22 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
 	agent_messages
-} from '$lib/server/db/schema';
-import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { agentChatSchema, parseBody } from '$lib/server/validation/api-schemas';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import type { ChatMessage } from '$lib/server/llm';
+} from '#lib/server/db/schema.ts';
+import { requireAuth, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
+import { agentChatSchema, parseBody } from '#lib/server/validation/api-schemas.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
 import {
 	createAndGenerateAiChat,
 	reserveAiChatId,
 	reserveConversationId
-} from '$lib/server/ai-chat/utils';
-import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
+} from '#lib/server/ai-chat/utils.ts';
+import { resolveChatContext } from '#lib/server/ai-chat/chat-context.ts';
 import { EMPTY_CONTEXT_VARIABLES } from './placeholders';
 import { isStaffUser } from './scope';
 import {
@@ -28,7 +28,7 @@ import {
 	type LiveCapability,
 	liveLanguages,
 	renderCapabilityPrompt
-} from '$lib/server/ai-chat/capabilities';
+} from '#lib/server/ai-chat/capabilities.ts';
 import {
 	dedupeProposals,
 	type ProposalCandidate,
@@ -36,23 +36,23 @@ import {
 	renderDropNotice,
 	type StoredProposal,
 	traceProposal
-} from '$lib/server/ai-chat/agent/proposals';
-import { summarizeProposal } from '$lib/server/ai-chat/proposal-summary';
+} from '#lib/server/ai-chat/agent/proposals.ts';
+import { summarizeProposal } from '#lib/server/ai-chat/proposal-summary.ts';
 import {
 	type ProposalOutcome,
 	renderProposalOutcomes
-} from '$lib/server/ai-chat/proposal-outcomes';
+} from '#lib/server/ai-chat/proposal-outcomes.ts';
 import {
 	deriveTitle,
 	MAX_CONTEXT_MESSAGES,
 	readProposalOutcomes
-} from '$lib/server/ai-chat/agent/history';
-import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
-import { type DirectLogOutcome, logReportedEvents } from '$lib/server/ai-chat/direct-log';
-import { aiChatTraceSeed, startTrace, traceStep } from '$lib/server/monitoring/telemetry';
-import { config } from '$lib/server/config';
+} from '#lib/server/ai-chat/agent/history.ts';
+import { ASSISTANT_PROFILE_FIELDS } from '#lib/server/ai-chat/profile-fields.ts';
+import { type DirectLogOutcome, logReportedEvents } from '#lib/server/ai-chat/direct-log.ts';
+import { aiChatTraceSeed, startTrace, traceStep } from '#lib/server/monitoring/telemetry.ts';
+import { config } from '#lib/server/config.ts';
 import { respondWithAgent } from './agent-turn';
-import { scoreGeneration } from '$lib/server/monitoring/product-scores';
+import { scoreGeneration } from '#lib/server/monitoring/product-scores.ts';
 
 /**
  * Field-by-field diff for the card, using the values captured when the

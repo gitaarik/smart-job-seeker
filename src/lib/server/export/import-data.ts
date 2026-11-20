@@ -3,7 +3,7 @@
  */
 
 import { eq, and, ne } from 'drizzle-orm';
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import {
 	profiles,
 	highlights,
@@ -33,10 +33,10 @@ import {
 	application_questions,
 	application_records,
 	jobs
-} from '$lib/server/db/schema';
-import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
-import { toDateString } from '$lib/tools/date-utils';
-import { asWorkMode } from '$lib/work-mode';
+} from '#lib/server/db/schema.ts';
+import { generateVersionPdfs } from '#lib/server/profile/generate-version-pdfs.ts';
+import { toDateString } from '#lib/tools/date-utils.ts';
+import { asWorkMode } from '#lib/work-mode.ts';
 import {
 	deleteProfileDocuments,
 	emptyCreatedProjectIds,
@@ -59,12 +59,12 @@ import {
 	type MediaLibraryIdMaps
 } from './import-media-library';
 import { legacyNoteEntries } from './legacy-notes';
-import { salaryFromExport, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import { salaryFromExport, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
 import {
 	certificateFilesByName,
 	restoreCertificateFiles
-} from '$lib/server/profile/certificate-file';
+} from '#lib/server/profile/certificate-file.ts';
 
 // Helper to convert JSON value for database insert
 function toJsonValue(value: unknown): unknown | undefined {

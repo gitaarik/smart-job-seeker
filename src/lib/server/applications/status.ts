@@ -35,9 +35,9 @@
  * is not a data error.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq } from 'drizzle-orm';
-import { application_status_log, applications } from '$lib/server/db/schema';
+import { application_status_log, applications } from '#lib/server/db/schema.ts';
 import {
 	blankRound,
 	canEndUnsent,
@@ -52,8 +52,8 @@ import {
 	type InterviewRound,
 	type NextStep,
 	type StatusFacts
-} from '$lib/application-status';
-import { today } from '$lib/application-records';
+} from '#lib/application-status.ts';
+import { today } from '#lib/application-records.ts';
 
 /**
  * The statuses anything may set.

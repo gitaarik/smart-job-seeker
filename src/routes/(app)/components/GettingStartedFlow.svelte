@@ -11,7 +11,7 @@
 		MIN_SKILLS_FOR_MATCHING,
 		isProfileReadyForMatching,
 		type ProfileCompleteness
-	} from '$lib/profile-completeness';
+	} from '#lib/profile-completeness.ts';
 
 	interface Props {
 		completeness: ProfileCompleteness;

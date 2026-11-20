@@ -12,11 +12,11 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { clickOutside, keepInView } from '$lib/actions/popover';
-	import { arraysEqual, autoSaveField } from '$lib/components/auto-save.svelte';
-	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
-	import VersionTagPicker from '$lib/components/VersionTagPicker.svelte';
-	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
+	import { clickOutside, keepInView } from '#lib/actions/popover.ts';
+	import { arraysEqual, autoSaveField } from '#lib/components/auto-save.svelte.ts';
+	import ShowOnSwitches from '#lib/components/ShowOnSwitches.svelte';
+	import VersionTagPicker from '#lib/components/VersionTagPicker.svelte';
+	import VisibilityMark from '#lib/components/VisibilityMark.svelte';
 	import {
 		BASE_TEMPLATE_TAGS,
 		isHiddenFromDocuments,
@@ -24,7 +24,7 @@
 		setShownOn,
 		shownTemplates,
 		versionTagsOf
-	} from '$lib/profile-visibility';
+	} from '#lib/profile-visibility.ts';
 
 	export interface SkillItem {
 		name: string;

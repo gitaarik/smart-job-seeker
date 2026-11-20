@@ -18,8 +18,8 @@
  * (2026-09-01) changed nothing, because the gap is recall.
  */
 import { count, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { work_experiences } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { work_experiences } from '#lib/server/db/schema.ts';
 
 export async function isThinProfile(profileId: number): Promise<boolean> {
 	const [row] = await db

@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, gt, like, inArray, desc, count } from 'drizzle-orm';
 import {
 	users as usersTable,
@@ -8,16 +8,16 @@ import {
 	verifications,
 	subscriptions,
 	api_keys
-} from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth/better-auth';
-import { sendEmail } from '$lib/server/email';
-import { getEnv } from '$lib/tools/get-env';
-import { PLAN_LIMITS, type PlanId } from '$lib/server/billing/plans';
+} from '#lib/server/db/schema.ts';
+import { auth } from '#lib/server/auth/better-auth.ts';
+import { sendEmail } from '#lib/server/email/index.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { PLAN_LIMITS, type PlanId } from '#lib/server/billing/plans.ts';
 import {
 	applyInviteGrants,
 	PLAN_DURATION_MONTHS,
 	parseInviteGrants
-} from '$lib/server/auth/invite-grants';
+} from '#lib/server/auth/invite-grants.ts';
 import crypto from 'crypto';
 
 /** Escape a value being dropped into the invite email's HTML body. */

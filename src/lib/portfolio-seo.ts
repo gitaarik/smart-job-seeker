@@ -14,9 +14,9 @@
  * http.
  */
 
-import { assetUrl } from '$lib/presentation-templates';
-import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
-import type { PortfolioThemeConfig } from '$lib/portfolio-themes';
+import { assetUrl } from '#lib/presentation-templates.ts';
+import { getProfilePhotoUrl } from '#lib/utils/profile-photo-url.ts';
+import type { PortfolioThemeConfig } from '#lib/portfolio-themes.ts';
 
 /** The addresses a page needs for its head; worked out on the server, which knows the app's own. */
 export interface PortfolioSeoUrls {

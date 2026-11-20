@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
  */
 async function loadWith(env: Record<string, string>) {
 	vi.resetModules();
-	vi.doMock('$lib/tools/get-env', () => ({
+	vi.doMock('#lib/tools/get-env.ts', () => ({
 		getEnv: (key: string, fallback = '') => env[key] ?? fallback
 	}));
 	return (await import('../config')).config;

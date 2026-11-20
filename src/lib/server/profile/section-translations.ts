@@ -3,7 +3,7 @@
  *
  * English lives in a section's own columns; every other language is a sparse
  * overlay in `profile_translations`, keyed by (entity, id, field, locale) — see
- * `$lib/resume-translations`. The profile pages write that overlay through
+ * `#lib/resume-translations.ts`. The profile pages write that overlay through
  * their own endpoint, beside the column rather than through it, and the
  * assistant and the MCP server could only ever write the column. So every
  * agent edit of a translated field left the Dutch CV saying what the English
@@ -41,9 +41,9 @@
  */
 
 import { and, eq, inArray } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profile_translations } from '$lib/server/db/schema';
-import { isTranslatable, localeLabel, TRANSLATION_LOCALES } from '$lib/resume-translations';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_translations } from '#lib/server/db/schema.ts';
+import { isTranslatable, localeLabel, TRANSLATION_LOCALES } from '#lib/resume-translations.ts';
 import { assistantFields, PROFILE_RESOURCES, type ProfileResourceName } from './resources';
 import { BASIC_INFO_COLUMNS, PROFILE_ROW } from './basic-info';
 import { isEntityOwned } from './translations';

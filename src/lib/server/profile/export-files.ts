@@ -3,10 +3,10 @@
  * Handles querying profile_exports table and retrieving files
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc, isNull } from 'drizzle-orm';
-import { profile_exports } from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
+import { profile_exports } from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
 
 /**
  * Query parameters for finding profile exports

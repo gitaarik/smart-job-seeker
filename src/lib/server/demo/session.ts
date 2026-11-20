@@ -9,7 +9,7 @@
 
 import type { RequestEvent } from '@sveltejs/kit';
 import { parse as parseSetCookie } from 'set-cookie-parser';
-import { auth } from '$lib/server/auth/better-auth';
+import { auth } from '#lib/server/auth/better-auth.ts';
 import type { DemoCredentials } from './provision';
 
 /** Sign the demo user in and copy Better Auth's session cookies onto `event`. */

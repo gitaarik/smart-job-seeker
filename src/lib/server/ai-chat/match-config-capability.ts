@@ -30,10 +30,10 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { match_config } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { match_config } from '#lib/server/db/schema.ts';
 import type { CapabilityDef, CapabilityTarget } from './capabilities';
-import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
+import { MAX_BELOW_ASK_TOLERANCE_PCT } from '#lib/salary/pay-fit.ts';
 import {
 	EXPERIENCE_LEVEL_OPTIONS,
 	JOB_TYPE_OPTIONS,
@@ -41,9 +41,9 @@ import {
 	readMatchPreferences,
 	writeMatchPreferences,
 	type MatchPreferenceValues
-} from '$lib/server/job/match-preferences';
-import { type PreferredPlace, preferredLocationTexts } from '$lib/data/places';
-import { resolvePlaceText } from '$lib/server/places';
+} from '#lib/server/job/match-preferences.ts';
+import { type PreferredPlace, preferredLocationTexts } from '#lib/data/places.ts';
+import { resolvePlaceText } from '#lib/server/places.ts';
 
 export type MatchConfigCapability = 'edit_match_config';
 

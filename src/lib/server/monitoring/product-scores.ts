@@ -20,8 +20,8 @@
  * action has succeeded, and the client sends its queue on its own.
  */
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { agent_message_proposals, agent_messages, ai_chats } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { agent_message_proposals, agent_messages, ai_chats } from '#lib/server/db/schema.ts';
 import { langfuseClient } from './langfuse-client';
 import { getEnvironmentName } from './sentry';
 import { sendsToLangfuse } from './telemetry';

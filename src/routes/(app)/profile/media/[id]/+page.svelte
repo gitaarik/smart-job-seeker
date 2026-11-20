@@ -12,8 +12,8 @@
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import Card from '../../../components/Card.svelte';
-	import CropEditor from '$lib/components/media/CropEditor.svelte';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import CropEditor from '#lib/components/media/CropEditor.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import {
 		formatBytes,
 		itemPreviewUrl,
@@ -23,7 +23,7 @@
 		OUTPUT_FORMATS,
 		presetName,
 		type Crop
-	} from '$lib/media-library';
+	} from '#lib/media-library.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

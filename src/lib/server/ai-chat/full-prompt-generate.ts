@@ -3,9 +3,9 @@
  * Handles generating and updating full prompts for AI chats by combining system and user prompts
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { ai_chats } from '$lib/server/db/schema';
+import { ai_chats } from '#lib/server/db/schema.ts';
 import { getInterpolatedPrompts, makeFullPrompt } from './utils';
 
 /**

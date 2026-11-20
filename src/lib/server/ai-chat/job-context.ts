@@ -11,14 +11,14 @@
  * generation-context.ts.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { applications, jobs } from '$lib/server/db/schema';
+import { applications, jobs } from '#lib/server/db/schema.ts';
 import {
 	COMPACT_COLUMNS,
 	promptJobDescription,
 	type CompactableJob
-} from '$lib/server/jobs/compact-description';
+} from '#lib/server/jobs/compact-description.ts';
 
 export interface JobDetailsRow {
 	/**

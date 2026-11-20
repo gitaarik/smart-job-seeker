@@ -1,7 +1,12 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { activateApiKey, deleteApiKey, renameApiKey, revokeApiKey } from '$lib/server/auth/api-key';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import {
+	activateApiKey,
+	deleteApiKey,
+	renameApiKey,
+	revokeApiKey
+} from '#lib/server/auth/api-key.ts';
 
 /**
  * PATCH /api/api-keys/[id] — Update an API key (activate or rename).

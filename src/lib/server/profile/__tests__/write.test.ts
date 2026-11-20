@@ -15,7 +15,7 @@
  *    is the difference between a list that stays in date order and one that has
  *    silently switched to manual.
  *
- * Only `$lib/server/db` is mocked. Drizzle and the real schema run, so the
+ * Only `#lib/server/db/index.ts` is mocked. Drizzle and the real schema run, so the
  * queries this layer builds are the ones a resource declaration actually
  * produces.
  */
@@ -72,14 +72,14 @@ vi.mock('../change-log', () => ({
 
 // The reaper's SQL is proven against Postgres by scripts/verify-orphan-reap.ts;
 // here it is a spy, so these assert which files the write layer hands it.
-vi.mock('$lib/server/uploads/reap', () => ({
+vi.mock('#lib/server/uploads/reap.ts', () => ({
 	reapFileRefs: (refs: { fileIds: string[] }) => {
 		state.reaped.push(refs.fileIds);
 		return Promise.resolve({ failures: [] });
 	}
 }));
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	// `.where()` is awaited directly by the max-sort query, chained with
 	// `.limit()` by the row read and with `.orderBy()` by the list read, so it
 	// has to be both a promise and an object.
@@ -169,7 +169,7 @@ const {
 	work_experiences,
 	work_experience_projects,
 	work_experience_project_technologies
-} = await import('$lib/server/db/schema');
+} = await import('#lib/server/db/schema.ts');
 const { PROFILE_RESOURCES } = await import('../resources');
 type ProfileResourceName = keyof typeof PROFILE_RESOURCES;
 const {
@@ -186,7 +186,7 @@ const {
 	setRowVisible,
 	updateRow
 } = await import('../write');
-const { isHiddenFromDocuments } = await import('$lib/profile-visibility');
+const { isHiddenFromDocuments } = await import('#lib/profile-visibility.ts');
 
 const ACTOR: ProfileActor = { profileId: 7 };
 

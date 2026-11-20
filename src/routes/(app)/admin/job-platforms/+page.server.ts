@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, sql } from 'drizzle-orm';
-import { job_platform_changes, job_platforms } from '$lib/server/db/schema';
+import { job_platform_changes, job_platforms } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async () => {
 	const [platforms, changeCounts] = await Promise.all([

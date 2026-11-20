@@ -1,17 +1,17 @@
 import type { Actions, PageServerLoad } from './$types';
 import { type ActionFailure, type Cookies, fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
+import { application_records, applications } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
-import { deriveRecordTitle, recordTypeValues, today } from '$lib/application-records';
-import { deleteFile, uploadFile } from '$lib/server/files';
-import { readFileIntoRecord } from '$lib/server/applications/record-files';
-import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
-import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
-import { entryStage, STAGE_COLUMNS } from '$lib/server/applications/status';
-import type { StatusFacts } from '$lib/application-status';
-import { projectTargetsForProfile } from '$lib/server/profile/project-targets';
+import { deriveRecordTitle, recordTypeValues, today } from '#lib/application-records.ts';
+import { deleteFile, uploadFile } from '#lib/server/files.ts';
+import { readFileIntoRecord } from '#lib/server/applications/record-files.ts';
+import { deriveRecordMetadata } from '#lib/server/ai-chat/record-derivation.ts';
+import { summarizeApplication } from '#lib/server/ai-chat/application-summary.ts';
+import { entryStage, STAGE_COLUMNS } from '#lib/server/applications/status.ts';
+import type { StatusFacts } from '#lib/application-status.ts';
+import { projectTargetsForProfile } from '#lib/server/profile/project-targets.ts';
 import { Buffer } from 'buffer';
 
 /**

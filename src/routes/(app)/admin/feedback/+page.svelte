@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
@@ -109,7 +109,7 @@
 	<div class="flex flex-wrap gap-2">
 		{#each statusTabs as tab (tab.value)}
 			<a
-				href="{resolve('/admin/feedback')}{tab.value ? `?status=${tab.value}` : ''}{categoryFilter
+				href="{resolve('admin/feedback')}{tab.value ? `?status=${tab.value}` : ''}{categoryFilter
 					? `${tab.value ? '&' : '?'}category=${categoryFilter}`
 					: ''}"
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {statusFilter === tab.value
@@ -125,7 +125,7 @@
 	<!-- Category filter -->
 	<div class="flex flex-wrap gap-1.5">
 		<a
-			href="{resolve('/admin/feedback')}{statusFilter ? `?status=${statusFilter}` : ''}"
+			href="{resolve('admin/feedback')}{statusFilter ? `?status=${statusFilter}` : ''}"
 			class="rounded-full border px-2 py-0.5 text-xs transition-colors {!categoryFilter
 				? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
 				: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
@@ -133,7 +133,7 @@
 		>
 		{#each Object.entries(categoryLabels) as [value, label] (value)}
 			<a
-				href="{resolve('/admin/feedback')}?{statusFilter
+				href="{resolve('admin/feedback')}?{statusFilter
 					? `status=${statusFilter}&`
 					: ''}category={value}"
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {categoryFilter === value
@@ -212,7 +212,7 @@
 								{#each entry.user_feedback_files as fileRecord (fileRecord.id)}
 									{#if fileRecord.file}
 										<a
-											href="{resolve('/admin/feedback')}?fileId={fileRecord.file
+											href="{resolve('admin/feedback')}?fileId={fileRecord.file
 												.id}&feedbackId={entry.id}"
 											class="flex items-center gap-1.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
 										>

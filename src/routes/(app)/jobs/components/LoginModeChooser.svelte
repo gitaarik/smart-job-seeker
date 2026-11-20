@@ -6,7 +6,7 @@
 	 * CredentialSelector), inline in SearchTaskFields' add branch, and as a
 	 * derived constant with no UI at all in the simplified add form — and the
 	 * three had already drifted into describing the modes differently. The
-	 * words now come from `$lib/import-tasks/sign-in`, which is also what the
+	 * words now come from `#lib/import-tasks/sign-in.ts`, which is also what the
 	 * server reads for the default, so a change lands everywhere at once.
 	 */
 	import {
@@ -14,7 +14,7 @@
 		explainMissingSignInPage,
 		loginModeOptions,
 		type LoginMode
-	} from '$lib/import-tasks/sign-in';
+	} from '#lib/import-tasks/sign-in.ts';
 
 	interface Props {
 		/**

@@ -5,7 +5,7 @@ import {
 	importSettings,
 	validateSettingsExport,
 	type SettingsImportSummary
-} from '$lib/server/export';
+} from '#lib/server/export/index.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

@@ -20,8 +20,8 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faChevronDown, faPlus } from '@fortawesome/free-solid-svg-icons';
-	import { clickOutside } from '$lib/actions/popover';
-	import { CUSTOM_PLATFORM_ID } from '$lib/import-tasks/custom-site';
+	import { clickOutside } from '#lib/actions/popover.ts';
+	import { CUSTOM_PLATFORM_ID } from '#lib/import-tasks/custom-site.ts';
 
 	export type ComboboxPlatform = {
 		id: number;

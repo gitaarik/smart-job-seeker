@@ -27,7 +27,7 @@ const mockParseJobDescription = vi.fn();
 const mockAddMatchJob = vi.fn().mockResolvedValue({ score: 77 });
 const mockDetectPlatformId = vi.fn().mockResolvedValue(null);
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			jobs: { findFirst: (...a: unknown[]) => mockJobFindFirst(...a) },
@@ -50,7 +50,7 @@ vi.mock('drizzle-orm', () => ({
 	isNotNull: vi.fn((c: unknown) => c)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	application_status_log: {},
 	applications: {},
 	job_importers: { job_id: 'ji.job_id', profile_id: 'ji.profile_id' },
@@ -64,20 +64,20 @@ vi.mock('$lib/server/db/schema', () => ({
 	search_tasks: {}
 }));
 
-vi.mock('$lib/server/job/match-utils', () => ({ getProfileSkillLevels: vi.fn() }));
-vi.mock('$lib/server/queue/match-queue', () => ({
+vi.mock('#lib/server/job/match-utils.ts', () => ({ getProfileSkillLevels: vi.fn() }));
+vi.mock('#lib/server/queue/match-queue.ts', () => ({
 	addMatchJob: (...a: unknown[]) => mockAddMatchJob(...a)
 }));
 vi.mock('../../../profile/utils', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
-vi.mock('$lib/server/jobs/parse-job-description', () => ({
+vi.mock('#lib/server/jobs/parse-job-description.ts', () => ({
 	parseJobDescription: (...a: unknown[]) => mockParseJobDescription(...a)
 }));
-vi.mock('$lib/server/jobs/job-fields', async (importOriginal) => ({
+vi.mock('#lib/server/jobs/job-fields.ts', async (importOriginal) => ({
 	// Only the platform lookup touches the DB; the coercion helpers are pure and
 	// are exactly what these tests are checking the action wires up correctly.
-	...(await importOriginal<typeof import('$lib/server/jobs/job-fields')>()),
+	...(await importOriginal<typeof import('#lib/server/jobs/job-fields.ts')>()),
 	detectPlatformId: (...a: unknown[]) => mockDetectPlatformId(...a)
 }));
 

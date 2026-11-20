@@ -6,7 +6,7 @@
  */
 
 import { randomBytes } from 'crypto';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, or } from 'drizzle-orm';
 import {
 	inbound_emails,
@@ -15,7 +15,7 @@ import {
 	search_task_runs,
 	search_tasks,
 	verification_email_addresses
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { parseVerificationEmail } from './verification-parser';
 
 const VERIFY_DOMAIN = 'smartjobseeker.com';

@@ -9,13 +9,13 @@
  * later without asking for the file again.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles, work_experiences, education, side_projects } from '$lib/server/db/schema';
-import { getErrorMessage } from '$lib/server/utils/errors';
-import type { Crop } from '$lib/media-library';
-import { createMediaItem } from '$lib/server/media/items';
-import { MediaUploadError } from '$lib/server/media/originals';
+import { profiles, work_experiences, education, side_projects } from '#lib/server/db/schema.ts';
+import { getErrorMessage } from '#lib/server/utils/errors.ts';
+import type { Crop } from '#lib/media-library.ts';
+import { createMediaItem } from '#lib/server/media/items.ts';
+import { MediaUploadError } from '#lib/server/media/originals.ts';
 import {
 	assignEntitySlot,
 	clearEntitySlot,
@@ -23,7 +23,7 @@ import {
 	resolveEntitySlot,
 	SlotError,
 	type EntitySlot
-} from '$lib/server/media/slots';
+} from '#lib/server/media/slots.ts';
 
 interface UploadResult {
 	success: boolean;

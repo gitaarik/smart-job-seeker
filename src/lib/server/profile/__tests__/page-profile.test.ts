@@ -9,9 +9,9 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { getTableColumns } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { profiles } from '#lib/server/db/schema.ts';
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {},
 	dbDirect: {}
 }));

@@ -13,7 +13,7 @@
 	 * the generation context, so the model writes about the project the applicant
 	 * chose rather than whichever one the ranker surfaced.
 	 */
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronRight, faLink, faPlus } from '@fortawesome/free-solid-svg-icons';
@@ -108,7 +108,7 @@
 			}
 			chosen = '';
 			linking = false;
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			error = 'Could not change that link.';
 		} finally {

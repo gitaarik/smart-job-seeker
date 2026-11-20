@@ -13,7 +13,7 @@
  * their plan.
  */
 import { fail, isHttpError, type ActionFailure } from '@sveltejs/kit';
-import { requireProfileQuota } from '$lib/server/billing/require-profile-quota';
+import { requireProfileQuota } from '#lib/server/billing/require-profile-quota.ts';
 
 export async function profileQuotaFailure(
 	userId: string

@@ -10,13 +10,17 @@
  */
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { desc, eq } from 'drizzle-orm';
-import { job_platforms, platform_credentials, search_form_probe_runs } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { addSearchFormProbeJob } from '$lib/server/queue/search-form-probe-queue';
-import { hasCredentialAccess } from '$lib/server/credential-shares';
-import { hasDeviceAccess } from '$lib/server/device-shares';
+import {
+	job_platforms,
+	platform_credentials,
+	search_form_probe_runs
+} from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { addSearchFormProbeJob } from '#lib/server/queue/search-form-probe-queue.ts';
+import { hasCredentialAccess } from '#lib/server/credential-shares.ts';
+import { hasDeviceAccess } from '#lib/server/device-shares.ts';
 
 function requireAdmin(locals: App.Locals) {
 	const user = requireAuth(locals);

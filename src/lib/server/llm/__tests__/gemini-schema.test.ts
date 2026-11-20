@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { toJsonSchema } from '@langchain/core/utils/json_schema';
-import { aiPromptSchemas } from '$lib/server/schemas/ai-prompt-schemas';
+import { aiPromptSchemas } from '#lib/server/schemas/ai-prompt-schemas.ts';
 import { geminiResponseSchema, parseStructuredReply } from '../gemini-schema';
 
 /** The paths in a schema where `type` is a list. */

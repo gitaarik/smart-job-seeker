@@ -14,14 +14,19 @@
  *    cleared rather than resurrecting the parsed value.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { applications, application_status_log, job_importers, jobs } from '$lib/server/db/schema';
+import {
+	applications,
+	application_status_log,
+	job_importers,
+	jobs
+} from '#lib/server/db/schema.ts';
 
 const captured = vi.hoisted(() => ({
 	inserts: [] as Array<{ table: unknown; values: Record<string, unknown> }>,
 	nextId: 1000
 }));
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const insert = (table: unknown) => ({
 		values: (values: Record<string, unknown>) => {
 			captured.inserts.push({ table, values });
@@ -36,15 +41,15 @@ vi.mock('$lib/server/db', () => {
 });
 
 const mockTriggerMatch = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
-vi.mock('$lib/server/job/match-trigger', () => ({ triggerMatchForImport: mockTriggerMatch }));
+vi.mock('#lib/server/job/match-trigger.ts', () => ({ triggerMatchForImport: mockTriggerMatch }));
 
 const mockParse = vi.hoisted(() => vi.fn());
-vi.mock('$lib/server/jobs/parse-job-description', () => ({ parseJobDescription: mockParse }));
+vi.mock('#lib/server/jobs/parse-job-description.ts', () => ({ parseJobDescription: mockParse }));
 
 // Only `detectPlatformId` is replaced: it reads the platform table, where
 // `datePostedOrNull` beside it is pure and is part of what this is testing.
-vi.mock('$lib/server/jobs/job-fields', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/jobs/job-fields')>()),
+vi.mock('#lib/server/jobs/job-fields.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/jobs/job-fields.ts')>()),
 	detectPlatformId: vi.fn().mockResolvedValue(null)
 }));
 

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { PLATFORM_STATUSES, PLATFORM_TYPES } from '$lib/job-platforms/taxonomy';
+	import { PLATFORM_STATUSES, PLATFORM_TYPES } from '#lib/job-platforms/taxonomy.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faExternalLinkAlt,

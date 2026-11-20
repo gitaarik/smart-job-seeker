@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const mockRequireProfileAccess = vi.fn();
 
-vi.mock('$lib/server/utils/api-helpers', () => ({
+vi.mock('#lib/server/utils/api-helpers.ts', () => ({
 	requireProfileAccess: (...a: unknown[]) => mockRequireProfileAccess(...a)
 }));
 

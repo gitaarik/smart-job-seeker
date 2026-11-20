@@ -1,9 +1,9 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq, gt } from 'drizzle-orm';
-import { search_form_probe_logs, search_form_probe_runs } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { search_form_probe_logs, search_form_probe_runs } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 
 function requireAdmin(locals: App.Locals) {
 	const user = requireAuth(locals);

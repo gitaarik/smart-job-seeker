@@ -7,7 +7,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const roles = vi.fn();
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: { select: () => ({ from: () => ({ where: () => roles() }) }) }
 }));
 vi.mock('../skill-ontology', () => ({

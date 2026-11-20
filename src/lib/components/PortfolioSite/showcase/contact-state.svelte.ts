@@ -3,7 +3,7 @@
  * fetches them. One per page, shared by every "Get in touch" button on it.
  */
 
-import type { PortfolioContact } from '$lib/server/profile/portfolio-contact';
+import type { PortfolioContact } from '#lib/server/profile/portfolio-contact.ts';
 
 const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 

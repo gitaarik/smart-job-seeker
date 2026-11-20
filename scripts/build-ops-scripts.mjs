@@ -8,7 +8,7 @@
  * Steps tells you to run after a deploy. They had never run in production
  * because they could not.
  *
- * This resolves `$lib` at BUILD time, when `src/` is still present, and emits
+ * This resolves `#lib` at BUILD time, when `src/` is still present, and emits
  * self-contained ESM into `dist-scripts/`. The Dockerfile copies that into the
  * runtime stage, so the documented invocation becomes real:
  *
@@ -52,7 +52,7 @@ const outDir = path.join(root, 'dist-scripts');
  * Deliberately a superset of the old pattern: every file it used to match still
  * matches, so widening can add bundles but never drop one.
  */
-const REACHES_APP_SOURCE = /\$lib|['"](?:\.\.\/)+src\//;
+const REACHES_APP_SOURCE = /#lib|['"](?:\.\.\/)+src\//;
 
 /**
  * The files a source imports by relative path, resolved to disk.
@@ -121,8 +121,9 @@ await esbuild.build({
 	platform: 'node',
 	format: 'esm',
 	target: 'node22',
+	// #lib needs no alias: esbuild reads the `imports` field of package.json,
+	// and a subpath import is not a package, so it is bundled, not left external.
 	packages: 'external',
-	alias: { $lib: path.join(root, 'src/lib') },
 	logLevel: 'warning'
 });
 

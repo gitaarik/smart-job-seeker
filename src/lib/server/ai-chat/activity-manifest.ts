@@ -36,7 +36,7 @@
  * what exists that you cannot see from here.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, asc, eq } from 'drizzle-orm';
 import {
 	application_records,
@@ -44,9 +44,9 @@ import {
 	applications,
 	jobs,
 	profile_document_projects
-} from '$lib/server/db/schema';
-import { getRecordTypeLabel } from '$lib/application-records';
-import { getStatusLabel } from '$lib/application-status';
+} from '#lib/server/db/schema.ts';
+import { getRecordTypeLabel } from '#lib/application-records.ts';
+import { getStatusLabel } from '#lib/application-status.ts';
 
 /**
  * A ceiling, because this is an index of an unbounded thing. At ~85 chars a

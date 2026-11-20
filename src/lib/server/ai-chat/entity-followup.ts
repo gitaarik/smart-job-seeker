@@ -3,10 +3,10 @@
  * Both follow the same pattern: fetch entity → validate ai_chat → create followup → update entity.
  */
 
-import { getErrorMessage } from '$lib/server/utils/errors';
-import type { ChatMessage } from '$lib/server/llm';
+import { getErrorMessage } from '#lib/server/utils/errors.ts';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
 import type { GenerationContextOption } from './generation-context';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 import { createFollowupAiChat } from './create-followup';
 
 /**

@@ -5,7 +5,7 @@
  * See planning/MCP-FREE-ALLOWANCE.md in sjs-ops.
  */
 
-import { countMcpCall } from '$lib/server/mcp/usage';
+import { countMcpCall } from '#lib/server/mcp/usage.ts';
 
 /**
  * Whether a tool call may run. A refusal carries the text the agent should

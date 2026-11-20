@@ -29,7 +29,7 @@
  * and the downside of quietly removing one outweighs the tidiness.
  */
 
-import { OVERRIDE_ENTITIES, type OverrideAction } from '$lib/version-overrides';
+import { OVERRIDE_ENTITIES, type OverrideAction } from '#lib/version-overrides.ts';
 
 /** Entities a selection may drop. Everything else can only be added. */
 export const DROPPABLE_ENTITIES: string[] = [

@@ -36,7 +36,7 @@ vi.mock('bullmq', () => {
 	return { Queue: MockQueue, QueueEvents: MockQueueEvents };
 });
 
-vi.mock('$lib/server/monitoring/error-tracker', () => ({
+vi.mock('#lib/server/monitoring/error-tracker.ts', () => ({
 	errorTracker: { logError: (...args: unknown[]) => mocks.logError(...args) }
 }));
 

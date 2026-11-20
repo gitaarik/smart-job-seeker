@@ -17,7 +17,7 @@ interface UpdateCall {
 
 const updates: UpdateCall[] = [];
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		update: (table: unknown) => ({
 			set: (values: Record<string, unknown>) => ({
@@ -30,7 +30,7 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	jobs: { id: 'jobs.id', __table: 'jobs' },
 	job_matches: { job_id: 'job_matches.job_id', __table: 'job_matches' },
 	job_importers: {},

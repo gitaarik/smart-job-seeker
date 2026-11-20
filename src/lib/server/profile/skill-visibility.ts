@@ -9,10 +9,14 @@
  * they are free text from a listing, not references.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { tech_skill_categories, tech_skills } from '$lib/server/db/schema';
-import { isHiddenFromDocuments, type ProfileSkillRef, versionsOf } from '$lib/profile-visibility';
+import { tech_skill_categories, tech_skills } from '#lib/server/db/schema.ts';
+import {
+	isHiddenFromDocuments,
+	type ProfileSkillRef,
+	versionsOf
+} from '#lib/profile-visibility.ts';
 
 export type { ProfileSkillRef };
 

@@ -14,10 +14,10 @@ const mockGiveKey = vi.fn();
 const mockThemeById = vi.fn();
 const mockThemes = vi.fn();
 
-vi.mock('$lib/server/profile/default', () => ({
+vi.mock('#lib/server/profile/default.ts', () => ({
 	getProfileByIdentifier: () => mockProfile()
 }));
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			profile_tokens: { findFirst: () => mockToken() },
@@ -26,31 +26,31 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 vi.mock('drizzle-orm', () => ({ eq: () => ({}) }));
-vi.mock('$lib/server/db/schema', () => ({ profile_tokens: {}, profile_versions: {} }));
-vi.mock('$lib/server/auth/token-validation', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({ profile_tokens: {}, profile_versions: {} }));
+vi.mock('#lib/server/auth/token-validation.ts', () => ({
 	incrementTokenVisit: (...a: unknown[]) => mockIncrement(...a)
 }));
-vi.mock('$lib/server/profile/portfolio-key', () => ({
+vi.mock('#lib/server/profile/portfolio-key.ts', () => ({
 	givePortfolioKey: (...a: unknown[]) => mockGiveKey(...a)
 }));
-vi.mock('$lib/server/profile/portfolio-themes', () => ({
+vi.mock('#lib/server/profile/portfolio-themes.ts', () => ({
 	getPortfolioThemeById: () => mockThemeById(),
 	getPortfolioThemesForProfile: () => mockThemes()
 }));
-vi.mock('$lib/server/profile/translations', () => ({
+vi.mock('#lib/server/profile/translations.ts', () => ({
 	loadTranslator: async () => ({ locale: null }),
 	applyTranslations: () => {}
 }));
-vi.mock('$lib/server/profile/field-variants', () => ({
+vi.mock('#lib/server/profile/field-variants.ts', () => ({
 	loadFieldVariants: async () => [],
 	applyFieldVariants: () => {}
 }));
-vi.mock('$lib/server/profile/skill-words', () => ({
+vi.mock('#lib/server/profile/skill-words.ts', () => ({
 	loadDocumentSkillWords: async () => [],
 	applySkillWords: () => {},
 	renderedVersionId: (_p: unknown, id: number) => id
 }));
-vi.mock('$lib/server/profile/page-profile', () => ({
+vi.mock('#lib/server/profile/page-profile.ts', () => ({
 	pageProfile: (profile: unknown) => profile
 }));
 

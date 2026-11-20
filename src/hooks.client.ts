@@ -1,9 +1,9 @@
 import * as Sentry from '@sentry/sveltekit';
-import { env } from '$env/dynamic/public';
-import { isFrameworkClientError } from '$lib/monitoring/sentry-filters';
+import { PUBLIC_SENTRY_DSN } from '$app/env/public';
+import { isFrameworkClientError } from '#lib/monitoring/sentry-filters.ts';
 
 /**
- * Read through `$env/dynamic/public`, NOT `import.meta.env`.
+ * Read through `$app/env/public` (declared in src/env.ts), NOT `import.meta.env`.
  *
  * SvelteKit does not point Vite's `envPrefix` at `PUBLIC_`, so
  * `import.meta.env` carries only Vite's own keys — on this app it is exactly
@@ -18,11 +18,12 @@ import { isFrameworkClientError } from '$lib/monitoring/sentry-filters';
  * the DSN, the SDK was installed, the CSP allowed the host, and the server
  * half of the same integration was reporting normally.
  *
- * The dynamic form reads the value SvelteKit serializes into the page from the
- * server's own environment, so one image picks up whichever DSN its
- * environment sets, and nothing has to be known at build time.
+ * A dynamic variable (the default in src/env.ts) reads the value SvelteKit
+ * serializes into the page from the server's own environment, so one image
+ * picks up whichever DSN its environment sets, and nothing has to be known at
+ * build time.
  */
-const dsn = env.PUBLIC_SENTRY_DSN;
+const dsn = PUBLIC_SENTRY_DSN;
 
 if (dsn) {
 	const host = window.location.hostname;

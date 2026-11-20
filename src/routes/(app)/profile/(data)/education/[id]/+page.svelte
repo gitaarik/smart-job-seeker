@@ -1,16 +1,16 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
 	import { resolve } from '$app/paths';
-	import { armOn } from '$lib/actions/arm-on';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faGraduationCap, faTrash } from '@fortawesome/free-solid-svg-icons';
-	import MediaUpload from '$lib/components/MediaUpload.svelte';
-	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import VersionTags from '$lib/components/VersionTags.svelte';
+	import MediaUpload from '#lib/components/MediaUpload.svelte';
+	import { autoSaveField, patchBody, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
+	import VersionTags from '#lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import Card from '../../../../components/Card.svelte';
 
@@ -147,7 +147,7 @@
 	<!-- Header -->
 	<div class="flex items-center gap-4">
 		<a
-			href={resolve('/profile/education')}
+			href={resolve('profile/education')}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

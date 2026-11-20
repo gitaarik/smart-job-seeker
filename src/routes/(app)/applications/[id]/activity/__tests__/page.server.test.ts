@@ -43,7 +43,7 @@ const mockDeleteFile = vi.fn();
 const mockExtract = vi.fn();
 const mockDerive = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			applications: { findFirst: (...a: unknown[]) => mockAppFindFirst(...a) },
@@ -62,7 +62,7 @@ vi.mock('drizzle-orm', () => ({
 	and: vi.fn((...a: unknown[]) => a)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	applications: {
 		id: 'applications.id',
 		profile_id: 'applications.profile_id'
@@ -73,23 +73,23 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-vi.mock('$lib/server/profile/selected-profile', () => ({
+vi.mock('#lib/server/profile/selected-profile.ts', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 
-vi.mock('$lib/server/files', () => ({
+vi.mock('#lib/server/files.ts', () => ({
 	uploadFile: (...a: unknown[]) => mockUploadFile(...a),
 	deleteFile: (...a: unknown[]) => mockDeleteFile(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/application-activity', () => ({
+vi.mock('#lib/server/ai-chat/application-activity.ts', () => ({
 	extractRecordFile: (...a: unknown[]) => mockExtract(...a)
 }));
 
 // Mocked explicitly rather than left to fall into its own catch: derivation is
 // best-effort by design, so an unmocked one would "pass" while doing nothing
 // and the wiring assertions below would prove nothing.
-vi.mock('$lib/server/ai-chat/record-derivation', () => ({
+vi.mock('#lib/server/ai-chat/record-derivation.ts', () => ({
 	deriveRecordMetadata: (...a: unknown[]) => mockDerive(...a)
 }));
 

@@ -20,7 +20,7 @@
 		projectToHourly,
 		compareSalary,
 		type SalaryPeriod
-	} from '$lib/salary/conversion';
+	} from '#lib/salary/conversion.ts';
 	import {
 		askForJob,
 		modesForJobTypes,
@@ -30,11 +30,11 @@
 		type JobAsk,
 		type JobContext,
 		type SalaryMode
-	} from '$lib/salary/settings';
-	import { grossPayPerYear, rateAsSalary, salaryAsRate } from '$lib/salary/take-home';
-	import { canonicalJobTypes, jobContextFor, postedPayKind } from '$lib/salary/pay-fit';
-	import { isSalarySingleValue } from '$lib/format';
-	import { REGIONS, buildDisplayMap } from '$lib/data/job-taxonomy';
+	} from '#lib/salary/settings.ts';
+	import { grossPayPerYear, rateAsSalary, salaryAsRate } from '#lib/salary/take-home.ts';
+	import { canonicalJobTypes, jobContextFor, postedPayKind } from '#lib/salary/pay-fit.ts';
+	import { isSalarySingleValue } from '#lib/format.ts';
+	import { REGIONS, buildDisplayMap } from '#lib/data/job-taxonomy.ts';
 
 	const regionDisplayMap = buildDisplayMap(REGIONS);
 
@@ -441,7 +441,7 @@
 				<h2 class="text-lg font-semibold text-[var(--dash-text)]">Your Ask</h2>
 			</div>
 			<a
-				href={resolve('/applications/salary')}
+				href={resolve('applications/salary')}
 				class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 			>
 				Salary Prep
@@ -635,7 +635,7 @@
 						<p class="mb-3 text-[var(--dash-text-secondary)]">
 							No ask recorded yet.
 							<a
-								href={resolve('/applications/salary')}
+								href={resolve('applications/salary')}
 								class="text-[var(--dash-primary)] hover:underline">Set up Salary Prep</a
 							> to get one worked out for each job, or enter it yourself.
 						</p>

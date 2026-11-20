@@ -21,7 +21,7 @@ vi.mock('../sentry', () => ({
 	Sentry: { captureException: mocks.captureException, addBreadcrumb: mocks.addBreadcrumb }
 }));
 
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		get isProduction() {
 			return mocks.isProduction;

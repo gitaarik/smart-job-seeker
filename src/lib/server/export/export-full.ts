@@ -2,16 +2,16 @@
  * Export full account data (profile + all additional data)
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq, asc } from 'drizzle-orm';
 import {
 	applications as applicationsTable,
 	project_stories,
 	cheat_sheets,
 	profiles
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { buildProfileExport } from './export-profile';
-import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 import type {
 	ArchiveFilePayload,
 	DocumentFilePayload,

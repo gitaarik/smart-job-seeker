@@ -15,19 +15,19 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { desc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { application_records, profile_document_projects } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { requireRowActor } from '$lib/server/profile/write-http';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
-import { DocumentExtractError } from '$lib/server/documents/extract';
-import { buildRecordDocument } from '$lib/server/documents/from-record';
-import { saveExtractedProject, setProjectSummary } from '$lib/server/documents/store';
-import { summarizeProject } from '$lib/server/documents/summarize';
-import { parseProjectKind, type ProjectKind } from '$lib/server/documents/project-corpus';
-import { extractRecordFile } from '$lib/server/ai-chat/application-activity';
-import { applicationRecordSource } from '$lib/document-sources';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { application_records, profile_document_projects } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { requireRowActor } from '#lib/server/profile/write-http.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { requireDocumentQuota } from '#lib/server/billing/require-document-quota.ts';
+import { DocumentExtractError } from '#lib/server/documents/extract.ts';
+import { buildRecordDocument } from '#lib/server/documents/from-record.ts';
+import { saveExtractedProject, setProjectSummary } from '#lib/server/documents/store.ts';
+import { summarizeProject } from '#lib/server/documents/summarize.ts';
+import { parseProjectKind, type ProjectKind } from '#lib/server/documents/project-corpus.ts';
+import { extractRecordFile } from '#lib/server/ai-chat/application-activity.ts';
+import { applicationRecordSource } from '#lib/document-sources.ts';
 
 /** The copy this project already holds of this entry, if any. */
 async function existingCopy(kind: ProjectKind, projectId: number, recordId: number) {

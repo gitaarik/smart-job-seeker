@@ -1,20 +1,20 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
-import { CAPABILITIES, describeProposalChanges } from '$lib/server/ai-chat/capabilities';
-import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
+import { CAPABILITIES, describeProposalChanges } from '#lib/server/ai-chat/capabilities.ts';
+import { describeLoggedChange, readEditLog, revertEdit } from '#lib/server/ai-chat/edit-log.ts';
 import {
 	approveRequest,
 	readRequests,
 	rejectRequest,
 	requestIdsByEdit
-} from '$lib/server/mcp/requests';
-import { targetingFor } from '$lib/server/mcp/entities';
-import type { Capability, CapabilityActor } from '$lib/server/ai-chat/capabilities';
-import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
-import { rowPagePath } from '$lib/server/profile/row-page';
-import { DIRECTIVES_PAGE } from '$lib/server/ai-chat/directive-capability';
-import { deletedWithChange } from '$lib/server/ai-chat/delete-capabilities';
+} from '#lib/server/mcp/requests.ts';
+import { targetingFor } from '#lib/server/mcp/entities.ts';
+import type { Capability, CapabilityActor } from '#lib/server/ai-chat/capabilities.ts';
+import { PROFILE_RESOURCES, type ProfileResourceName } from '#lib/server/profile/resources.ts';
+import { rowPagePath } from '#lib/server/profile/row-page.ts';
+import { DIRECTIVES_PAGE } from '#lib/server/ai-chat/directive-capability.ts';
+import { deletedWithChange } from '#lib/server/ai-chat/delete-capabilities.ts';
 
 /**
  * Where an entry of a given kind can be put right by hand.

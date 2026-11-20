@@ -2,7 +2,7 @@
  * The recommendation word a job match shows, worked out from its score and
  * never stored.
  *
- * Lives outside `$lib/server` because both sides need it, as
+ * Lives outside `#lib/server` because both sides need it, as
  * match-provenance.ts does: the pages show the word, and the server hands it to
  * the assistant.
  *

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -8,7 +8,7 @@
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
-	import { getEducationLogoUrl } from '$lib/utils/entity-media-url';
+	import { getEducationLogoUrl } from '#lib/utils/entity-media-url.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { getPlans, CREDIT_COST_EXAMPLES, getExtraUsage } from '$lib/server/billing/plans';
-import { registrationOpen } from '$lib/server/auth/registration';
+import { getPlans, CREDIT_COST_EXAMPLES, getExtraUsage } from '#lib/server/billing/plans.ts';
+import { registrationOpen } from '#lib/server/auth/registration.ts';
 
 /**
  * One row of the "what things cost" table.

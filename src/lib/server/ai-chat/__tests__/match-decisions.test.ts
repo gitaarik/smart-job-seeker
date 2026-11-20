@@ -17,7 +17,7 @@ import {
 	type ScoreFactors
 } from '../match-decisions';
 import { skillDecisionFingerprint } from '../skill-decisions';
-import type { SystemOneResponse } from '$lib/server/llm/typesafe';
+import type { SystemOneResponse } from '#lib/server/llm/typesafe.ts';
 
 const VALUES: Record<string, string> = {
 	data: '{"title":"Senior engineer"}',

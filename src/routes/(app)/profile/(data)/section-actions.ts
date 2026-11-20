@@ -21,7 +21,7 @@
  */
 
 import { fail, redirect, type Actions, type Cookies, type RequestEvent } from '@sveltejs/kit';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
 import {
 	createRow,
 	deleteRow,
@@ -31,8 +31,8 @@ import {
 	updateRow,
 	type ProfileActor,
 	type WriteRefusal
-} from '$lib/server/profile/write';
-import type { ProfileResourceName } from '$lib/server/profile/resources';
+} from '#lib/server/profile/write.ts';
+import type { ProfileResourceName } from '#lib/server/profile/resources.ts';
 
 type ActionEvent = Pick<RequestEvent, 'request' | 'locals' | 'cookies'>;
 

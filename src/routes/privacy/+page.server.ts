@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
-import { loadLegalPage } from '$lib/server/legal/texts';
+import { loadLegalPage } from '#lib/server/legal/texts.ts';
 
 /** Public, like /pricing: outside `(app)`, so no session is needed to read it. */
 export const load: PageServerLoad = async () => {

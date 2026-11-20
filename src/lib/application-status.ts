@@ -1,5 +1,5 @@
-import type { TimeFormat } from '$lib/format-date';
-import { today } from '$lib/application-records';
+import type { TimeFormat } from '#lib/format-date.ts';
+import { today } from '#lib/application-records.ts';
 
 // --- Phase definitions ---
 
@@ -76,7 +76,7 @@ export function canEndUnsent(status: string): boolean {
  * Still in play — the pipeline lists and the home dashboard.
  *
  * A status only. Whether an application is being *worked on* is a second
- * question this does not answer: see `$lib/application-snooze`, which the same
+ * question this does not answer: see `#lib/application-snooze.ts`, which the same
  * lists apply on top of this one.
  */
 export const activeStatuses = ['applying', 'interviewing', 'negotiating'];

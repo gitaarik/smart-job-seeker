@@ -24,7 +24,7 @@ const mockInsertValues = vi.fn().mockReturnValue({
 });
 const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			tech_skill_categories: {
@@ -47,7 +47,7 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn((col: unknown) => col)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	tech_skills: { id: 'id', category_id: 'category_id', sort: 'sort' },
 	tech_skill_categories: { id: 'id', profile_id: 'profile_id', sort: 'sort' },
 	profile_versions: { id: 'id', profile_id: 'profile_id', slug: 'slug' }

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import EdgeDraft from './EdgeDraft.svelte';
 	import { RELATION_STYLES, dashFor, edgePath, verbFor } from './graph-shared';
 	import type { PageData } from './$types';
 
 	/** Every href on this page points back at this route. */
-	const GRAPH = resolve('/admin/skill-ontology/graph');
+	const GRAPH = resolve('admin/skill-ontology/graph');
 
 	let { data }: { data: PageData } = $props();
 
@@ -97,7 +97,7 @@
 		body.set('id', String(retiring.id));
 		const res = await fetch('?/retireRelation', { method: 'POST', body });
 		retiring = null;
-		if (res.ok) await invalidateAll();
+		if (res.ok) await refreshAll();
 	}
 
 	let suggestions = $derived(
@@ -182,13 +182,13 @@
 		</div>
 		<div class="flex shrink-0 gap-2">
 			<a
-				href={resolve('/admin/skill-ontology/graph/all')}
+				href={resolve('admin/skill-ontology/graph/all')}
 				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
 			>
 				Whole graph
 			</a>
 			<a
-				href={resolve('/admin/skill-ontology')}
+				href={resolve('admin/skill-ontology')}
 				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
 			>
 				Review queue
@@ -231,7 +231,7 @@
 			Pick a concept above — {data.concepts.length} in the vocabulary — or
 			<a
 				class="text-[var(--dash-primary)] underline"
-				href={resolve('/admin/skill-ontology/graph/all')}>see all of them at once</a
+				href={resolve('admin/skill-ontology/graph/all')}>see all of them at once</a
 			>.
 		</div>
 	{:else if data.nodes.length <= 1}

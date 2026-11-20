@@ -29,8 +29,8 @@
  */
 
 import { and, inArray, lt, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { scraper_log_steps, scraper_logs } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { scraper_log_steps, scraper_logs } from '#lib/server/db/schema.ts';
 import { readdir, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 

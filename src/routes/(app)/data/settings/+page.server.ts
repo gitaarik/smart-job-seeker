@@ -1,9 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, ne, count, asc } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { deleteProfile } from '$lib/server/profile/delete';
+import { profiles } from '#lib/server/db/schema.ts';
+import { deleteProfile } from '#lib/server/profile/delete.ts';
 import { getSelectedProfileId } from '../../profile/utils';
 
 export const load: PageServerLoad = async ({ parent }) => {

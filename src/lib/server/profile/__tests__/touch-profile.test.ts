@@ -11,7 +11,7 @@ const mockWhere = vi.fn().mockResolvedValue({});
 const mockSet = vi.fn().mockReturnValue({ where: mockWhere });
 const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		update: (...a: unknown[]) => mockUpdate(...a)
 	}
@@ -22,7 +22,7 @@ vi.mock('drizzle-orm', () => ({
 	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: { id: 'profiles.id' }
 }));
 

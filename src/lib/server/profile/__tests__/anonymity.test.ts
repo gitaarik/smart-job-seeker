@@ -11,7 +11,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 const dbMock = vi.hoisted(() => ({ query: {} as Record<string, { findFirst: unknown }> }));
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {},
 	dbDirect: dbMock
 }));
@@ -27,7 +27,7 @@ const {
 	writingAnonymity
 } = await import('../anonymity');
 const { pageIsAnonymous, pageProfile } = await import('../page-profile');
-const { ANONYMOUS_TOGGLE, isAnonymous, withAnonymous } = await import('$lib/resume-anonymity');
+const { ANONYMOUS_TOGGLE, isAnonymous, withAnonymous } = await import('#lib/resume-anonymity.ts');
 
 function profile() {
 	return {

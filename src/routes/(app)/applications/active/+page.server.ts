@@ -1,31 +1,31 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, inArray, isNull, gt, lte, or, desc } from 'drizzle-orm';
 import {
 	applications,
 	application_letters,
 	application_records,
 	job_platforms
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	applicationStatusError,
 	entryStage,
 	STAGE_COLUMNS,
 	writeApplicationStatus
-} from '$lib/server/applications/status';
-import { writeApplicationSnooze } from '$lib/server/applications/snooze';
-import { attachLastActivity } from '$lib/server/applications/activity';
-import { activeStatuses, finishedStatuses } from '$lib/application-status';
+} from '#lib/server/applications/status.ts';
+import { writeApplicationSnooze } from '#lib/server/applications/snooze.ts';
+import { attachLastActivity } from '#lib/server/applications/activity.ts';
+import { activeStatuses, finishedStatuses } from '#lib/application-status.ts';
 import {
 	applicationTier,
 	defaultSort,
 	isSortKey,
 	sortApplications,
 	tiers
-} from '$lib/application-ranking';
-import { snoozeError } from '$lib/application-snooze';
-import { today } from '$lib/application-records';
+} from '#lib/application-ranking.ts';
+import { snoozeError } from '#lib/application-snooze.ts';
+import { today } from '#lib/application-records.ts';
 import { getSelectedProfileId } from '../../profile/utils';
 
 export const load: PageServerLoad = async ({ parent, url }) => {

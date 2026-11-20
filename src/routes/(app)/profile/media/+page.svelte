@@ -6,7 +6,12 @@
 	import { faImages, faTriangleExclamation, faUpload } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../components/SectionHeader.svelte';
 	import Card from '../../components/Card.svelte';
-	import { formatBytes, MEDIA_KIND_LABELS, MEDIA_KINDS, type MediaKind } from '$lib/media-library';
+	import {
+		formatBytes,
+		MEDIA_KIND_LABELS,
+		MEDIA_KINDS,
+		type MediaKind
+	} from '#lib/media-library.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

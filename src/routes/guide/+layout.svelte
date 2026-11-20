@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { guideSections } from '$lib/guide';
+	import { guideSections } from '#lib/guide/index.ts';
 
 	let { children } = $props();
 
@@ -16,11 +16,11 @@
 	<header
 		class="flex items-center justify-between border-b border-[var(--dash-border)] px-4 py-4 sm:px-6"
 	>
-		<a href={resolve('/guide')} class="text-lg font-semibold text-[var(--dash-text)]">
+		<a href={resolve('guide')} class="text-lg font-semibold text-[var(--dash-text)]">
 			Smart Job Seeker — Guide
 		</a>
 		<a
-			href={resolve('/home')}
+			href={resolve('home')}
 			class="text-sm font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 		>
 			Back to app

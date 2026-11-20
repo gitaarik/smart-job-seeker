@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { projectStories } from '$lib/server/profile/project-stories';
+import { projectStories } from '#lib/server/profile/project-stories.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	// `parent()` for the project, not `params` — the layout's ownership check has

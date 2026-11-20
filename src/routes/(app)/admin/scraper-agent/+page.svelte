@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faRobot, faPlay, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import Card from '../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { searchTaskDisplayName } from '$lib/format';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { searchTaskDisplayName } from '#lib/format.ts';
 	import {
 		type Profile,
 		type SearchTask,
@@ -111,11 +111,11 @@
 
 	// Handle retry=SESSION_ID from detail page
 	async function handleRetryParam() {
-		const retryId = $page.url.searchParams.get('retry');
+		const retryId = page.url.searchParams.get('retry');
 		if (!retryId) return;
 
 		// Clear the param from URL
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.delete('retry');
 		history.replaceState({}, '', url.pathname);
 

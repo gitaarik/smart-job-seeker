@@ -22,7 +22,7 @@ const state = vi.hoisted(() => ({
 	extractedText: ''
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: { application_records: { findFirst: () => Promise.resolve(state.row) } },
 		update: () => ({
@@ -37,11 +37,11 @@ vi.mock('$lib/server/db', () => ({
 	dbDirect: {}
 }));
 
-vi.mock('$lib/server/files', () => ({
+vi.mock('#lib/server/files.ts', () => ({
 	getFile: vi.fn().mockResolvedValue(Buffer.from('pretend bytes'))
 }));
 
-vi.mock('$lib/server/documents/extract', () => ({
+vi.mock('#lib/server/documents/extract.ts', () => ({
 	extractUpload: vi.fn(() => Promise.resolve({ files: [{ text: state.extractedText }] }))
 }));
 

@@ -7,8 +7,8 @@
 
 import { Queue, QueueEvents } from 'bullmq';
 import { redisConnection } from './connection';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
-import type { SkipReason } from '$lib/match-recommendation';
+import { errorTracker } from '#lib/server/monitoring/error-tracker.ts';
+import type { SkipReason } from '#lib/match-recommendation.ts';
 
 // ============================================================================
 // Types

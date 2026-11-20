@@ -8,20 +8,20 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { signUploadGrant } from '$lib/server/mcp/upload-grants';
+import { signUploadGrant } from '#lib/server/mcp/upload-grants.ts';
 
 const verifyMcpKeyById = vi.fn();
 const attachFileToRecord = vi.fn();
 
-vi.mock('$lib/server/mcp/keys', () => ({
+vi.mock('#lib/server/mcp/keys.ts', () => ({
 	verifyMcpKeyById: (...a: unknown[]) => verifyMcpKeyById(...a)
 }));
 
-vi.mock('$lib/server/applications/record-files', () => ({
+vi.mock('#lib/server/applications/record-files.ts', () => ({
 	attachFileToRecord: (...a: unknown[]) => attachFileToRecord(...a)
 }));
 
-vi.mock('$lib/server/middleware/rate-limit', () => ({
+vi.mock('#lib/server/middleware/rate-limit.ts', () => ({
 	mcpRateLimiter: { consumeKey: async () => true, retryAfterSeconds: () => 1 },
 	createRateLimitResponse: vi.fn()
 }));

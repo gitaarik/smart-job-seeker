@@ -15,17 +15,20 @@
 
 import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { profile_versions, profiles } from '$lib/server/db/schema';
-import { checkProfileAccess, type AccessControlResult } from '$lib/server/profile/access-control';
-import { readPortfolioKey } from '$lib/server/profile/portfolio-key';
-import { isAnonymousChain } from '$lib/server/profile/anonymity';
+import { db } from '#lib/server/db/index.ts';
+import { profile_versions, profiles } from '#lib/server/db/schema.ts';
+import {
+	checkProfileAccess,
+	type AccessControlResult
+} from '#lib/server/profile/access-control.ts';
+import { readPortfolioKey } from '#lib/server/profile/portfolio-key.ts';
+import { isAnonymousChain } from '#lib/server/profile/anonymity.ts';
 import {
 	getPortfolioThemeById,
 	getPortfolioThemesForProfile
-} from '$lib/server/profile/portfolio-themes';
-import { gatesContact, type PortfolioContact } from '$lib/server/profile/portfolio-contact';
-import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
+} from '#lib/server/profile/portfolio-themes.ts';
+import { gatesContact, type PortfolioContact } from '#lib/server/profile/portfolio-contact.ts';
+import { verifyTurnstileToken } from '#lib/server/auth/turnstile.ts';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({

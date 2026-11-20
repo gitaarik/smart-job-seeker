@@ -19,8 +19,8 @@
 		getStepperPhase,
 		roundState,
 		type InterviewRound
-	} from '$lib/application-status';
-	import type { TimeFormat } from '$lib/format-date';
+	} from '#lib/application-status.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 
 	let {
 		status,

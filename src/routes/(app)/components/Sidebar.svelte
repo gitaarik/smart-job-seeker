@@ -4,7 +4,7 @@
 	 * This component only renders what it is handed, so the rule has nothing
 	 * to check.
 	 */
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { sidebarState, overlayState } from './sidebar-state.svelte';
@@ -61,8 +61,8 @@
 		contractor: { icon: faBuilding, color: 'text-purple-500', activeColor: 'text-purple-200' }
 	};
 
-	import type { CreditBalance } from '$lib/server/billing/credits';
-	import type { PaymentIssue } from '$lib/server/billing/subscription';
+	import type { CreditBalance } from '#lib/server/billing/credits.ts';
+	import type { PaymentIssue } from '#lib/server/billing/subscription.ts';
 
 	let {
 		creditBalance,
@@ -311,7 +311,7 @@
 		}
 	];
 
-	let isAdmin = $derived(($page.data.user as { is_admin?: boolean })?.is_admin ?? false);
+	let isAdmin = $derived((page.data.user as { is_admin?: boolean })?.is_admin ?? false);
 
 	let menuItems = $derived(baseMenuItems);
 
@@ -334,7 +334,7 @@
 		// Job detail pages (/jobs/123) - check jobCategory from page data
 		const jobDetailMatch = currentPath.match(/^\/jobs\/(\d+)$/);
 		if (jobDetailMatch) {
-			const jobCategory = $page.data?.jobCategory;
+			const jobCategory = page.data?.jobCategory;
 			if (href === '/jobs?status=saved' && jobCategory === 'saved') {
 				return true;
 			}
@@ -393,12 +393,12 @@
 
 	// Auto-expand sections that contain the active menu item, but only on navigation
 	$effect(() => {
-		const currentHref = $page.url.pathname + $page.url.search;
+		const currentHref = page.url.pathname + page.url.search;
 		if (currentHref === lastPath) return;
 		lastPath = currentHref;
 
-		const currentPath = $page.url.pathname;
-		const currentSearch = $page.url.search;
+		const currentPath = page.url.pathname;
+		const currentSearch = page.url.search;
 
 		const allItems = isAdmin ? [...menuItems, ...adminMenuItems] : menuItems;
 		for (const item of allItems) {
@@ -422,8 +422,8 @@
 	}
 
 	function isActive(href: string, alsoActiveFor?: string[]): boolean {
-		const currentPath = $page.url.pathname;
-		const currentSearch = $page.url.search;
+		const currentPath = page.url.pathname;
+		const currentSearch = page.url.search;
 		if (href === '/home') {
 			return currentPath === '/home';
 		}
@@ -554,10 +554,10 @@
 		<!-- Plan & Usage -->
 		<div class="mt-3 border-t border-[var(--dash-border)] pt-3">
 			<a
-				href={resolve('/billing')}
+				href={resolve('billing')}
 				onclick={closeMobileMenu}
 				class="
-          flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors {$page.url.pathname.startsWith(
+          flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors {page.url.pathname.startsWith(
 					'/billing'
 				)
 					? 'bg-[var(--dash-primary)] text-white'
@@ -566,7 +566,7 @@
 			>
 				<FontAwesomeIcon
 					icon={planIcon.icon}
-					class="h-4 w-4 {$page.url.pathname.startsWith('/billing')
+					class="h-4 w-4 {page.url.pathname.startsWith('/billing')
 						? planIcon.activeColor
 						: planIcon.color}"
 				/>
@@ -574,7 +574,7 @@
 			</a>
 			{#if paymentIssue}
 				<a
-					href={resolve('/billing')}
+					href={resolve('billing')}
 					onclick={closeMobileMenu}
 					class="mx-2.5 mt-1 flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
 					title="Your last payment failed. Update your card on the billing page."
@@ -597,7 +597,7 @@
 						)
 					: null}
 				<a
-					href={resolve('/billing')}
+					href={resolve('billing')}
 					onclick={closeMobileMenu}
 					class="group mx-2.5 mt-1.5 block"
 					title="{onExtra ? 'Plan used up, now using extra usage' : `${usedPct}% used`}{daysLeft !=

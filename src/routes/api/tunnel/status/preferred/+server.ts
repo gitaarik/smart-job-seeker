@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { getDeviceById, getPreferredDevice } from '$lib/server/sjs-browser-status';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getDeviceById, getPreferredDevice } from '#lib/server/sjs-browser-status.ts';
 
 /**
  * GET /api/tunnel/status/preferred — the device that would be used when scraping.

@@ -25,7 +25,7 @@ const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 const mockDeleteWhere = vi.fn().mockResolvedValue({});
 const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profiles: { findFirst: (...a: unknown[]) => mockProfilesFindFirst(...a) },
@@ -46,13 +46,13 @@ vi.mock('drizzle-orm', () => ({
 }));
 
 const mockProjectBelongsToProfile = vi.fn();
-vi.mock('$lib/server/profile/project-ownership', () => ({
+vi.mock('#lib/server/profile/project-ownership.ts', () => ({
 	// `unknown[]` rather than the `any[]` its neighbours use: the lint budget is a
 	// ratchet, so a new `any` here would cost a gate even where it matches local style.
 	projectBelongsToProfile: (...a: unknown[]) => mockProjectBelongsToProfile(...a)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
 	project_stories: {
 		id: 'project_stories.id',

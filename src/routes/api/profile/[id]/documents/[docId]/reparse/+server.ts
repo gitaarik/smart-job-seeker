@@ -8,13 +8,13 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq } from 'drizzle-orm';
-import { profile_document_files, profile_document_projects } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { summarizeProject } from '$lib/server/documents/summarize';
-import { setProjectSummary } from '$lib/server/documents/store';
+import { profile_document_files, profile_document_projects } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { summarizeProject } from '#lib/server/documents/summarize.ts';
+import { setProjectSummary } from '#lib/server/documents/store.ts';
 
 export const POST: RequestHandler = async ({ params, locals }) => {
 	const user = requireAuth(locals);

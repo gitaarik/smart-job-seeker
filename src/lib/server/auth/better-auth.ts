@@ -5,22 +5,22 @@
  */
 
 import { betterAuth } from 'better-auth';
-import { redisAuthRateLimitStorage } from '$lib/server/middleware/redis-rate-limit';
+import { redisAuthRateLimitStorage } from '#lib/server/middleware/redis-rate-limit.ts';
 import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { legal_acceptances, users, verifications } from '$lib/server/db/schema';
-import { getEnv } from '$lib/tools/get-env';
-import { sendEmail } from '$lib/server/email';
-import { verificationMail } from '$lib/server/auth/verification-email';
+import { legal_acceptances, users, verifications } from '#lib/server/db/schema.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { sendEmail } from '#lib/server/email/index.ts';
+import { verificationMail } from '#lib/server/auth/verification-email.ts';
 import {
 	approvesOnSignup,
 	guardEmailChange,
 	guardSignup,
 	signupTermsFields
-} from '$lib/server/auth/signup-gate';
-import { userAdditionalFields } from '$lib/server/auth/user-fields';
+} from '#lib/server/auth/signup-gate.ts';
+import { userAdditionalFields } from '#lib/server/auth/user-fields.ts';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'pg' }),

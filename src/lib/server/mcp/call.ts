@@ -34,8 +34,8 @@
  * do.
  */
 
-import { listLibraryVersions } from '$lib/server/profile/versions';
-import { versionDeleteImpact } from '$lib/server/profile/version-tags';
+import { listLibraryVersions } from '#lib/server/profile/versions.ts';
+import { versionDeleteImpact } from '#lib/server/profile/version-tags.ts';
 import {
 	CAPABILITIES,
 	describeProposalChanges,
@@ -46,24 +46,24 @@ import {
 	type CapabilityActor,
 	type CapabilityTarget,
 	type ProposedChange
-} from '$lib/server/ai-chat/capabilities';
-import { profileEditCounts } from '$lib/server/ai-chat/profile-edit-manifest';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { profileEditCounts } from '#lib/server/ai-chat/profile-edit-manifest.ts';
 import {
 	DIRECTIVE_TOPIC_NAMES,
 	DIRECTIVE_TOPICS,
 	type Directive,
 	loadDirectives,
 	topicLabel
-} from '$lib/server/ai-chat/directives';
-import { describeChangeLines } from '$lib/server/ai-chat/proposal-summary';
+} from '#lib/server/ai-chat/directives.ts';
+import { describeChangeLines } from '#lib/server/ai-chat/proposal-summary.ts';
 import {
 	assistantFields,
 	isHideable,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
-import { isHiddenFromDocuments, versionsOf } from '$lib/profile-visibility';
-import { readOwnedRows } from '$lib/server/profile/write';
+} from '#lib/server/profile/resources.ts';
+import { isHiddenFromDocuments, versionsOf } from '#lib/profile-visibility.ts';
+import { readOwnedRows } from '#lib/server/profile/write.ts';
 import {
 	isOfferedField,
 	LANGUAGES_KEY,
@@ -75,33 +75,33 @@ import {
 	translatableColumns,
 	translatedLocales,
 	translationField
-} from '$lib/server/profile/section-translations';
-import { BASIC_INFO_PAGE, PROFILE_ROW } from '$lib/server/profile/basic-info';
-import { readEditLog } from '$lib/server/ai-chat/edit-log';
-import { createNotification } from '$lib/server/notifications';
+} from '#lib/server/profile/section-translations.ts';
+import { BASIC_INFO_PAGE, PROFILE_ROW } from '#lib/server/profile/basic-info.ts';
+import { readEditLog } from '#lib/server/ai-chat/edit-log.ts';
+import { createNotification } from '#lib/server/notifications.ts';
 import {
 	listProfileApplications,
 	readApplicationEntry,
 	readApplicationStanding,
 	readProfileApplication,
 	type ApplicationStanding
-} from '$lib/server/applications/profile-applications';
-import { getStatusLabel, statusLabels, type InterviewRound } from '$lib/application-status';
+} from '#lib/server/applications/profile-applications.ts';
+import { getStatusLabel, statusLabels, type InterviewRound } from '#lib/application-status.ts';
 import {
 	RELABELLED_STATUSES,
 	settableStatuses,
 	statusForModel,
 	describeRoundsForModel
-} from '$lib/server/applications/status';
-import { describeOffer } from '$lib/server/ai-chat/application-pipeline';
-import { listProfileDocuments, readProfileDocument } from '$lib/server/documents/read';
+} from '#lib/server/applications/status.ts';
+import { describeOffer } from '#lib/server/ai-chat/application-pipeline.ts';
+import { listProfileDocuments, readProfileDocument } from '#lib/server/documents/read.ts';
 import {
 	isTextKind,
 	listProfileTexts,
 	readProfileText,
 	TEXT_KIND_NAMES
-} from '$lib/server/texts/profile-texts';
-import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
+} from '#lib/server/texts/profile-texts.ts';
+import { listProfileJobs, readProfileJob } from '#lib/server/jobs/profile-jobs.ts';
 import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
 import { countRequests, createRequest, readRequests, requestPath, requestUrl } from './requests';
@@ -117,9 +117,9 @@ import {
 	UPLOAD_TOOL
 } from './tools';
 import { GRANT_MAX_AGE_MS, MAX_UPLOAD_BYTES, signUploadGrant } from './upload-grants';
-import { isSupportedUpload, SUPPORTED_UPLOAD_EXTENSIONS } from '$lib/server/files';
-import { findAttachableRecord } from '$lib/server/applications/record-files';
-import { getEnv } from '$lib/tools/get-env';
+import { isSupportedUpload, SUPPORTED_UPLOAD_EXTENSIONS } from '#lib/server/files.ts';
+import { findAttachableRecord } from '#lib/server/applications/record-files.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
 import { JOB_CAPABILITIES } from './entities';
 import type { McpReadScope, McpScope, VerifiedMcpKey } from './keys';
 

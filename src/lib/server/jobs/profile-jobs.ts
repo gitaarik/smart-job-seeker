@@ -34,9 +34,9 @@
  * `canEditJob` again against a fresh read.
  */
 
-import { db, queryRaw } from '$lib/server/db';
+import { db, queryRaw } from '#lib/server/db/index.ts';
 import { and, eq, sql } from 'drizzle-orm';
-import { applications, job_importers, jobs } from '$lib/server/db/schema';
+import { applications, job_importers, jobs } from '#lib/server/db/schema.ts';
 
 /** How many jobs one call may return. A profile's scope runs to thousands. */
 export const JOB_PAGE_DEFAULT = 20;

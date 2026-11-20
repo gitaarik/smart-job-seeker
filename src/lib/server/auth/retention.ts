@@ -19,8 +19,8 @@
  */
 
 import { inArray, lt } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { sessions, verifications } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { sessions, verifications } from '#lib/server/db/schema.ts';
 
 export interface AuthRetentionResult {
 	rowsDeleted: number;

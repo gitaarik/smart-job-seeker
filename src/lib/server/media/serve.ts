@@ -9,9 +9,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { and, eq, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { media_items, media_renditions, profiles } from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { media_items, media_renditions, profiles } from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
 import { publicRenditionCondition } from './references';
 import { ensureRendered, type RenderedRendition } from './renditions';
 import { renderPreview } from './render';

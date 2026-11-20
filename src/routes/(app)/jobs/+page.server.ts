@@ -1,12 +1,12 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { asc, eq, inArray, or, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRaw, sqlJoin } from '$lib/server/db';
-import { job_platforms } from '$lib/server/db/schema';
-import { PLATFORM_PAUSED } from '$lib/job-platforms/taxonomy';
-import { getProfileSkillLevels } from '$lib/server/job/match-utils';
+import { dbDirect as db, queryRaw, sqlJoin } from '#lib/server/db/index.ts';
+import { job_platforms } from '#lib/server/db/schema.ts';
+import { PLATFORM_PAUSED } from '#lib/job-platforms/taxonomy.ts';
+import { getProfileSkillLevels } from '#lib/server/job/match-utils.ts';
 import { getSelectedProfileId } from '../profile/utils';
-import { rejectJob, saveJob, unrejectJob, unsaveJob } from '$lib/server/job/job-actions';
+import { rejectJob, saveJob, unrejectJob, unsaveJob } from '#lib/server/job/job-actions.ts';
 import {
 	buildJsonFilters,
 	buildScoreFilter,
@@ -14,8 +14,8 @@ import {
 	listJobs,
 	markJobsShown,
 	parseJobListFilters
-} from '$lib/server/job/list-jobs';
-import { isThinProfile } from '$lib/server/profile/thin-profile';
+} from '#lib/server/job/list-jobs.ts';
+import { isThinProfile } from '#lib/server/profile/thin-profile.ts';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();

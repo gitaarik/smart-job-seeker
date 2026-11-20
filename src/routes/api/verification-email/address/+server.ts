@@ -1,13 +1,13 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { db } from '$lib/server/db';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles, verification_email_addresses } from '$lib/server/db/schema';
+import { profiles, verification_email_addresses } from '#lib/server/db/schema.ts';
 import {
 	getOrCreateVerificationAddress,
 	regenerateVerificationAddress
-} from '$lib/server/email/verification-relay';
+} from '#lib/server/email/verification-relay.ts';
 
 /**
  * GET /api/verification-email/address?profileId=123

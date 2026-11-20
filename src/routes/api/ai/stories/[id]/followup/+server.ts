@@ -1,15 +1,15 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles, project_stories } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { followupRequestSchema, parseBody } from '$lib/server/validation/api-schemas';
-import { createProfileStoryFollowup } from '$lib/server/ai-chat/profile-story-followup';
-import { generateProfileStory } from '$lib/server/ai-chat/profile-story';
-import { STORY_VERSIONS, trimVersionsFrom } from '$lib/server/ai-chat/entity-versions';
-import { trackGeneration } from '$lib/server/ai-chat/ai-generation-status';
-import { requireCredits } from '$lib/server/billing/require-credits';
+import { profiles, project_stories } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { followupRequestSchema, parseBody } from '#lib/server/validation/api-schemas.ts';
+import { createProfileStoryFollowup } from '#lib/server/ai-chat/profile-story-followup.ts';
+import { generateProfileStory } from '#lib/server/ai-chat/profile-story.ts';
+import { STORY_VERSIONS, trimVersionsFrom } from '#lib/server/ai-chat/entity-versions.ts';
+import { trackGeneration } from '#lib/server/ai-chat/ai-generation-status.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

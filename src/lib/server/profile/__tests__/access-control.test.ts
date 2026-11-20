@@ -8,8 +8,8 @@ const { mockValidateToken } = vi.hoisted(() => ({
 	mockValidateToken: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({ db: {} }));
-vi.mock('$lib/server/auth/token-validation', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({ db: {} }));
+vi.mock('#lib/server/auth/token-validation.ts', () => ({
 	validateToken: mockValidateToken
 }));
 

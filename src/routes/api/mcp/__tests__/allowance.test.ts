@@ -14,7 +14,7 @@ const callTool = vi.fn();
 const checkMcpAllowance = vi.fn();
 const recordMcpCall = vi.fn();
 
-vi.mock('$lib/server/mcp/keys', () => ({
+vi.mock('#lib/server/mcp/keys.ts', () => ({
 	verifyMcpKey: async () => ({
 		keyId: 7,
 		userId: 'user-1',
@@ -26,19 +26,19 @@ vi.mock('$lib/server/mcp/keys', () => ({
 	recordMcpClient: vi.fn()
 }));
 
-vi.mock('$lib/server/mcp/call', () => ({ callTool: (...a: unknown[]) => callTool(...a) }));
+vi.mock('#lib/server/mcp/call.ts', () => ({ callTool: (...a: unknown[]) => callTool(...a) }));
 
-vi.mock('$lib/server/billing/require-mcp-allowance', () => ({
+vi.mock('#lib/server/billing/require-mcp-allowance.ts', () => ({
 	checkMcpAllowance: (...a: unknown[]) => checkMcpAllowance(...a),
 	recordMcpCall: (...a: unknown[]) => recordMcpCall(...a)
 }));
 
-vi.mock('$lib/server/mcp/tools', () => ({
+vi.mock('#lib/server/mcp/tools.ts', () => ({
 	instructionsFor: () => 'instructions',
 	toolsFor: async () => []
 }));
 
-vi.mock('$lib/server/middleware/rate-limit', () => ({
+vi.mock('#lib/server/middleware/rate-limit.ts', () => ({
 	mcpRateLimiter: { consumeKey: async () => true, retryAfterSeconds: () => 1 },
 	createRateLimitResponse: vi.fn()
 }));

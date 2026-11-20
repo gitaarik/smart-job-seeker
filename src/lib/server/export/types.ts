@@ -2,8 +2,12 @@
  * Export/Import Type Definitions
  */
 
-import type { EmployedSettings, FreelanceSettings, SalaryAdjustments } from '$lib/salary/settings';
-import type { Place } from '$lib/data/places';
+import type {
+	EmployedSettings,
+	FreelanceSettings,
+	SalaryAdjustments
+} from '#lib/salary/settings.ts';
+import type { Place } from '#lib/data/places.ts';
 
 // Export scope options
 export type ExportScope = 'profile' | 'full';

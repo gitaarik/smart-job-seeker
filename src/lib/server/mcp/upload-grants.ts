@@ -57,7 +57,7 @@
  */
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 /**
  * Long enough to move a large file on a slow link, short enough that a grant

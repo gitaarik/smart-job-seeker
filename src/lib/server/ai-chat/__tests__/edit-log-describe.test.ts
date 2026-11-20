@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { EditLogEntry } from '../edit-log';
 
 // Imported for its declarations; nothing here reads or writes.
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
 const { describeLoggedChange } = await import('../edit-log');
 

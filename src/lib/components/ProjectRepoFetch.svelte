@@ -29,7 +29,7 @@
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import { faCircleNotch, faDownload, faListUl } from '@fortawesome/free-solid-svg-icons';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { normalizeSkill } from '$lib/skills';
+	import { normalizeSkill } from '#lib/skills.ts';
 
 	type Field = 'name' | 'url' | 'summary' | 'description' | 'stars' | 'start_date' | 'end_date';
 

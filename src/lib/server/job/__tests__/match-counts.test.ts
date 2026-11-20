@@ -17,7 +17,7 @@ const { queryRaw, getExpandedProfileSkills } = vi.hoisted(() => ({
 	getExpandedProfileSkills: vi.fn()
 }));
 
-vi.mock('$lib/server/db', async () => {
+vi.mock('#lib/server/db/index.ts', async () => {
 	const { sql } = await import('drizzle-orm');
 	return {
 		dbDirect: { query: {} },
@@ -30,7 +30,7 @@ vi.mock('$lib/server/db', async () => {
 			)
 	};
 });
-vi.mock('$lib/server/job/match-utils', () => ({ getExpandedProfileSkills }));
+vi.mock('#lib/server/job/match-utils.ts', () => ({ getExpandedProfileSkills }));
 
 import { getSkillVocabularyReach } from '../match-counts';
 

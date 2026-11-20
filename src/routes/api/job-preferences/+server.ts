@@ -11,16 +11,16 @@
  * partial change to a config that must already exist.
  */
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { match_config, profiles } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { writeMatchPreferences } from '$lib/server/job/match-preferences';
+import { match_config, profiles } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { writeMatchPreferences } from '#lib/server/job/match-preferences.ts';
 import {
 	jobPreferencesPatchSchema,
 	jobPreferencesSchema,
 	parseBody
-} from '$lib/server/validation/api-schemas';
+} from '#lib/server/validation/api-schemas.ts';
 
 /** The profile is this user's, or there is nothing here to write. */
 async function ownsProfile(profileId: number, userId: string): Promise<boolean> {

@@ -90,7 +90,7 @@
 	} = $props();
 
 	/** Spelled out here so `svelte/no-navigation-without-resolve` can see it. */
-	const GRAPH = resolve('/admin/skill-ontology/graph');
+	const GRAPH = resolve('admin/skill-ontology/graph');
 
 	function isPair(r: PendingRelation): boolean {
 		if (!counterpart) return false;

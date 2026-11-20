@@ -1,7 +1,7 @@
-import type { Profiles } from '$lib/server/db/schema';
-import { db } from '$lib/server/db';
+import type { Profiles } from '#lib/server/db/schema.ts';
+import { db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profile_versions } from '$lib/server/db/schema';
+import { profile_versions } from '#lib/server/db/schema.ts';
 import { validateToken } from '../auth/token-validation';
 
 export interface AccessControlOptions {

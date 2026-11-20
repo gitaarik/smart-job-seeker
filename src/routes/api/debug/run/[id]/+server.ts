@@ -12,14 +12,14 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
 import {
 	scraper_log_steps,
 	scraper_logs,
 	search_task_run_items,
 	search_task_runs
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 

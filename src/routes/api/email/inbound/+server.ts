@@ -1,11 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { getEnv } from '$lib/tools/get-env';
-import { createRateLimitResponse, webhookRateLimiter } from '$lib/server/middleware/rate-limit';
-import { routeInboundEmail } from '$lib/server/email/inbound-router';
-import { db } from '$lib/server/db';
-import { inbound_emails } from '$lib/server/db/schema';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { createRateLimitResponse, webhookRateLimiter } from '#lib/server/middleware/rate-limit.ts';
+import { routeInboundEmail } from '#lib/server/email/inbound-router.ts';
+import { db } from '#lib/server/db/index.ts';
+import { inbound_emails } from '#lib/server/db/schema.ts';
 
 /**
  * GET /api/email/inbound — health check

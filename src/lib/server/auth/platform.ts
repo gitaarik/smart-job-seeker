@@ -8,9 +8,9 @@
  * login-error persistence helper has external callers.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { platform_profiles } from '$lib/server/db/schema';
+import { platform_profiles } from '#lib/server/db/schema.ts';
 
 /**
  * Persist a login error on the per-profile state row. If no

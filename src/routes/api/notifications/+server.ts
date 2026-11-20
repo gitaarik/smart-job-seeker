@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getNotifications, markAsRead, markAllAsRead } from '$lib/server/notifications';
+import { getNotifications, markAsRead, markAllAsRead } from '#lib/server/notifications.ts';
 
 /**
  * GET /api/notifications — Get recent notifications

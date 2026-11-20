@@ -8,9 +8,9 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { job_matches, match_config } from '$lib/server/db/schema';
-import { enqueueMatchJob } from '$lib/server/queue/match-queue';
+import { db } from '#lib/server/db/index.ts';
+import { job_matches, match_config } from '#lib/server/db/schema.ts';
+import { enqueueMatchJob } from '#lib/server/queue/match-queue.ts';
 
 export async function triggerMatchForImport(
 	profileId: number,

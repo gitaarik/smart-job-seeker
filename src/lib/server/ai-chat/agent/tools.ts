@@ -10,14 +10,14 @@
  * name, its description with the contract in it, and its JSON Schema, in the
  * shape the provider layer binds (llm/langchain.ts ToolDefinition).
  */
-import type { ToolDefinition } from '$lib/server/llm';
-import type { CapabilityActor, LiveCapability } from '$lib/server/ai-chat/capabilities';
+import type { ToolDefinition } from '#lib/server/llm/index.ts';
+import type { CapabilityActor, LiveCapability } from '#lib/server/ai-chat/capabilities.ts';
 import {
 	chatReadTools,
 	withoutProfileId,
 	writeToolsFor,
 	type McpTool
-} from '$lib/server/mcp/tools';
+} from '#lib/server/mcp/tools.ts';
 
 /**
  * How much of a long text one read returns to the chat. The server reads

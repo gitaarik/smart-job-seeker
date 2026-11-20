@@ -16,7 +16,7 @@
  * Mirrors device-shares.ts.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import {
 	api_keys,
@@ -24,9 +24,9 @@ import {
 	device_shares,
 	platform_credentials,
 	users
-} from '$lib/server/db/schema';
-import { areContacts } from '$lib/server/contacts';
-import { createNotification } from '$lib/server/notifications';
+} from '#lib/server/db/schema.ts';
+import { areContacts } from '#lib/server/contacts.ts';
+import { createNotification } from '#lib/server/notifications.ts';
 
 /** Resolve all platform_credential ids owned by a user. */
 async function ownedCredentialIds(ownerId: string): Promise<number[]> {

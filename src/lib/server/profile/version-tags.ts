@@ -6,9 +6,14 @@
  * reach them without that module and everything it imports.
  */
 import { and, eq, sql, type SQL } from 'drizzle-orm';
-import { dbDirect as db, queryRaw } from '$lib/server/db';
-import { profile_versions, profiles } from '$lib/server/db/schema';
-import { onlyOnVersion, renameTagSlug, retireVersionTag, tagSlug } from '$lib/profile-visibility';
+import { dbDirect as db, queryRaw } from '#lib/server/db/index.ts';
+import { profile_versions, profiles } from '#lib/server/db/schema.ts';
+import {
+	onlyOnVersion,
+	renameTagSlug,
+	retireVersionTag,
+	tagSlug
+} from '#lib/profile-visibility.ts';
 
 function asStringArray(value: unknown): string[] {
 	return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];

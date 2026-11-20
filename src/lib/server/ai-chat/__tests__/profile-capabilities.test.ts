@@ -47,13 +47,13 @@ const state = {
 	createdAt: null as Date | null
 };
 
-vi.mock('$lib/server/profile/write', async (importOriginal) => {
+vi.mock('#lib/server/profile/write.ts', async (importOriginal) => {
 	// validatePatch is real — the point of the capability's validate() is that it
 	// is the write layer's rule, not a second copy of it. Same for the parent
 	// matcher and its refusal: checkParent used to compare labels itself, and
 	// being the stricter of the two readings is how it silently decided what a
 	// name could reach.
-	const actual = await importOriginal<typeof import('$lib/server/profile/write')>();
+	const actual = await importOriginal<typeof import('#lib/server/profile/write.ts')>();
 	return {
 		validatePatch: actual.validatePatch,
 		matchParentName: actual.matchParentName,
@@ -119,10 +119,11 @@ const translations = {
 	writtenSince: false
 };
 
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => {
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => {
 	// The field vocabulary and the refusals are real — they are what is under
 	// test. Only the overlay's reads and writes are stood in for.
-	const actual = await importOriginal<typeof import('$lib/server/profile/section-translations')>();
+	const actual =
+		await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>();
 	return {
 		...actual,
 		translatedLocales: () => Promise.resolve(translations.languages),
@@ -153,7 +154,7 @@ vi.mock('$lib/server/profile/section-translations', async (importOriginal) => {
 
 const { PROFILE_CAPABILITIES, PROFILE_CAPABILITY_NAMES, resourceForCapability } =
 	await import('../profile-capabilities');
-const { HIDEABLE_RESOURCES, PROFILE_RESOURCES } = await import('$lib/server/profile/resources');
+const { HIDEABLE_RESOURCES, PROFILE_RESOURCES } = await import('#lib/server/profile/resources.ts');
 type ProfileResourceName = keyof typeof PROFILE_RESOURCES;
 
 const ACTOR = { profileId: 12, isStaff: false };

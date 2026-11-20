@@ -2,9 +2,9 @@
  * Export profile data (resume/CV/portfolio scope)
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { profile_field_variants, profiles } from '$lib/server/db/schema';
+import { profile_field_variants, profiles } from '#lib/server/db/schema.ts';
 import {
 	CERTIFICATE_COLUMNS,
 	CERTIFICATE_SKILL_COLUMNS,

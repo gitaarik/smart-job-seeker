@@ -19,10 +19,10 @@
  *   npx dotenvx run -f ../.env -- npx tsx scripts/backfill-failure-kinds.ts --apply
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { search_task_runs } from '$lib/server/db/schema';
-import { classifyLegacyErrorMessage } from '$lib/import-tasks/failure-kinds';
+import { search_task_runs } from '#lib/server/db/schema.ts';
+import { classifyLegacyErrorMessage } from '#lib/import-tasks/failure-kinds.ts';
 
 const APPLY = process.argv.includes('--apply');
 

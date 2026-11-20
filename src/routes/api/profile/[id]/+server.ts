@@ -1,12 +1,12 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, ne } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { coerceFields, type FieldKind } from '$lib/server/utils/field-kinds';
-import { parseBody, profileUpdateSchema } from '$lib/server/validation/api-schemas';
-import type { Place } from '$lib/data/places';
+import { profiles } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { coerceFields, type FieldKind } from '#lib/server/utils/field-kinds.ts';
+import { parseBody, profileUpdateSchema } from '#lib/server/validation/api-schemas.ts';
+import type { Place } from '#lib/data/places.ts';
 
 /**
  * The profile row's own editable columns.

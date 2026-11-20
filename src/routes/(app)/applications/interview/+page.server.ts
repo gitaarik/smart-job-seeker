@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { cheat_sheets, project_stories } from '$lib/server/db/schema';
+import { cheat_sheets, project_stories } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

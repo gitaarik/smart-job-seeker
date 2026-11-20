@@ -1,7 +1,7 @@
 /**
  * Tests for what the auth-block applier actually writes.
  *
- * The decision is tested next door in `$lib/import-tasks/failure-policy`; this
+ * The decision is tested next door in `#lib/import-tasks/failure-policy.ts`; this
  * covers the layer under it, which is where the mistakes that matter live: the
  * guards that decide a task is even eligible, the exact columns written for a
  * backoff versus a switch-off, and the two places where writing the wrong
@@ -34,11 +34,11 @@ const state: FakeState = {
 
 const createNotification = vi.fn();
 
-vi.mock('$lib/server/notifications', () => ({
+vi.mock('#lib/server/notifications.ts', () => ({
 	createNotification: (...args: unknown[]) => createNotification(...args)
 }));
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	// `await db.update(x).set(y).where(z)` and
 	// `await db.update(x).set(y).where(z).returning(w)` are both used, so the
 	// where() result has to be thenable *and* carry returning().

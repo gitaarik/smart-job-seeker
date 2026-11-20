@@ -3,10 +3,10 @@
  * Used by the resume parse endpoint and the diff apply action.
  */
 
-import { dbDirect as db } from '$lib/server/db';
-import { import_logs } from '$lib/server/db/schema';
-import type { ResumeData } from '$lib/server/resume/types';
-import type { DiffApplyPayload } from '$lib/server/resume/apply-diff';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { import_logs } from '#lib/server/db/schema.ts';
+import type { ResumeData } from '#lib/server/resume/types.ts';
+import type { DiffApplyPayload } from '#lib/server/resume/apply-diff.ts';
 
 type User = { id: string; email?: string | null };
 

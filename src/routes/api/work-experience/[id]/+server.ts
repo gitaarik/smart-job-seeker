@@ -10,8 +10,8 @@
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { patchOwnedRow, requireRowActor } from '$lib/server/profile/write-http';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { patchOwnedRow, requireRowActor } from '#lib/server/profile/write-http.ts';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

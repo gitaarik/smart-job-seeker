@@ -5,9 +5,9 @@
 
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { getBalance } from '$lib/server/billing/credits';
-import { getPlans } from '$lib/server/billing/plans';
-import { getActiveSubscription } from '$lib/server/billing/subscription';
+import { getBalance } from '#lib/server/billing/credits.ts';
+import { getPlans } from '#lib/server/billing/plans.ts';
+import { getActiveSubscription } from '#lib/server/billing/subscription.ts';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;

@@ -7,10 +7,10 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { getCommunityJobCountsByWindow } from '$lib/server/job/match-counts';
+import { profiles } from '#lib/server/db/schema.ts';
+import { getCommunityJobCountsByWindow } from '#lib/server/job/match-counts.ts';
 
 const WINDOWS = [7, 30, 90, null]; // null = all time
 

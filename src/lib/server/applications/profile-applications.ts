@@ -14,14 +14,14 @@
  * an external agent was given a key for.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
-import { getRecordTypeLabel, today } from '$lib/application-records';
-import { isSnoozed } from '$lib/application-snooze';
-import { nextStep, stageLabel, type InterviewRound } from '$lib/application-status';
+import { application_records, applications } from '#lib/server/db/schema.ts';
+import { getRecordTypeLabel, today } from '#lib/application-records.ts';
+import { isSnoozed } from '#lib/application-snooze.ts';
+import { nextStep, stageLabel, type InterviewRound } from '#lib/application-status.ts';
 import { describeNextStepForModel } from './status';
-import type { OfferTerms } from '$lib/application-offer';
+import type { OfferTerms } from '#lib/application-offer.ts';
 
 export const APPLICATION_PAGE_DEFAULT = 20;
 export const APPLICATION_PAGE_MAX = 50;
@@ -49,7 +49,7 @@ export interface ProfileApplicationSummary {
 	 * Part of what NAMES an application's state for the same reason the status
 	 * is: an agent asked which applications need chasing would otherwise call a
 	 * deliberately parked one neglected. Only ever set while the pause is still
-	 * ahead — see `$lib/application-snooze`.
+	 * ahead — see `#lib/application-snooze.ts`.
 	 */
 	snoozed_until: string | null;
 }

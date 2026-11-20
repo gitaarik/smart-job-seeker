@@ -17,16 +17,16 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { skill_embeddings } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { skill_embeddings } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import {
 	cosineSimilarity,
 	embedBatch,
 	isEmbeddingConfigured,
 	truncateVector
-} from '$lib/server/llm/embeddings';
-import { normalizeSkill } from '$lib/skills';
+} from '#lib/server/llm/embeddings.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 interface VocabEntry {
 	label: string;

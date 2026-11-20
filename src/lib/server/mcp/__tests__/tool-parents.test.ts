@@ -18,7 +18,7 @@ const state = {
 	rowsByTable: new Map<unknown, Record<string, unknown>[]>()
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const resolvable = (rows: unknown[]) =>
 		Object.assign(Promise.resolve(rows), {
 			limit: () => Promise.resolve(rows),
@@ -66,18 +66,18 @@ vi.mock('$lib/server/db', () => {
 
 // Which languages a profile writes in is another file's question. This profile
 // has none, so no tool here grows a translation field.
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>()),
 	translatedLocales: () => Promise.resolve([])
 }));
 
 // The versions a tag may name are the tag tools' list, not the parents'. None here.
-vi.mock('$lib/server/ai-chat/tag-capabilities', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/ai-chat/tag-capabilities')>()),
+vi.mock('#lib/server/ai-chat/tag-capabilities.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/ai-chat/tag-capabilities.ts')>()),
 	libraryVersions: () => Promise.resolve([])
 }));
 
-const { tech_skill_categories } = await import('$lib/server/db/schema');
+const { tech_skill_categories } = await import('#lib/server/db/schema.ts');
 const { toolsFor } = await import('../tools');
 
 const ACTOR = { profileId: 7 };

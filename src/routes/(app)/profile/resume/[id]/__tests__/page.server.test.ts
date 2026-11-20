@@ -32,7 +32,7 @@ const mockDelete = vi.fn((table: unknown) => {
 	return { where: vi.fn().mockResolvedValue(undefined) };
 });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profile_versions: {
@@ -60,7 +60,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values }))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profile_versions: { __table: 'profile_versions', id: 'pv.id', profile_id: 'pv.profile_id' },
 	profile_version_extensions: { __table: 'profile_version_extensions' },
 	profiles: { __table: 'profiles', id: 'p.id' },
@@ -78,23 +78,23 @@ vi.mock('../../../utils', () => ({
 // The load asks which wording the version prints for each field. These tests
 // are about the actions, and the schema stand-in above holds only the tables
 // they touch, so the wording module (which reads several more) is stood in for.
-vi.mock('$lib/server/profile/field-variants', () => ({
+vi.mock('#lib/server/profile/field-variants.ts', () => ({
 	wordingStatesFor: vi.fn().mockResolvedValue([])
 }));
 
-vi.mock('$lib/server/profile/generate-version-pdfs', () => ({
+vi.mock('#lib/server/profile/generate-version-pdfs.ts', () => ({
 	generateVersionPdfs: (...a: unknown[]) => mockGenerateVersionPdfs(...a)
 }));
 
-vi.mock('$lib/server/profile/version-tags', () => ({
+vi.mock('#lib/server/profile/version-tags.ts', () => ({
 	retagVersionSlug: (...a: unknown[]) => mockRetagVersionSlug(...a),
 	versionDeleteImpact: vi.fn().mockResolvedValue(null)
 }));
 
-vi.mock('$lib/server/billing/credits', () => ({ chargeCredits: vi.fn() }));
-vi.mock('$lib/server/billing/require-credits', () => ({ requireCredits: vi.fn() }));
-vi.mock('$lib/resume-contact-fields', () => ({ buildToggles: vi.fn(() => []) }));
-vi.mock('$lib/version-overrides', () => ({
+vi.mock('#lib/server/billing/credits.ts', () => ({ chargeCredits: vi.fn() }));
+vi.mock('#lib/server/billing/require-credits.ts', () => ({ requireCredits: vi.fn() }));
+vi.mock('#lib/resume-contact-fields.ts', () => ({ buildToggles: vi.fn(() => []) }));
+vi.mock('#lib/version-overrides.ts', () => ({
 	isTailoredSlug: vi.fn(() => false),
 	isReservedVersionSlug: vi.fn(() => false)
 }));

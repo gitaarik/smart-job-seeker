@@ -1,6 +1,6 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
-import type { Session, User } from '$lib/server/auth/better-auth';
+import type { Session, User } from '#lib/server/auth/better-auth.ts';
 
 declare global {
 	interface Window {

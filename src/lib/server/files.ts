@@ -8,9 +8,9 @@
 import { writeFile, readFile, mkdir, unlink } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { files } from '$lib/server/db/schema';
+import { files } from '#lib/server/db/schema.ts';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
 

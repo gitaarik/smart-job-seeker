@@ -9,10 +9,10 @@
  * auto-translate, the verification-email parser and the scraper's helpers.
  */
 
-import { chargeCredits, tokensToCost } from '$lib/server/billing/credits';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
-import { config } from '$lib/server/config';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
+import { chargeCredits, tokensToCost } from '#lib/server/billing/credits.ts';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
+import { config } from '#lib/server/config.ts';
+import { errorTracker } from '#lib/server/monitoring/error-tracker.ts';
 import {
 	completionOutput,
 	generateChatCompletionTracked,

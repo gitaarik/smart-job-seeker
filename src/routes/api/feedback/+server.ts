@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
-import { user_feedback, user_feedback_files } from '$lib/server/db/schema';
-import { uploadFile } from '$lib/server/files';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { user_feedback, user_feedback_files } from '#lib/server/db/schema.ts';
+import { uploadFile } from '#lib/server/files.ts';
 import { Buffer } from 'buffer';
 
 export const POST: RequestHandler = async ({ request, locals }) => {

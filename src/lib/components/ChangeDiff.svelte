@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-	import { analyseChanges, asText, isLong, type FieldChange } from '$lib/utils/change-analysis';
+	import { analyseChanges, asText, isLong, type FieldChange } from '#lib/utils/change-analysis.ts';
 	import DiffSegments from './DiffSegments.svelte';
 
 	/**

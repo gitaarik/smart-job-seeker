@@ -3,7 +3,7 @@
  * Creates profile with all related data from parsed resume
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
 import {
 	profiles,
@@ -21,7 +21,7 @@ import {
 	certificate_skills,
 	certificates,
 	references
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import type {
 	Certificate,
 	Education,
@@ -33,7 +33,7 @@ import type {
 	SkillCategory,
 	WorkExperience
 } from './types';
-import { asWorkMode } from '$lib/work-mode';
+import { asWorkMode } from '#lib/work-mode.ts';
 
 /**
  * Resume importer dates come as ISO-ish strings; destination columns are

@@ -21,7 +21,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 import fixture from './fixtures/skill-similarities.json';
 
 const { labels, sims, model, dimensions, anchors } = fixture as {

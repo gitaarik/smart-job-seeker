@@ -1,18 +1,18 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, count, desc, sum } from 'drizzle-orm';
-import { media_items, profile_document_projects, profile_exports } from '$lib/server/db/schema';
+import { media_items, profile_document_projects, profile_exports } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
-import { createProfileExport } from '$lib/server/profile/exports';
-import { buildExportUrl } from '$lib/server/utils/export-url-builder';
+import { createProfileExport } from '#lib/server/profile/exports.ts';
+import { buildExportUrl } from '#lib/server/utils/export-url-builder.ts';
 import {
 	buildProfileExport,
 	buildFullExport,
 	createExportZip,
 	getProfileName,
 	type ExportScope
-} from '$lib/server/export';
+} from '#lib/server/export/index.ts';
 
 /**
  * What the archive will actually contain, so the page can say so before the

@@ -18,7 +18,11 @@
  */
 import { createHash } from 'node:crypto';
 import { promptTemplates } from './prompt-templates.js';
-import type { NoulQuestion, SystemOneRequest, SystemOneResponse } from '$lib/server/llm/typesafe';
+import type {
+	NoulQuestion,
+	SystemOneRequest,
+	SystemOneResponse
+} from '#lib/server/llm/typesafe.ts';
 
 export const SKILL_MATCH_PROMPT = 'extract_matched_skills';
 

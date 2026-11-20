@@ -8,20 +8,20 @@
 
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { projectDetailDep } from '$lib/project-detail';
-import { dbDirect as db } from '$lib/server/db';
+import { projectDetailDep } from '#lib/project-detail.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, count, eq } from 'drizzle-orm';
 import {
 	profile_document_projects,
 	side_project_achievements,
 	side_project_technologies,
 	side_projects
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	getSideProjectBannerUrl,
 	getSideProjectImageUrl,
 	getSideProjectLogoUrl
-} from '$lib/utils/entity-media-url';
+} from '#lib/utils/entity-media-url.ts';
 
 export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 	const layoutData = await parent();

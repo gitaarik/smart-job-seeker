@@ -1,14 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
 import { sectionActions } from '../section-actions';
-import { PROFILE_RESOURCES } from '$lib/server/profile/resources';
+import { PROFILE_RESOURCES } from '#lib/server/profile/resources.ts';
 import { redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, asc } from 'drizzle-orm';
 import {
 	work_experiences,
 	work_experience_achievements,
 	work_experience_technologies
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

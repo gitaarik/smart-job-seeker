@@ -8,8 +8,8 @@
  * different fields, read the same once they are slides.
  */
 
-import { formatDateRangeVerbose } from '$lib/tools/date-utils';
-import { getSideProjectLogoUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
+import { formatDateRangeVerbose } from '#lib/tools/date-utils.ts';
+import { getSideProjectLogoUrl, getWorkExperienceLogoUrl } from '#lib/utils/entity-media-url.ts';
 import { featuredKey, type FeaturedWork, type Row, type SiteLists } from '../site-lists';
 
 /** How many technologies a slide names before "+N"; the story names them all. */

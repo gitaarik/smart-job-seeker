@@ -10,8 +10,8 @@
 	import { onMount } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTimes, faUpload } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { portalToBody } from '$lib/actions/portal';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { portalToBody } from '#lib/actions/portal.ts';
 	import CropEditor from './CropEditor.svelte';
 	import {
 		centredCrop,
@@ -20,7 +20,7 @@
 		type Crop,
 		type MediaItemView,
 		type MediaKind
-	} from '$lib/media-library';
+	} from '#lib/media-library.ts';
 
 	interface Props {
 		title: string;

@@ -14,7 +14,7 @@
 		faCircleNotch,
 		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
-	import { ANONYMOUS_DESCRIPTION, LEAK_LABELS, type LeakHit } from '$lib/resume-anonymity';
+	import { ANONYMOUS_DESCRIPTION, LEAK_LABELS, type LeakHit } from '#lib/resume-anonymity.ts';
 
 	let {
 		anonymous,

@@ -93,10 +93,11 @@ npm run test:ui                 # Test UI dashboard
 - **Strict mode enabled** - Type everything properly
 - Use `npx tsx` for running TypeScript scripts (not `node`)
 - Use ES Modules (`import`) instead of CommonJS (`require`)
-- **Path Aliases** - `$lib` alias is configured for both SvelteKit and scripts:
-  - In SvelteKit: Works automatically via `kit.alias` configuration
-  - In scripts: Configured via `tsconfig.json` paths and `deno.json` imports
-  - Use `$lib/` imports in scripts directory for better maintainability
+- **`#lib`** - `src/lib` is imported as `#lib/...`, with the file's extension
+  (`import { db } from '#lib/server/db/index.ts'`). It is a Node subpath import
+  declared in `package.json` (`imports`), so SvelteKit, Vite, TypeScript, tsx
+  and esbuild all resolve it the same way, scripts included. SvelteKit 3
+  replaced `$lib` with it.
 
 ### Svelte 5
 

@@ -8,8 +8,8 @@
 
 import { randomBytes } from 'node:crypto';
 import { and, desc, eq, inArray } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { api_keys, type DemoLinks, demo_link_devices, demo_links } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { api_keys, type DemoLinks, demo_link_devices, demo_links } from '#lib/server/db/schema.ts';
 
 /** Generated as a url-safe random token (~32 chars). */
 function generateToken(): string {

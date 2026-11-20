@@ -1,13 +1,13 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, gt, like } from 'drizzle-orm';
 import { eq } from 'drizzle-orm';
-import { verifications } from '$lib/server/db/schema';
-import { createOrLinkAccount } from '$lib/server/auth/invite-account';
-import { acceptedTermsField, recordTermsAcceptance } from '$lib/server/legal/record';
-import { termsVersion } from '$lib/server/legal/texts';
-import { applyInviteGrants, grantsFromInvitePayload } from '$lib/server/auth/invite-grants';
+import { verifications } from '#lib/server/db/schema.ts';
+import { createOrLinkAccount } from '#lib/server/auth/invite-account.ts';
+import { acceptedTermsField, recordTermsAcceptance } from '#lib/server/legal/record.ts';
+import { termsVersion } from '#lib/server/legal/texts.ts';
+import { applyInviteGrants, grantsFromInvitePayload } from '#lib/server/auth/invite-grants.ts';
 
 function findInviteByToken(
 	invites: { id: string; identifier: string; value: string }[],

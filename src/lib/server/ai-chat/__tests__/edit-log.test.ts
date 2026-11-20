@@ -23,7 +23,7 @@ const state = {
 	newer: [] as Record<string, unknown>[]
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const dbMock = {
 		insert: () => ({
 			values: (values: Record<string, unknown>) => {
@@ -83,7 +83,7 @@ vi.mock('../capabilities', () => ({
 }));
 
 const mockScoreProposalTurn = vi.fn();
-vi.mock('$lib/server/monitoring/product-scores', () => ({
+vi.mock('#lib/server/monitoring/product-scores.ts', () => ({
 	scoreProposalTurn: (...a: unknown[]) => mockScoreProposalTurn(...a)
 }));
 

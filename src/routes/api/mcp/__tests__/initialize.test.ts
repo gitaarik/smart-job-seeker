@@ -12,19 +12,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const verifyMcpKey = vi.fn();
 const recordMcpClient = vi.fn();
 
-vi.mock('$lib/server/mcp/keys', () => ({
+vi.mock('#lib/server/mcp/keys.ts', () => ({
 	verifyMcpKey: (...a: unknown[]) => verifyMcpKey(...a),
 	recordMcpClient: (...a: unknown[]) => recordMcpClient(...a)
 }));
 
-vi.mock('$lib/server/mcp/call', () => ({ callTool: vi.fn() }));
+vi.mock('#lib/server/mcp/call.ts', () => ({ callTool: vi.fn() }));
 
-vi.mock('$lib/server/mcp/tools', () => ({
+vi.mock('#lib/server/mcp/tools.ts', () => ({
 	instructionsFor: () => 'instructions',
 	toolsFor: async () => []
 }));
 
-vi.mock('$lib/server/middleware/rate-limit', () => ({
+vi.mock('#lib/server/middleware/rate-limit.ts', () => ({
 	mcpRateLimiter: { consumeKey: async () => true, retryAfterSeconds: () => 1 },
 	createRateLimitResponse: vi.fn()
 }));

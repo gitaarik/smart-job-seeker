@@ -15,14 +15,14 @@ const mockQuery = vi.fn();
 const mockWhereDelete = vi.fn();
 const mockDelete = vi.fn().mockReturnValue({ where: mockWhereDelete });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	queryRawDirect: (q: SQL) => mockQuery(q),
 	dbDirect: {
 		delete: (...a: unknown[]) => mockDelete(...a)
 	}
 }));
 
-import { jobs } from '$lib/server/db/schema';
+import { jobs } from '#lib/server/db/schema.ts';
 import {
 	DEFAULT_BATCH_LIMIT,
 	DEFAULT_RETENTION_DAYS,

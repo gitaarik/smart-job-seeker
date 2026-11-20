@@ -24,7 +24,7 @@ const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 const mockDeleteWhere = vi.fn().mockResolvedValue({ rowCount: 1 });
 const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			api_keys: { findFirst: (...a: unknown[]) => mockApiKeysFindFirst(...a) },
@@ -49,7 +49,7 @@ vi.mock('drizzle-orm', () => ({
 	inArray: vi.fn((col: unknown, vals: unknown[]) => ({ kind: 'in', col, vals }))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	api_keys: {
 		id: 'api_keys.id',
 		user_id: 'api_keys.user_id',
@@ -68,17 +68,17 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 const mockEnsureAcceptedContact = vi.fn().mockResolvedValue(undefined);
-vi.mock('$lib/server/contacts', () => ({
+vi.mock('#lib/server/contacts.ts', () => ({
 	areContacts: vi.fn(),
 	ensureAcceptedContact: (...a: unknown[]) => mockEnsureAcceptedContact(...a)
 }));
 
 const mockCreateNotification = vi.fn().mockResolvedValue(undefined);
-vi.mock('$lib/server/notifications', () => ({
+vi.mock('#lib/server/notifications.ts', () => ({
 	createNotification: (...a: unknown[]) => mockCreateNotification(...a)
 }));
 
-vi.mock('$lib/server/credential-shares', () => ({
+vi.mock('#lib/server/credential-shares.ts', () => ({
 	revokeOrphanedCredentialShares: vi.fn()
 }));
 
@@ -86,7 +86,11 @@ vi.mock('node:crypto', () => ({
 	randomBytes: vi.fn(() => ({ toString: () => 'deadbeef' }))
 }));
 
-import { acceptDeviceInvite, createDeviceInvite, getDeviceInvite } from '$lib/server/device-shares';
+import {
+	acceptDeviceInvite,
+	createDeviceInvite,
+	getDeviceInvite
+} from '#lib/server/device-shares.ts';
 
 function inviteRow(payload: Record<string, unknown>) {
 	return { id: 'ver-1', value: JSON.stringify(payload) };

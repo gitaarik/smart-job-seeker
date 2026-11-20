@@ -6,7 +6,7 @@ import {
 	type RetrievalItem,
 	type RetrievalRecord
 } from './retrieval-record';
-import { describeVia, formatRetrievalScore, isFusedItem } from '$lib/retrieval-display';
+import { describeVia, formatRetrievalScore, isFusedItem } from '#lib/retrieval-display.ts';
 
 const item = (over: Partial<RetrievalItem> = {}): RetrievalItem => ({
 	source: 'projects',

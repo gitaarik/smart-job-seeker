@@ -29,7 +29,7 @@ const mockValues = vi.fn((_values: Record<string, unknown>) => ({
 	returning: () => Promise.resolve([{ id: 501 }])
 }));
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const handle = {
 		query: {
 			job_platforms: { findFirst: (...a: unknown[]) => mockPlatformFindFirst(...a) },
@@ -52,7 +52,7 @@ vi.mock('drizzle-orm', () => ({
 	or: (...a: unknown[]) => a
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	api_keys: { id: 'api_keys.id' },
 	job_platforms: { id: 'job_platforms.id' },
 	platform_credentials: {
@@ -68,14 +68,14 @@ vi.mock('$lib/server/db/schema', () => ({
 	search_tasks: {}
 }));
 
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: { localBrowserAllowed: true, defaultBrowserProvider: null }
 }));
-vi.mock('$lib/server/auth/api-key', () => ({ listApiKeys: vi.fn() }));
-vi.mock('$lib/server/credential-shares', () => ({
+vi.mock('#lib/server/auth/api-key.ts', () => ({ listApiKeys: vi.fn() }));
+vi.mock('#lib/server/credential-shares.ts', () => ({
 	hasCredentialAccess: () => Promise.resolve(true)
 }));
-vi.mock('$lib/server/device-shares', () => ({
+vi.mock('#lib/server/device-shares.ts', () => ({
 	hasDeviceAccess: (...a: unknown[]) => mockHasDeviceAccess(...a),
 	listSharedWithMe: vi.fn()
 }));

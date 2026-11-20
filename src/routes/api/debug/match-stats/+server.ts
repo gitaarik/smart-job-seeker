@@ -17,7 +17,7 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { queryRawDirect, sql } from '$lib/server/db';
+import { queryRawDirect, sql } from '#lib/server/db/index.ts';
 
 function requireDebugAuth(request: Request): void {
 	const key = process.env.DEBUG_API_KEY;

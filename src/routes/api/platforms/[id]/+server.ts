@@ -1,12 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { job_platforms, search_tasks } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { platformUpdateSchema, parseBody } from '$lib/server/validation/api-schemas';
-import { checkPublicHttpUrl } from '$lib/server/net/public-url';
-import { LOGIN_PAGE_URL_MAX } from '$lib/import-tasks/custom-site';
+import { job_platforms, search_tasks } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { platformUpdateSchema, parseBody } from '#lib/server/validation/api-schemas.ts';
+import { checkPublicHttpUrl } from '#lib/server/net/public-url.ts';
+import { LOGIN_PAGE_URL_MAX } from '#lib/import-tasks/custom-site.ts';
 
 /**
  * PATCH /api/platforms/[id]

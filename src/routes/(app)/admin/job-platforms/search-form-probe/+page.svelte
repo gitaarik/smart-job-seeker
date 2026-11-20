@@ -22,7 +22,7 @@
 		<p class="text-sm text-[var(--dash-text-muted)]">
 			Recent platform-discovery activity across all platforms. To start a new run, open the platform
 			on
-			<a href={resolve('/admin/job-platforms')} class="underline">Job Platforms</a>
+			<a href={resolve('admin/job-platforms')} class="underline">Job Platforms</a>
 			and click "New discovery".
 		</p>
 	</header>

@@ -7,16 +7,16 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
+import { dbDirect as db, queryRaw, sql } from '#lib/server/db/index.ts';
 import { eq, and, inArray, lt, desc, count } from 'drizzle-orm';
 import {
 	search_task_runs,
 	search_task_run_items,
 	search_tasks,
 	users
-} from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { searchTaskDisplayName } from '$lib/format';
+} from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { searchTaskDisplayName } from '#lib/format.ts';
 import {
 	addScrapeJob,
 	removeWaitingJob,
@@ -24,7 +24,7 @@ import {
 	listQueueJobs,
 	removeJobById,
 	getQueueStats
-} from '$lib/server/queue';
+} from '#lib/server/queue/index.ts';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = requireAuth(locals);

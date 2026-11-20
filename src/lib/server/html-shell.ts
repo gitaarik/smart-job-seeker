@@ -1,4 +1,4 @@
-import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
+import { BASE_LOCALE, isKnownLocale } from '#lib/resume-translations.ts';
 
 /**
  * Fill in what app.html cannot know until a page has rendered: the theme, and

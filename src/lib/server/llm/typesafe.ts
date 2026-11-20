@@ -8,7 +8,7 @@
  * a level between its criteria. None of the chat wrapper applies (no messages,
  * no JSON to parse, no response cache), so this is a plain HTTP call.
  */
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 import { assertUnderDailyLimit, recordSpend } from './spend-limit.js';
 
 const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';

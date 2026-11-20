@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
-import { profile_tokens, profile_versions } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_tokens, profile_versions } from '#lib/server/db/schema.ts';
 import { eq, and, inArray, asc, desc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../utils';
 import {
@@ -9,7 +9,7 @@ import {
 	DEFAULT_VIEW_MODE,
 	isValidFormat,
 	isValidViewMode
-} from '$lib/profile-tokens';
+} from '#lib/profile-tokens.ts';
 import crypto from 'crypto';
 
 function generateToken(): string {

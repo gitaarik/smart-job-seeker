@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { saveToCookie, switchTheme, themeState } from '$lib/stores/theme.svelte';
+	import { saveToCookie, switchTheme, themeState } from '#lib/stores/theme.svelte.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCircleHalfStroke, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
-	import { track } from '$lib/tools/analytics';
+	import { track } from '#lib/tools/analytics.ts';
 
 	interface Props {
 		variant?: 'floating' | 'inline';

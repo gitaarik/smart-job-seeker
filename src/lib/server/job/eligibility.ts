@@ -1,4 +1,4 @@
-import { sqlJoin, sql } from '$lib/server/db';
+import { sqlJoin, sql } from '#lib/server/db/index.ts';
 /**
  * Shared eligibility filter for job matching SQL queries.
  *
@@ -13,9 +13,9 @@ import { sqlJoin, sql } from '$lib/server/db';
  */
 
 import { type SQL } from 'drizzle-orm';
-import { JOB_TYPES, WORK_LOCATIONS, buildFamilyMap } from '$lib/data/job-taxonomy';
-import { expandExperienceBuckets, toExperienceBuckets } from '$lib/job-platforms/search-filters';
-import { normalizeSkill } from '$lib/skills';
+import { JOB_TYPES, WORK_LOCATIONS, buildFamilyMap } from '#lib/data/job-taxonomy.ts';
+import { expandExperienceBuckets, toExperienceBuckets } from '#lib/job-platforms/search-filters.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 /**
  * Does the skill-overlap gate get a vote on this job?

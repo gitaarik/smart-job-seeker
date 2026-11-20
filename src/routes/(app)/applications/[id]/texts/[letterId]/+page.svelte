@@ -3,22 +3,22 @@
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { goto, refreshAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
-	import { track } from '$lib/tools/analytics';
-	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
+	import { track } from '#lib/tools/analytics.ts';
+	import ConversationTimeline from '#lib/components/conversation/ConversationTimeline.svelte';
 	import ConfirmModal from '../../../../profile/components/ConfirmModal.svelte';
-	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
-	import type { DeleteScope, TurnLabels } from '$lib/server/ai-chat/entity-versions';
+	import { LETTER_TYPE_LABELS, letterLabel } from '#lib/texts/letter-label.ts';
+	import type { DeleteScope, TurnLabels } from '#lib/server/ai-chat/entity-versions.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let letter = $derived(data.letter);
 	let conversation = $derived(data.conversation);
 	let isNew = $derived(data.isNew);
-	let appId = $derived($page.params.id ?? '');
+	let appId = $derived(page.params.id ?? '');
 
 	let showDeleteConfirm = $state(false);
 
@@ -87,7 +87,7 @@
 				letterId: String(result.letterId)
 			}),
 			{
-				replaceState: true
+				replace: true
 			}
 		);
 		return result.letterId;
@@ -162,7 +162,7 @@
 		// Activation funnel: count fresh drafts — explicit "generate" and any "auto"
 		// turn (which may draft or just advise; close enough for activation).
 		if (mode === 'generate' || mode === 'auto') track('ai_letter_generated');
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function onReview(content: string) {
@@ -171,7 +171,7 @@
 		const latestContent = conversation.findLast((e) => e.content)?.content;
 		if (content !== latestContent) {
 			await apiSaveContent(letterId, content);
-			await invalidateAll();
+			await refreshAll();
 		}
 		if (letter.ai_chat_id) {
 			await apiFollowup(
@@ -183,7 +183,7 @@
 		} else {
 			await apiGenerate(letterId, 'review');
 		}
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function onSendFollowup(
@@ -192,13 +192,13 @@
 	) {
 		const letterId = await ensureLetterExists();
 		await apiFollowup(letterId, text, opts.updateContent, opts.mode, opts.replaceVersionId);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function onSaveVersion(content: string, opts: { deleteAfterVersionId?: number }) {
 		const letterId = await ensureLetterExists();
 		await apiSaveContent(letterId, content, opts.deleteAfterVersionId);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	// Non-destructive: make a chosen version the live letter without trimming.
@@ -207,7 +207,7 @@
 		const fd = new FormData();
 		fd.set('content', content);
 		await postAction(letter.id, 'applyVersion', fd);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	// Remove one entry from the version trail, rewinding the thread to just
@@ -218,7 +218,7 @@
 		fd.set('versionId', String(versionId));
 		fd.set('scope', scope);
 		await postAction(letter.id, 'deleteEntry', fd);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function formatDate(date: Date | string | null): string {

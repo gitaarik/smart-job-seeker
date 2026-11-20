@@ -10,16 +10,16 @@
  * answer); advice/review only record a version for the timeline to render.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { project_stories } from '$lib/server/db/schema';
+import { project_stories } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import { ensureBaselineVersion, recordVersion, STORY_VERSIONS } from './entity-versions';
-import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '$lib/interview/star';
+import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '#lib/interview/star.ts';
 import type { GenerationContextOption } from './generation-context';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
-import { pinnedProjectForStory } from '$lib/server/profile/project-stories';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
+import { pinnedProjectForStory } from '#lib/server/profile/project-stories.ts';
 
 /** Profile data fields relevant for building a behavioural STAR story. */
 export const STORY_PROFILE_FIELDS: ExportedProfileKey[] = [

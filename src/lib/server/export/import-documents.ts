@@ -10,9 +10,9 @@
  * (only extracted text is kept), so there is nothing to point at.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profile_document_files, profile_document_projects } from '$lib/server/db/schema';
+import { profile_document_files, profile_document_projects } from '#lib/server/db/schema.ts';
 import { sanitizeArchivePath } from './export-documents';
 import type { ExportedDocument } from './types';
 

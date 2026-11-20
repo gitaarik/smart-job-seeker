@@ -5,9 +5,9 @@
 	 * See $lib/portfolio-seo.ts. Both layouts print it; the private CV page,
 	 * which is noindex, does not.
 	 */
-	import type { PortfolioThemeConfig } from '$lib/portfolio-themes';
-	import { assetUrl } from '$lib/presentation-templates';
-	import { absoluteUrl, personJsonLd, type PortfolioSeoUrls } from '$lib/portfolio-seo';
+	import type { PortfolioThemeConfig } from '#lib/portfolio-themes.ts';
+	import { assetUrl } from '#lib/presentation-templates.ts';
+	import { absoluteUrl, personJsonLd, type PortfolioSeoUrls } from '#lib/portfolio-seo.ts';
 
 	interface Props {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

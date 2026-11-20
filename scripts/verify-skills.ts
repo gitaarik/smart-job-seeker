@@ -16,15 +16,15 @@ import {
 	readOwnedRow,
 	readOwnedRows,
 	updateRow
-} from '$lib/server/profile/write';
+} from '#lib/server/profile/write.ts';
 import {
 	CAPABILITIES,
 	resolveCapabilities,
 	renderCapabilityPrompt
-} from '$lib/server/ai-chat/capabilities';
-import { PROFILE_CAPABILITY_NAMES, verbsFor } from '$lib/server/ai-chat/profile-capabilities';
-import { profileEditManifestText } from '$lib/server/ai-chat/profile-edit-manifest';
-import { isHiddenFromDocuments } from '$lib/profile-visibility';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { PROFILE_CAPABILITY_NAMES, verbsFor } from '#lib/server/ai-chat/profile-capabilities.ts';
+import { profileEditManifestText } from '#lib/server/ai-chat/profile-edit-manifest.ts';
+import { isHiddenFromDocuments } from '#lib/profile-visibility.ts';
 
 const profileId = Number(process.argv[2]);
 const actor = { profileId, isStaff: false };
@@ -67,7 +67,7 @@ async function main() {
 	// --- a create, a move and a delete, on a row this script owns ---
 	// The group as the assistant names it — the heading plus whatever tells it
 	// apart from a group of the same name, which is what `category` has to carry.
-	const { PROFILE_RESOURCES } = await import('$lib/server/profile/resources');
+	const { PROFILE_RESOURCES } = await import('#lib/server/profile/resources.ts');
 	const group = PROFILE_RESOURCES.skill_category.rowLabel(groups[0]);
 	const created = await createRow(
 		'skill',
@@ -127,7 +127,7 @@ async function main() {
 		live.length === 6,
 		live.map((c) => c.capability).join(', ')
 	);
-	const { TARGET_LIST_CAP } = await import('$lib/server/ai-chat/capabilities');
+	const { TARGET_LIST_CAP } = await import('#lib/server/ai-chat/capabilities.ts');
 	check(
 		'the target list is capped and says so',
 		!!listed &&
@@ -159,8 +159,8 @@ async function main() {
 	// createRow above is the layer underneath; this is `executeCapability`, which
 	// is what the Apply button and the MCP tools call: authorize, re-read, coerce,
 	// validate, write, log — and then the undo the feed offers.
-	const { executeCapability } = await import('$lib/server/ai-chat/capabilities');
-	const { revertEdit, readEditLog } = await import('$lib/server/ai-chat/edit-log');
+	const { executeCapability } = await import('#lib/server/ai-chat/capabilities.ts');
+	const { revertEdit, readEditLog } = await import('#lib/server/ai-chat/edit-log.ts');
 
 	const addTarget = await CAPABILITIES.add_skill.resolve(null, actor);
 	const added = await executeCapability(
@@ -279,7 +279,7 @@ async function main() {
 	}
 
 	// --- the same registry, over MCP ---
-	const { toolsFor } = await import('$lib/server/mcp/tools');
+	const { toolsFor } = await import('#lib/server/mcp/tools.ts');
 	const tools = await toolsFor('write');
 	const addSkill = tools.find((t) => t.name === 'add_skill');
 	// By name rather than by count: the count was 27 when this was written and

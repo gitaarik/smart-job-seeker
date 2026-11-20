@@ -19,7 +19,7 @@
  * the same LCS word-diff the card highlights with.
  */
 
-import { computeDiff, type DiffSegment } from '$lib/utils/word-diff';
+import { computeDiff, type DiffSegment } from '#lib/utils/word-diff.ts';
 import type { ProposedChange } from './capabilities';
 
 /** Above this, a value is summarised and excerpted rather than quoted. */

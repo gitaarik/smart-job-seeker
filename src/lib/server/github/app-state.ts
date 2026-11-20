@@ -11,7 +11,7 @@
  */
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 /** Long enough to finish an install, short enough that a stale link is dead. */
 const MAX_AGE_MS = 30 * 60 * 1000;

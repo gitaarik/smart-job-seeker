@@ -27,12 +27,12 @@
  */
 
 import { and, eq, isNull } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { application_records } from '$lib/server/db/schema';
-import { uploadFile } from '$lib/server/files';
-import { extractRecordFile } from '$lib/server/ai-chat/application-activity';
-import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
-import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
+import { db } from '#lib/server/db/index.ts';
+import { application_records } from '#lib/server/db/schema.ts';
+import { uploadFile } from '#lib/server/files.ts';
+import { extractRecordFile } from '#lib/server/ai-chat/application-activity.ts';
+import { deriveRecordMetadata } from '#lib/server/ai-chat/record-derivation.ts';
+import { summarizeApplication } from '#lib/server/ai-chat/application-summary.ts';
 
 /** An entry a file could go on, as far as the grant-minting side needs to know. */
 export interface AttachableRecord {

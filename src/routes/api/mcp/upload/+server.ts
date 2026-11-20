@@ -20,10 +20,10 @@
  */
 
 import type { RequestHandler } from './$types';
-import { verifyMcpKeyById } from '$lib/server/mcp/keys';
-import { MAX_UPLOAD_BYTES, verifyUploadGrant } from '$lib/server/mcp/upload-grants';
-import { attachFileToRecord } from '$lib/server/applications/record-files';
-import { mcpRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
+import { verifyMcpKeyById } from '#lib/server/mcp/keys.ts';
+import { MAX_UPLOAD_BYTES, verifyUploadGrant } from '#lib/server/mcp/upload-grants.ts';
+import { attachFileToRecord } from '#lib/server/applications/record-files.ts';
+import { mcpRateLimiter, createRateLimitResponse } from '#lib/server/middleware/rate-limit.ts';
 
 function json(body: unknown, status = 200): Response {
 	return new Response(JSON.stringify(body), {

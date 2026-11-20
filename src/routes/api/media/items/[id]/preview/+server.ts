@@ -7,8 +7,8 @@
 
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { itemPreview, ownedItem } from '$lib/server/media/serve';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { itemPreview, ownedItem } from '#lib/server/media/serve.ts';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const user = requireAuth(locals);

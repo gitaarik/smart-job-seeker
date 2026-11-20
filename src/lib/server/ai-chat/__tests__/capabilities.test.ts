@@ -42,7 +42,7 @@ const mockEditLogInsert = vi.fn();
 // vi.mock is hoisted above every top-level binding, so the query object is
 // written out twice rather than shared through a helper — a helper here is a
 // ReferenceError at import time, not a tidier test.
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			applications: { findFirst: () => Promise.resolve(applicationRow) },
@@ -96,8 +96,8 @@ vi.mock('$lib/server/db', () => ({
  * is the behaviour, not the storage.
  */
 let sectionRows: Record<string, Record<string, unknown>[]> = {};
-vi.mock('$lib/server/profile/write', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('$lib/server/profile/write')>();
+vi.mock('#lib/server/profile/write.ts', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/profile/write.ts')>();
 	return {
 		...actual,
 		readOwnedRow: (resource: string, _actor: unknown, id: number) =>
@@ -113,8 +113,8 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
  */
 let profileLanguages: string[] = [];
 let translatedRows: Record<number, Record<string, string>> = {};
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>()),
 	translatedLocales: () => Promise.resolve(profileLanguages),
 	readTranslations: (_profileId: number, _name: string, ids: number[]) =>
 		Promise.resolve(
@@ -122,7 +122,7 @@ vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
 		)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	applications: {
 		id: 'applications.id',
 		profile_id: 'applications.profile_id'
@@ -251,8 +251,8 @@ const mockWriteStatus = vi.fn().mockResolvedValue({
 	appliedDateSet: null
 });
 const mockRevertStatus = vi.fn().mockResolvedValue(true);
-vi.mock('$lib/server/applications/status', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/applications/status')>()),
+vi.mock('#lib/server/applications/status.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/applications/status.ts')>()),
 	writeApplicationStatus: (...a: unknown[]) => mockWriteStatus(...a),
 	revertApplicationStatus: (...a: unknown[]) => mockRevertStatus(...a)
 }));
@@ -265,14 +265,14 @@ vi.mock('$lib/server/applications/status', async (importOriginal) => ({
  */
 const mockCreateApplication = vi.fn().mockResolvedValue({ applicationId: 501, jobId: 502 });
 const mockParseForNew = vi.fn().mockResolvedValue(null);
-vi.mock('$lib/server/applications/create', () => ({
+vi.mock('#lib/server/applications/create.ts', () => ({
 	createApplication: (...a: unknown[]) => mockCreateApplication(...a),
 	parseForNewApplication: (...a: unknown[]) => mockParseForNew(...a)
 }));
 
 /** The inventory `add_application` diffs against. Set per test. */
 const mockListApplications = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-vi.mock('$lib/server/applications/profile-applications', () => ({
+vi.mock('#lib/server/applications/profile-applications.ts', () => ({
 	listProfileApplications: mockListApplications
 }));
 
@@ -281,8 +281,8 @@ const mockApplyJobFields = vi.fn().mockResolvedValue(undefined);
 const mockApplyJobTexts = vi.fn().mockResolvedValue(undefined);
 const mockApplyJobSkills = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('$lib/server/jobs/edit-job', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/jobs/edit-job')>()),
+vi.mock('#lib/server/jobs/edit-job.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/jobs/edit-job.ts')>()),
 	canEditJob: (...a: unknown[]) => mockCanEditJob(...a),
 	applyJobFields: (...a: unknown[]) => mockApplyJobFields(...a),
 	applyJobTexts: (...a: unknown[]) => mockApplyJobTexts(...a),
@@ -308,7 +308,7 @@ import {
 	renderCapabilityPrompt,
 	resolveCapabilities
 } from '../capabilities';
-import { geminiResponseSchema } from '$lib/server/llm/gemini-schema';
+import { geminiResponseSchema } from '#lib/server/llm/gemini-schema.ts';
 
 /**
  * What /applications/[id] offers — the busiest route in the table: its own six,

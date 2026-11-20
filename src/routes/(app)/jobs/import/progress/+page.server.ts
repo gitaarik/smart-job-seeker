@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { match_config } from '$lib/server/db/schema';
-import { getSkillVocabularyReach } from '$lib/server/job/match-counts';
+import { match_config } from '#lib/server/db/schema.ts';
+import { getSkillVocabularyReach } from '#lib/server/job/match-counts.ts';
 
 /**
  * Skill reach is loaded here rather than on /api/matcher/status, which the page

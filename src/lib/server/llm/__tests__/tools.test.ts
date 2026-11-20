@@ -10,12 +10,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AIMessage, ToolMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn(() => 'test-api-key')
 }));
 
 // One attempt per provider, so a failure goes straight to the fallback.
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		groqApiKey: 'test-groq-key',
 		geminiApiKey: 'test-gemini-key',
@@ -70,8 +70,8 @@ import {
 	LLMOutputValidationError,
 	type ChatMessage,
 	type ToolDefinition
-} from '$lib/server/llm';
-import { llmCache } from '$lib/server/llm/cache';
+} from '#lib/server/llm/index.ts';
+import { llmCache } from '#lib/server/llm/cache.ts';
 
 const readJob: ToolDefinition = {
 	name: 'read_job',

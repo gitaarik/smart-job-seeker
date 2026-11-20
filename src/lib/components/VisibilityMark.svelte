@@ -22,7 +22,7 @@
 		DOCUMENT_TEMPLATE_TAGS,
 		templateNames,
 		visibilityAmong
-	} from '$lib/profile-visibility';
+	} from '#lib/profile-visibility.ts';
 
 	let {
 		tags,

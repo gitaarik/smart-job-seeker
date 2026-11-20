@@ -1,15 +1,15 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
-import { platform_credentials } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { db } from '#lib/server/db/index.ts';
+import { platform_credentials } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	listCredentialShares,
 	listSharedCredentialsWithMe,
 	shareCredential,
 	unshareCredential
-} from '$lib/server/credential-shares';
+} from '#lib/server/credential-shares.ts';
 
 /**
  * GET /api/credential-shares?platformCredentialId=123 — List shares for a credential.

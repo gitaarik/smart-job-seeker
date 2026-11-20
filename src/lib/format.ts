@@ -4,8 +4,8 @@ import {
 	EXPERIENCE_LEVELS,
 	buildDisplayMap,
 	matchPatternDisplay
-} from '$lib/data/job-taxonomy';
-import { formatSalaryPeriod } from '$lib/salary/conversion';
+} from '#lib/data/job-taxonomy.ts';
+import { formatSalaryPeriod } from '#lib/salary/conversion.ts';
 
 const jobTypeLabels = buildDisplayMap(JOB_TYPES);
 const workLocationLabels = buildDisplayMap(WORK_LOCATIONS);

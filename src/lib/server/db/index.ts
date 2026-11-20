@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
-import { getEnv } from '$lib/tools/get-env';
-import { isRunningInDocker } from '$lib/server/utils/docker';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { isRunningInDocker } from '#lib/server/utils/docker.ts';
 import * as schema from './schema';
 import * as relations from './relations';
 import type { SQL } from 'drizzle-orm';

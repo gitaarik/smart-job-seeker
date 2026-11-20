@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { faUserShield } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -28,7 +28,7 @@
 		What the app stores on your device is your login and a few preferences. Page statistics are
 		collected on our own server without cookies and without knowing who you are. The one choice
 		below is whether those statistics may be linked to your account. The
-		<a href={resolve('/privacy')} class="text-[var(--dash-primary)] hover:underline"
+		<a href={resolve('privacy')} class="text-[var(--dash-primary)] hover:underline"
 			>privacy policy</a
 		> has the full picture.
 	</p>

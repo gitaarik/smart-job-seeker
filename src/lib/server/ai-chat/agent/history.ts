@@ -3,19 +3,19 @@
  * turn share for it (planning/ASSISTANT-AGENT.md § Records and tracing).
  */
 import { asc, desc, eq, inArray } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	agent_message_proposals,
 	agent_messages,
 	ai_chats,
 	capability_edits
-} from '$lib/server/db/schema';
-import type { ChatMessage } from '$lib/server/llm';
+} from '#lib/server/db/schema.ts';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
 import {
 	type ProposalOutcome,
 	renderProposalOutcomes
-} from '$lib/server/ai-chat/proposal-outcomes';
-import type { ReadRecord, RetrievalRecord } from '$lib/server/documents/retrieval-record';
+} from '#lib/server/ai-chat/proposal-outcomes.ts';
+import type { ReadRecord, RetrievalRecord } from '#lib/server/documents/retrieval-record.ts';
 
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.

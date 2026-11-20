@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPlus, faTimes, faTags, faBan } from '@fortawesome/free-solid-svg-icons';
-	import { portalToBody } from '$lib/actions/portal';
+	import { portalToBody } from '#lib/actions/portal.ts';
 
 	/**
 	 * Modal editor for an item's resume/CV version tags. Edits the bound `tags`

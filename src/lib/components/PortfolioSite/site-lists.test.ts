@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { careerDetail, type PortfolioPage, type PortfolioThemeConfig } from '$lib/portfolio-themes';
+import {
+	careerDetail,
+	type PortfolioPage,
+	type PortfolioThemeConfig
+} from '#lib/portfolio-themes.ts';
 import {
 	careerView,
 	featuredKey,

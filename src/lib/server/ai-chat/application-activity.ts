@@ -26,13 +26,13 @@
  * layer rather than a change to this module.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
-import { extractUpload } from '$lib/server/documents/extract';
-import { getRecordTypeLabel } from '$lib/application-records';
-import { PRIVATE_DETAIL_CATEGORIES, type StoredDetail } from '$lib/application-details';
+import { application_records, applications } from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
+import { extractUpload } from '#lib/server/documents/extract.ts';
+import { getRecordTypeLabel } from '#lib/application-records.ts';
+import { PRIVATE_DETAIL_CATEGORIES, type StoredDetail } from '#lib/application-details.ts';
 
 /**
  * `full` is for prompts the history is *about* (cheat sheets), where it is the

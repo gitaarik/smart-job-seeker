@@ -3,10 +3,10 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { isStaffViewer } from '$lib/server/auth/guards';
+import { profiles } from '#lib/server/db/schema.ts';
+import { isStaffViewer } from '#lib/server/auth/guards.ts';
 
 /**
  * Require authenticated user from locals, or throw 401.

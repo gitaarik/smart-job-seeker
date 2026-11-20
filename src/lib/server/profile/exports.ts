@@ -1,6 +1,6 @@
-import { dbDirect as db } from '$lib/server/db';
-import { profile_exports } from '$lib/server/db/schema';
-import { deleteFile, uploadFile } from '$lib/server/files';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_exports } from '#lib/server/db/schema.ts';
+import { deleteFile, uploadFile } from '#lib/server/files.ts';
 import type { Buffer } from 'buffer';
 
 interface CreateExportOptions {

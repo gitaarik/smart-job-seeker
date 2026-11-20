@@ -20,10 +20,10 @@
  *   docker compose exec app node dist-scripts/backfill-work-location.mjs --apply
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, isNotNull } from 'drizzle-orm';
-import { jobs } from '$lib/server/db/schema';
-import { normalizeWorkLocation } from '$lib/data/job-normalize';
+import { jobs } from '#lib/server/db/schema.ts';
+import { normalizeWorkLocation } from '#lib/data/job-normalize.ts';
 
 const APPLY = process.argv.includes('--apply');
 

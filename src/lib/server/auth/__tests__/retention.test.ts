@@ -16,7 +16,7 @@ const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 const mockWhereDelete = vi.fn();
 const mockDelete = vi.fn().mockReturnValue({ where: mockWhereDelete });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: (...a: unknown[]) => mockSelect(...a),
 		delete: (...a: unknown[]) => mockDelete(...a)
@@ -28,7 +28,7 @@ vi.mock('drizzle-orm', () => ({
 	inArray: vi.fn((c: unknown, v: unknown) => ({ col: c, ids: v }))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	sessions: { id: 'sessions.id', expiresAt: 'sessions.expiresAt' },
 	verifications: { id: 'verifications.id', expiresAt: 'verifications.expiresAt' }
 }));

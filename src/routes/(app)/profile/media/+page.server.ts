@@ -15,11 +15,11 @@ import {
 	deleteMediaItem,
 	listMediaItemViews,
 	updateMediaItem
-} from '$lib/server/media/items';
-import { MediaUploadError } from '$lib/server/media/originals';
-import { mediaUsage, usesByItem } from '$lib/server/media/usage';
-import { stalePlatforms } from '$lib/server/media/live';
-import { isMediaKind } from '$lib/media-library';
+} from '#lib/server/media/items.ts';
+import { MediaUploadError } from '#lib/server/media/originals.ts';
+import { mediaUsage, usesByItem } from '#lib/server/media/usage.ts';
+import { stalePlatforms } from '#lib/server/media/live.ts';
+import { isMediaKind } from '#lib/media-library.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

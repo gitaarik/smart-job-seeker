@@ -42,8 +42,8 @@
  */
 
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profile_directives } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_directives } from '#lib/server/db/schema.ts';
 
 /** Who reads a directive. The generator says which it is; nothing infers it. */
 export type DirectiveConsumer = 'chat' | 'letters' | 'answers';

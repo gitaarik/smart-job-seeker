@@ -10,11 +10,11 @@
  */
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { search_form_probe_runs } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getSearchFormProbeQueue } from '$lib/server/queue/search-form-probe-queue';
+import { search_form_probe_runs } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getSearchFormProbeQueue } from '#lib/server/queue/search-form-probe-queue.ts';
 
 function requireAdmin(locals: App.Locals) {
 	const user = requireAuth(locals);

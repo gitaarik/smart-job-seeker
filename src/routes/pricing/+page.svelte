@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { track } from '$lib/tools/analytics';
+	import { track } from '#lib/tools/analytics.ts';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -91,7 +91,7 @@
 					{/if}
 
 					<a
-						href={resolve(`/${next}`)}
+						href={resolve(next)}
 						onclick={() => track('pricing_plan_clicked', { plan: plan.id, next })}
 						class="mt-6 inline-flex justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
 						style={plan.id === featured
@@ -155,8 +155,8 @@
 
 		<footer class="mt-16 border-t pt-8 text-center" style="border-color: var(--dash-border);">
 			<p class="text-sm text-[var(--dash-text-secondary)]">
-				Questions? <a class="underline" href={resolve('/guide')}>Read the guide</a> or
-				<a class="underline" href={resolve('/')}>go back home</a>.
+				Questions? <a class="underline" href={resolve('guide')}>Read the guide</a> or
+				<a class="underline" href={resolve('/(auth)')}>go back home</a>.
 			</p>
 		</footer>
 	</div>

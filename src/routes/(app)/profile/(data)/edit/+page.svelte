@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { armOn } from '$lib/actions/arm-on';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCamera,
@@ -22,17 +22,17 @@
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import Card from '../../../components/Card.svelte';
 	import CopyButton from '../../../components/CopyButton.svelte';
-	import MediaUpload from '$lib/components/MediaUpload.svelte';
-	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import AutoTranslateProfile from '$lib/components/AutoTranslateProfile.svelte';
-	import FieldVariants from '$lib/components/FieldVariants.svelte';
-	import { variantsForTarget, type FieldVariant } from '$lib/field-variants';
+	import MediaUpload from '#lib/components/MediaUpload.svelte';
+	import { autoSaveField, diffPayload, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
+	import AutoTranslateProfile from '#lib/components/AutoTranslateProfile.svelte';
+	import FieldVariants from '#lib/components/FieldVariants.svelte';
+	import { variantsForTarget, type FieldVariant } from '#lib/field-variants.ts';
 	import CountrySelect from '../../../jobs/components/CountrySelect.svelte';
-	import PlacePicker from '$lib/components/PlacePicker.svelte';
-	import type { Place } from '$lib/data/places';
-	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
+	import PlacePicker from '#lib/components/PlacePicker.svelte';
+	import type { Place } from '#lib/data/places.ts';
+	import { getProfilePhotoUrl } from '#lib/utils/profile-photo-url.ts';
 
 	let { data }: { data: PageData } = $props();
 

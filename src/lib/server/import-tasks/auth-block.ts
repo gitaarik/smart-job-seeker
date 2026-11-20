@@ -2,7 +2,7 @@
  * Act on a scheduled import task that can't get past the platform's login,
  * and tell the user what would fix it.
  *
- * The decision lives in `$lib/import-tasks/failure-policy` (pure, unit-tested,
+ * The decision lives in `#lib/import-tasks/failure-policy.ts` (pure, unit-tested,
  * and the place to read for *why* this backs off rather than switching tasks
  * off); this file is only the orchestration around it — read the run history, apply the
  * verdict, send the notification. It runs inside the worker/scraper process,
@@ -21,7 +21,7 @@
  * the evidence for changing it is gone.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import {
 	api_keys,
@@ -29,9 +29,9 @@ import {
 	search_task_runs,
 	search_tasks,
 	verification_email_addresses
-} from '$lib/server/db/schema';
-import { createNotification } from '$lib/server/notifications';
-import { toFailureKind, type FailureKind } from '$lib/import-tasks/failure-kinds';
+} from '#lib/server/db/schema.ts';
+import { createNotification } from '#lib/server/notifications.ts';
+import { toFailureKind, type FailureKind } from '#lib/import-tasks/failure-kinds.ts';
 import {
 	backoffNextRun,
 	decideAuthBlockRemedy,
@@ -39,7 +39,7 @@ import {
 	type AuthBlockRemedy,
 	type RemedyOptions,
 	type RunOutcome
-} from '$lib/import-tasks/failure-policy';
+} from '#lib/import-tasks/failure-policy.ts';
 
 /**
  * How many recent runs to hand the policy. It walks newest-first and stops at

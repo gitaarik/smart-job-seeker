@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import { normalizeQuestion } from '$lib/utils/normalize-question';
+	import { normalizeQuestion } from '#lib/utils/normalize-question.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -20,12 +20,12 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import CopyButton from '../../../components/CopyButton.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import FilterTabs from '../../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
 	import ReorderableList from '../../../profile/components/ReorderableList.svelte';
-	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
-	import { compareTexts, textKey } from '$lib/texts/text-order';
+	import { LETTER_TYPE_LABELS, letterLabel } from '#lib/texts/letter-label.ts';
+	import { compareTexts, textKey } from '#lib/texts/text-order.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

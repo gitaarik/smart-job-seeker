@@ -9,7 +9,7 @@
  * succeeds without a summary. See planning/DOCUMENT-INGESTION.md § AI.
  */
 
-import { runProfileAiChat } from '$lib/server/ai-chat/job-utils';
+import { runProfileAiChat } from '#lib/server/ai-chat/job-utils.ts';
 
 export interface ProjectSummary {
 	summary: string;

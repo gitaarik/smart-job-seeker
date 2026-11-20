@@ -41,8 +41,8 @@
  */
 
 import { sql, type SQL } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
-import { normalizeSkill } from '$lib/skills';
+import { queryRawDirect } from '#lib/server/db/index.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 /**
  * Relations that license a match upward. Closed on purpose — this list IS the

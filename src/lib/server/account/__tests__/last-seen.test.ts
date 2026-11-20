@@ -20,8 +20,8 @@ vi.mock('drizzle-orm', () => ({
 	lt: (a: unknown, b: unknown) => ({ op: 'lt', a, b }),
 	isNull: (a: unknown) => ({ op: 'isNull', a })
 }));
-vi.mock('$lib/server/db', () => ({ dbDirect: { update } }));
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({ dbDirect: { update } }));
+vi.mock('#lib/server/db/schema.ts', () => ({
 	users: { id: 'users.id', last_seen_at: 'users.last_seen_at' }
 }));
 

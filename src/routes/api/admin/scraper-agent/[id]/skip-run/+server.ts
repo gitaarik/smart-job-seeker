@@ -1,13 +1,13 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, desc } from 'drizzle-orm';
 import {
 	scraper_agent_sessions,
 	scraper_agent_iterations,
 	search_task_runs
-} from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
+} from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
 
 export const POST: RequestHandler = async ({ params, locals }) => {
 	const user = requireAuth(locals);

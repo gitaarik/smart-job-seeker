@@ -14,28 +14,28 @@
  */
 
 import { error, redirect } from '@sveltejs/kit';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { getVersionIdBySlug } from '$lib/server/profile/access-control';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
+import { getVersionIdBySlug } from '#lib/server/profile/access-control.ts';
 import {
 	incrementTokenVisit,
 	touchTokenVisit,
 	validateToken
-} from '$lib/server/auth/token-validation';
+} from '#lib/server/auth/token-validation.ts';
 import {
 	getPortfolioTheme,
 	getPortfolioThemeById,
 	getPortfolioThemesForProfile
-} from '$lib/server/profile/portfolio-themes';
-import { isKnownLocale } from '$lib/resume-translations';
-import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
-import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
-import { pageProfile } from '$lib/server/profile/page-profile';
-import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
-import { withoutContact } from '$lib/server/profile/portfolio-contact';
-import { portfolioBusiness } from '$lib/server/profile/portfolio-business';
-import { givePortfolioKey, readPortfolioKey } from '$lib/server/profile/portfolio-key';
-import { portfolioHrefs } from '$lib/server/profile/portfolio-pages';
-import { hasPrivateCv } from '$lib/portfolio-themes';
+} from '#lib/server/profile/portfolio-themes.ts';
+import { isKnownLocale } from '#lib/resume-translations.ts';
+import { applyTranslations, loadTranslator } from '#lib/server/profile/translations.ts';
+import { applyFieldVariants, loadFieldVariants } from '#lib/server/profile/field-variants.ts';
+import { pageProfile } from '#lib/server/profile/page-profile.ts';
+import { applySkillWords, loadDocumentSkillWords } from '#lib/server/profile/skill-words.ts';
+import { withoutContact } from '#lib/server/profile/portfolio-contact.ts';
+import { portfolioBusiness } from '#lib/server/profile/portfolio-business.ts';
+import { givePortfolioKey, readPortfolioKey } from '#lib/server/profile/portfolio-key.ts';
+import { portfolioHrefs } from '#lib/server/profile/portfolio-pages.ts';
+import { hasPrivateCv } from '#lib/portfolio-themes.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({
@@ -52,7 +52,7 @@ export const load: PageServerLoad = async ({
 	setHeaders({ 'X-Robots-Tag': 'noindex, nofollow', 'Cache-Control': 'private, no-store' });
 
 	const profile = await getProfileByIdentifier(params.slug);
-	if (!profile) throw error(404, { message: 'Not found' });
+	if (!profile) throw error(404, 'Not found');
 
 	const owner = !!locals.user?.id && profile.user_id === locals.user.id;
 	const hrefs = portfolioHrefs(profile.slug ?? params.slug, url, owner);
@@ -76,7 +76,7 @@ export const load: PageServerLoad = async ({
 	const key = owner ? null : await readPortfolioKey(cookies, url, profile.id);
 	if (!owner && !key) {
 		if (published) redirect(303, hrefs.home);
-		throw error(404, { message: 'Not found' });
+		throw error(404, 'Not found');
 	}
 	// Seen again, not counted again: the opening was counted when the link was.
 	if (key) await touchTokenVisit(key.tokenId, getClientAddress());
@@ -103,11 +103,12 @@ export const load: PageServerLoad = async ({
 	if (!theme && key) theme = (await getPortfolioThemesForProfile(profile.id))[0] ?? null;
 
 	if (!theme || !versionId) {
-		throw error(404, {
-			message: owner
+		throw error(
+			404,
+			owner
 				? 'This portfolio is not published yet. Publish a theme from Profile → Portfolio Site.'
 				: 'Not found'
-		});
+		);
 	}
 
 	// A site without a private CV page prints its career on its one page.

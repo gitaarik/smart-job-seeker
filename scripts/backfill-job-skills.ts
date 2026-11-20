@@ -73,9 +73,9 @@
  */
 
 import { eq, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { jobs as jobsTable, job_matches } from '$lib/server/db/schema';
-import { parseJobDescription } from '$lib/server/jobs/parse-job-description';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { jobs as jobsTable, job_matches } from '#lib/server/db/schema.ts';
+import { parseJobDescription } from '#lib/server/jobs/parse-job-description.ts';
 
 const APPLY = process.argv.includes('--apply');
 const limitArg = process.argv.indexOf('--limit');

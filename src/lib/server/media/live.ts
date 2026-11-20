@@ -10,15 +10,15 @@
  */
 
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	application_media,
 	applications,
 	media_items,
 	media_presets,
 	media_renditions
-} from '$lib/server/db/schema';
-import { presetName } from '$lib/media-library';
+} from '#lib/server/db/schema.ts';
+import { presetName } from '#lib/media-library.ts';
 
 export interface StalePlatform {
 	applicationId: number;

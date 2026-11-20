@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { resolve } from '$app/paths';
-	import { getSearchTaskStatusIcon } from '$lib/search-task-status';
-	import { searchTaskDisplayName } from '$lib/format';
+	import { getSearchTaskStatusIcon } from '#lib/search-task-status.ts';
+	import { searchTaskDisplayName } from '#lib/format.ts';
 	import Card from './Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	interface SearchTask {
 		id: number;
@@ -61,7 +61,7 @@
 	<div class="mb-3 flex items-center justify-between">
 		<h3 class="text-base font-semibold text-[var(--dash-text)]">Import Tasks</h3>
 		<a
-			href={resolve('/jobs/import/tasks')}
+			href={resolve('jobs/import/tasks')}
 			class="text-sm text-[var(--dash-primary)] hover:underline"
 		>
 			{searchTasks.totalCount === 0 ? 'Add' : 'Manage'}
@@ -116,7 +116,7 @@
 				{/each}
 				{#if searchTasks.totalCount > 4}
 					<a
-						href={resolve('/jobs/import/tasks')}
+						href={resolve('jobs/import/tasks')}
 						class="text-xs text-[var(--dash-primary)] hover:underline"
 					>
 						+{searchTasks.totalCount - 4} more

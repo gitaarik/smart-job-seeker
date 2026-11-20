@@ -1,6 +1,6 @@
 /**
  * Banner templates: banners drawn from the profile, at every size a platform
- * asks for (planning/MEDIA-LIBRARY.md, decision 6; `$lib/banner-templates.ts`).
+ * asks for (planning/MEDIA-LIBRARY.md, decision 6; `#lib/banner-templates.ts`).
  *
  * The words come from the profile (or a resume version's wording of the
  * title), the colours and fonts from a portfolio theme. "Draw" photographs the
@@ -11,20 +11,20 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, isHttpError, redirect } from '@sveltejs/kit';
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	media_items,
 	media_renditions,
 	presentation_templates,
 	profile_versions
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../utils';
-import { listPresets } from '$lib/server/media/presets';
-import { bannerHtml, bannerSources, drawBannerTemplate } from '$lib/server/media/banners';
-import { assignTemplateSlot, clearThemeSlot, SlotError } from '$lib/server/media/slots';
-import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
-import { bannerAlignment, bannerLine, type BannerTemplateConfig } from '$lib/banner-templates';
-import { BANNER_MEDIA_SLOTS, isBannerMediaSlot, type Crop } from '$lib/media-library';
+import { listPresets } from '#lib/server/media/presets.ts';
+import { bannerHtml, bannerSources, drawBannerTemplate } from '#lib/server/media/banners.ts';
+import { assignTemplateSlot, clearThemeSlot, SlotError } from '#lib/server/media/slots.ts';
+import { foldAssetsIntoConfig } from '#lib/server/profile/presentation-templates.ts';
+import { bannerAlignment, bannerLine, type BannerTemplateConfig } from '#lib/banner-templates.ts';
+import { BANNER_MEDIA_SLOTS, isBannerMediaSlot, type Crop } from '#lib/media-library.ts';
 
 const KIND = 'banner';
 

@@ -46,10 +46,10 @@
 import { error, json, type RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { formatZodError } from '$lib/server/validation/api-schemas';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { formatZodError } from '#lib/server/validation/api-schemas.ts';
 import { PROFILE_RESOURCES, type ProfileResourceName } from './resources';
 import { createRow, deleteRow, type ProfileActor, readOwnedRow, reorderRows } from './write';
 import { patchOwnedRow, requireRowActor, unwrapWrite } from './write-http';

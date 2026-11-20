@@ -13,9 +13,9 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getTableName } from 'drizzle-orm';
-import { FIELD_VARIANT_ENTITY } from '$lib/field-variants';
-import { OVERRIDE_ENTITY_TYPES } from '$lib/version-overrides';
-import { PROFILE_RESOURCES } from '$lib/server/profile/resources';
+import { FIELD_VARIANT_ENTITY } from '#lib/field-variants.ts';
+import { OVERRIDE_ENTITY_TYPES } from '#lib/version-overrides.ts';
+import { PROFILE_RESOURCES } from '#lib/server/profile/resources.ts';
 import { profile_field_variants } from '../schema';
 
 const TRIGGER =

@@ -25,9 +25,9 @@
  */
 import { fail } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
-import { GRAPH_RELATIONS } from '$lib/server/job/skill-ontology';
-import { createRelation, retireRelation } from '$lib/server/job/skill-relation-edit';
+import { queryRawDirect } from '#lib/server/db/index.ts';
+import { GRAPH_RELATIONS } from '#lib/server/job/skill-ontology.ts';
+import { createRelation, retireRelation } from '#lib/server/job/skill-relation-edit.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export interface FullNode {

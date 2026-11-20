@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
-	import { armOn } from '$lib/actions/arm-on';
-	import { page } from '$app/stores';
+	import { armOn } from '#lib/actions/arm-on.ts';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -13,25 +13,25 @@
 		faPencil
 	} from '@fortawesome/free-solid-svg-icons';
 	import { resolve } from '$app/paths';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import Card from '../components/Card.svelte';
 	import SectionHeader from '../profile/components/SectionHeader.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import { formatTzLabel, TIMEZONE_OPTIONS } from '$lib/timezone';
-	import { defaultTimeFormat, formatDate, isHour12, resolveTimeFormat } from '$lib/format-date';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { autoSaveField, diffPayload, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import { formatTzLabel, TIMEZONE_OPTIONS } from '#lib/timezone.ts';
+	import { defaultTimeFormat, formatDate, isHour12, resolveTimeFormat } from '#lib/format-date.ts';
 
 	let { data }: { data: PageData } = $props();
 
 	// Email
-	let email = $state($page.data.user.email);
+	let email = $state(page.data.user.email);
 	let emailSaving = $state(false);
 	let emailSaved = $state(false);
 	let emailError = $state('');
 	let emailOpen = $state(false);
 
-	const originalEmail = $page.data.user.email;
+	const originalEmail = page.data.user.email;
 	const emailChanged = $derived(email !== originalEmail);
 
 	// Password
@@ -541,14 +541,14 @@
 				<div class="space-y-1">
 					<p class="text-sm font-medium text-[var(--dash-text)]">
 						<a
-							href={resolve('/terms')}
+							href={resolve('terms')}
 							target="_blank"
 							rel="noopener"
 							class="text-[var(--dash-primary)] hover:underline">Terms of service</a
 						>
 						<span class="text-[var(--dash-text-muted)]"> · </span>
 						<a
-							href={resolve('/privacy')}
+							href={resolve('privacy')}
 							target="_blank"
 							rel="noopener"
 							class="text-[var(--dash-primary)] hover:underline">Privacy policy</a

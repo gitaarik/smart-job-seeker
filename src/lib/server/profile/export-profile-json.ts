@@ -1,6 +1,6 @@
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles, work_experiences } from '$lib/server/db/schema';
+import { profiles, work_experiences } from '#lib/server/db/schema.ts';
 
 export interface ExportedProfile {
 	profile: {

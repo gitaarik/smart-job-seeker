@@ -35,8 +35,8 @@
  * already turned down.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { normalizeSkill } from '$lib/skills';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 /** Bumped only when the shape changes in a way an older importer cannot read. */
 export const FORMAT_VERSION = 1;

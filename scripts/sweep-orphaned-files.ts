@@ -2,7 +2,7 @@
 /**
  * Delete `files` rows nothing references any more, and the bytes under them.
  *
- * Until `$lib/server/uploads/reap.ts` existed, deleting a profile cascaded the
+ * Until `#lib/server/uploads/reap.ts` existed, deleting a profile cascaded the
  * rows that pointed at a file and left the `files` row and its blob behind.
  * The reap fixed the flow; it cannot fix the history. This is the one-off
  * sweep for what past deletions already left — 334 of dev's 1,145 rows when it
@@ -32,7 +32,7 @@ import {
 	DEFAULT_ORPHAN_MIN_AGE_DAYS,
 	findOrphanedFiles,
 	reapFileRefs
-} from '$lib/server/uploads/reap';
+} from '#lib/server/uploads/reap.ts';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');

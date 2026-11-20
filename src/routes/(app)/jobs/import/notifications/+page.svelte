@@ -2,8 +2,8 @@
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { armOn } from '$lib/actions/arm-on';
-	import { page } from '$app/stores';
+	import { armOn } from '#lib/actions/arm-on.ts';
+	import { page } from '$app/state';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -16,16 +16,16 @@
 	import Card from '../../../components/Card.svelte';
 	import Checkbox from '../../../components/Checkbox.svelte';
 	import ToggleSwitch from '../../../components/ToggleSwitch.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import { formatTzLabel, TIMEZONE_OPTIONS } from '$lib/timezone';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { autoSaveField, diffPayload, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import { formatTzLabel, TIMEZONE_OPTIONS } from '#lib/timezone.ts';
 	import {
 		buildHourOptions,
 		formatDateShort as fmtDateShort,
 		formatTimeShort
-	} from '$lib/format-date';
-	import type { TimeFormat } from '$lib/format-date';
+	} from '#lib/format-date.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 
 	let { data }: { data: PageData } = $props();
 
@@ -126,7 +126,7 @@
 		return `In ${diffDays} days`;
 	}
 
-	const timeFormat = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
+	const timeFormat = $derived((page.data as { timeFormat: TimeFormat }).timeFormat);
 
 	function formatTime(date: Date): string {
 		return formatTimeShort(date, timeFormat, {
@@ -314,7 +314,7 @@
 		>
 			<p class="text-sm" style="color: var(--dash-warning);">
 				No email address available. Add one in
-				<a href={resolve('/profile/edit')} class="font-medium underline">Profile Data</a>
+				<a href={resolve('profile/edit')} class="font-medium underline">Profile Data</a>
 				to enable email digests.
 			</p>
 		</div>
@@ -404,7 +404,7 @@
 									label="{data.emailDigest.email_address} (profile)"
 								/>
 								<a
-									href="{resolve('/profile/edit')}#email_address"
+									href="{resolve('profile/edit')}#email_address"
 									class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 									title="Edit profile email"
 								>
@@ -419,7 +419,7 @@
 									label="{data.emailDigest.account_email} (account)"
 								/>
 								<a
-									href="{resolve('/settings')}#account-email"
+									href="{resolve('settings')}#account-email"
 									class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 									title="Edit account email"
 								>
@@ -432,7 +432,7 @@
 				{#if digestSendTo === 'profile' && !hasEmail}
 					<p class="mt-1.5 text-xs" style="color: var(--dash-warning);">
 						This profile doesn't have an email address. Add one in
-						<a href={resolve('/profile/edit')} class="underline">Profile Data</a>
+						<a href={resolve('profile/edit')} class="underline">Profile Data</a>
 						or switch to account email.
 					</p>
 				{/if}

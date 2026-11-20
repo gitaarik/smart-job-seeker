@@ -8,7 +8,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 const ALGORITHM = 'aes-256-gcm';
 const NONCE_LENGTH = 12;

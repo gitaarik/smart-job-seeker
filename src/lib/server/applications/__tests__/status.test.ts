@@ -22,7 +22,7 @@ const updates: { table: string; values: Record<string, unknown> }[] = [];
 const inserts: { table: string; values: Record<string, unknown> }[] = [];
 const deletes: string[] = [];
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			applications: { findFirst: () => Promise.resolve(applicationRow) },
@@ -66,7 +66,7 @@ vi.mock('drizzle-orm', () => ({
 	eq: (c: unknown, v: unknown) => [c, v]
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	applications: { __table: 'applications', id: 'applications.id', profile_id: 'applications.pid' },
 	application_status_log: {
 		__table: 'application_status_log',

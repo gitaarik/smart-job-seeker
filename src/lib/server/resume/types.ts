@@ -3,7 +3,7 @@
  * Used for CV/resume parsing and profile creation
  */
 
-import type { WorkMode } from '$lib/work-mode';
+import type { WorkMode } from '#lib/work-mode.ts';
 
 /**
  * Basic profile information

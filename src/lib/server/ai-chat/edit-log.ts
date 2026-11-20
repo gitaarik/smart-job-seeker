@@ -75,15 +75,15 @@
  * to go instead, the same way the manifest names a page it cannot reach.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm';
-import { agent_message_proposals, capability_edits } from '$lib/server/db/schema';
-import { recordChange, type EditSource } from '$lib/server/profile/change-log';
-import { scoreProposalTurn } from '$lib/server/monitoring/product-scores';
+import { agent_message_proposals, capability_edits } from '#lib/server/db/schema.ts';
+import { recordChange, type EditSource } from '#lib/server/profile/change-log.ts';
+import { scoreProposalTurn } from '#lib/server/monitoring/product-scores.ts';
 import { deletedWithChange } from './delete-capabilities';
-import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
-import { translatableColumns } from '$lib/server/profile/section-translations';
-import { TRANSLATION_LOCALES } from '$lib/resume-translations';
+import { PROFILE_RESOURCES, type ProfileResourceName } from '#lib/server/profile/resources.ts';
+import { translatableColumns } from '#lib/server/profile/section-translations.ts';
+import { TRANSLATION_LOCALES } from '#lib/resume-translations.ts';
 import {
 	CAPABILITIES,
 	describeFieldChanges,

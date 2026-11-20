@@ -8,9 +8,9 @@
  * scraper itself owns the CDP connection.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { search_task_runs } from '$lib/server/db/schema';
+import { search_task_runs } from '#lib/server/db/schema.ts';
 
 export interface PendingActionRequest {
 	type: 'type_text' | 'navigate_url' | 'submit' | 'clear';

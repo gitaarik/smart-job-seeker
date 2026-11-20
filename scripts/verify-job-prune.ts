@@ -23,7 +23,7 @@
  * or from cloud/: npm run db:verify-job-prune
  */
 import { inArray } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	applications,
 	job_importers,
@@ -33,8 +33,8 @@ import {
 	job_statuses,
 	jobs,
 	profiles
-} from '$lib/server/db/schema';
-import { DEFAULT_RETENTION_DAYS, expirableJobsSql } from '$lib/server/jobs/retention';
+} from '#lib/server/db/schema.ts';
+import { DEFAULT_RETENTION_DAYS, expirableJobsSql } from '#lib/server/jobs/retention.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 const cutoff = new Date(Date.now() - DEFAULT_RETENTION_DAYS * DAY);

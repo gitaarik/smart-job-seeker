@@ -8,7 +8,7 @@
  * wrong.
  */
 import { describe, expect, it } from 'vitest';
-import type { InterviewRound } from '$lib/application-status';
+import type { InterviewRound } from '#lib/application-status.ts';
 import {
 	applicationTier,
 	compareApplications,
@@ -21,7 +21,7 @@ import {
 	stageRank,
 	tiers,
 	type Rankable
-} from '$lib/application-ranking';
+} from '#lib/application-ranking.ts';
 
 const DAY = '2026-09-06';
 

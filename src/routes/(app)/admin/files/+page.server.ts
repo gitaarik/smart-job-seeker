@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, like, inArray, desc, count, exists, type SQL } from 'drizzle-orm';
-import { notReferencedCondition } from '$lib/server/uploads/reap';
+import { notReferencedCondition } from '#lib/server/uploads/reap.ts';
 import { sql } from 'drizzle-orm';
 import {
 	files,
@@ -10,7 +10,7 @@ import {
 	user_feedback_files,
 	profile_exports,
 	import_logs
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const typeFilter = url.searchParams.get('type') || '';

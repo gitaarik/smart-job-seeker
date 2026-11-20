@@ -39,7 +39,7 @@ vi.mock('../directives', async (importOriginal) => {
 	};
 });
 
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
 const { DIRECTIVE_CAPABILITIES, directiveField } = await import('../directive-capability');
 const { describeProposalChanges } = await import('../capabilities');

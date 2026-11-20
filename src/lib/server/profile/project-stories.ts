@@ -11,10 +11,10 @@
  */
 
 import { asc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { project_stories } from '$lib/server/db/schema';
-import type { ProjectKind } from '$lib/server/documents/project-corpus';
-import type { PinnedProject } from '$lib/server/documents/retrieval';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { project_stories } from '#lib/server/db/schema.ts';
+import type { ProjectKind } from '#lib/server/documents/project-corpus.ts';
+import type { PinnedProject } from '#lib/server/documents/retrieval.ts';
 
 export interface StoryListRow {
 	id: number;

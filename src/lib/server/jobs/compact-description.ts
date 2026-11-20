@@ -38,9 +38,9 @@
 
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { jobs } from '$lib/server/db/schema';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { jobs } from '#lib/server/db/schema.ts';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
 
 /**
  * Descriptions at or under this are used as they are.

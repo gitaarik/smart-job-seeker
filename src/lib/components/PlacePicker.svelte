@@ -16,8 +16,8 @@
 		type Place,
 		type PlaceKind,
 		type PreferredPlace
-	} from '$lib/data/places';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	} from '#lib/data/places.ts';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 
 	let {
 		value = $bindable(null),

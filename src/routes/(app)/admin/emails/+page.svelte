@@ -1,6 +1,6 @@
 <script lang="ts">
 	/*
-	 * Every href here comes from filterUrl(), which calls resolve('/admin/emails')
+	 * Every href here comes from filterUrl(), which calls resolve('admin/emails')
 	 * itself and appends the query. The rule does not follow a function call, so it
 	 * reports the call site even though the route is resolved.
 	 */
@@ -85,7 +85,7 @@
 		for (const [k, v] of Object.entries(params)) {
 			if (v) parts.push(`${k}=${v}`);
 		}
-		return `${resolve('/admin/emails')}${parts.length ? '?' + parts.join('&') : ''}`;
+		return `${resolve('admin/emails')}${parts.length ? '?' + parts.join('&') : ''}`;
 	}
 
 	function toggleExpand(id: number) {

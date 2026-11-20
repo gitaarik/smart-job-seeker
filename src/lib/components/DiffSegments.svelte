@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { DiffSegment } from '$lib/utils/word-diff';
+	import type { DiffSegment } from '#lib/utils/word-diff.ts';
 
 	/**
 	 * A word diff as inline marks: added in green, removed in red and struck

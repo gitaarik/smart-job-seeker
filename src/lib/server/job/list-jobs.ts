@@ -10,15 +10,15 @@
  */
 
 import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRaw, sqlJoin } from '$lib/server/db';
+import { dbDirect as db, queryRaw, sqlJoin } from '#lib/server/db/index.ts';
 import {
 	job_importers,
 	job_matches,
 	job_statuses,
 	jobs as jobsTable,
 	match_config
-} from '$lib/server/db/schema';
-import { buildVisibilityScope } from '$lib/server/job/match-counts';
+} from '#lib/server/db/schema.ts';
+import { buildVisibilityScope } from '#lib/server/job/match-counts.ts';
 import {
 	effectivePayMode,
 	parsePayFilterMode,
@@ -26,7 +26,7 @@ import {
 	payFilterSql,
 	readPayFilter,
 	type PayFilterMode
-} from '$lib/server/salary/pay-fit-store';
+} from '#lib/server/salary/pay-fit-store.ts';
 
 export interface JobListFilters {
 	status: string;

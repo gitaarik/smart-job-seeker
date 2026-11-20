@@ -8,12 +8,12 @@
  */
 
 import { and, count, eq, exists, gte, notExists, or, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	agent_message_proposals,
 	capability_edits,
 	capability_requests
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { DIRECT_WRITE_WINDOW_MS } from './tiers';
 
 /**

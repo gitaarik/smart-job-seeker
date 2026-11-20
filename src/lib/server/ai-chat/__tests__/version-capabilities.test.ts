@@ -5,7 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/profile/versions', () => ({
+vi.mock('#lib/server/profile/versions.ts', () => ({
 	createVersion: vi.fn(),
 	deleteVersion: vi.fn(),
 	listLibraryVersions: vi.fn(async () => []),
@@ -15,10 +15,10 @@ vi.mock('$lib/server/profile/versions', () => ({
 	slugFromName: (name: string) => name.toLowerCase().replace(/\s+/g, '-'),
 	VersionError: class VersionError extends Error {}
 }));
-vi.mock('$lib/server/profile/version-tags', () => ({ versionDeleteImpact: vi.fn() }));
+vi.mock('#lib/server/profile/version-tags.ts', () => ({ versionDeleteImpact: vi.fn() }));
 
 import { VERSION_CAPABILITIES } from '../version-capabilities';
-import { tierForWrite } from '$lib/server/mcp/tiers';
+import { tierForWrite } from '#lib/server/mcp/tiers.ts';
 
 const { add_resume_version, rename_resume_version, delete_resume_version } = VERSION_CAPABILITIES;
 const { set_public_resume_version } = VERSION_CAPABILITIES;

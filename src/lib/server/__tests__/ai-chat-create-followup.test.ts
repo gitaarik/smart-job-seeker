@@ -11,7 +11,7 @@ const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdate = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 // Mock the database with Drizzle-style API
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			ai_chats: {
@@ -29,7 +29,7 @@ vi.mock('$lib/server/db', () => ({
 }));
 
 // Mock ai-chat-utils
-vi.mock('$lib/server/ai-chat/utils', () => ({
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({
 	createAndGenerateAiChat: vi.fn()
 }));
 
@@ -37,14 +37,14 @@ vi.mock('drizzle-orm', () => ({
 	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	ai_chats: { id: 'ai_chats.id' },
 	application_letters: { ai_chat_id: 'application_letters.ai_chat_id' },
 	application_questions: { ai_chat_id: 'application_questions.ai_chat_id' }
 }));
 
-import { db } from '$lib/server/db';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
+import { db } from '#lib/server/db/index.ts';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
 import { createFollowupAiChat } from '../ai-chat/create-followup';
 import { findFirst, findMany } from './db-mocks';
 

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { navigating } from '$app/stores';
+	import { navigating } from '$app/state';
 	import { resolve } from '$app/paths';
 	import ProfileSwitcher from './ProfileSwitcher.svelte';
 	import UserMenu from './UserMenu.svelte';
 	import NotificationBell from './NotificationBell.svelte';
 	import { sidebarState } from './sidebar-state.svelte';
-	import type { ProfileSummary } from '$lib/server/profile/user-profiles';
+	import type { ProfileSummary } from '#lib/server/profile/user-profiles.ts';
 
 	interface Props {
 		user: { id: string; name: string | null; email: string };
@@ -31,7 +31,7 @@
 	<div class="flex items-center py-2">
 		<!-- Logo area — matches sidebar width on desktop -->
 		<a
-			href={resolve('/home')}
+			href={resolve('home')}
 			onclick={handleLogoClick}
 			class="flex shrink-0 items-center gap-3 px-4 lg:w-60"
 		>
@@ -75,7 +75,7 @@
 			<UserMenu {user} />
 		</div>
 	</div>
-	{#if $navigating}
+	{#if navigating.to}
 		<div class="h-0.5 bg-[var(--dash-chrome)]/50">
 			<div class="h-full animate-[nav-progress_2s_ease-in-out_infinite] bg-white/80"></div>
 		</div>

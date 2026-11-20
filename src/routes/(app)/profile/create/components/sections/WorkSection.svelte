@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { OpenRows } from '$lib/components/open-rows';
+	import { OpenRows } from '#lib/components/open-rows.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBriefcase,
@@ -8,9 +8,9 @@
 		faPlus,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { WorkExperience } from '$lib/server/resume/types';
+	import type { WorkExperience } from '#lib/server/resume/types.ts';
 	import Card from '../../../../components/Card.svelte';
-	import AchievementsList from '$lib/components/AchievementsList.svelte';
+	import AchievementsList from '#lib/components/AchievementsList.svelte';
 
 	interface Props {
 		work: WorkExperience[];

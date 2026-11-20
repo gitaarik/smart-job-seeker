@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AIMessage } from '@langchain/core/messages';
 
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn(() => 'test-api-key')
 }));
 

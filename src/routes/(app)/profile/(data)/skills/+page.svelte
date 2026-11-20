@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowsUpDown, faCode } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../components/SectionHeader.svelte';
@@ -87,7 +87,7 @@
 			formData.append(key, value);
 		}
 		const res = await fetch(`?/${action}`, { method: 'POST', body: formData });
-		await invalidateAll();
+		await refreshAll();
 		return res.ok;
 	}
 
@@ -181,7 +181,7 @@
 	 * Write one skill's Show-on switches, immediately.
 	 *
 	 * Deliberately not `postAction`: that reloads the page data through
-	 * `invalidateAll()`, and this write happens with the editor popup OPEN. A
+	 * `refreshAll()`, and this write happens with the editor popup OPEN. A
 	 * reload there rebuilds every category object underneath the popup that is
 	 * bound to them, which is the whole page's state swapped out mid-edit. The
 	 * local array already carries the change (the editor wrote it before calling

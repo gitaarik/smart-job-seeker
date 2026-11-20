@@ -18,8 +18,8 @@
  * lets a second copy be refused.
  */
 
-import { getRecordTypeLabel } from '$lib/application-records';
-import type { ApplicationRecordSource } from '$lib/document-sources';
+import { getRecordTypeLabel } from '#lib/application-records.ts';
+import type { ApplicationRecordSource } from '#lib/document-sources.ts';
 import { type ExtractedProject, extractText, slugForPath } from './extract';
 import type { SaveDocumentProjectInput } from './store';
 

@@ -16,11 +16,11 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
-import type { LeakHit, LeakKind } from '$lib/resume-anonymity';
-import { foldText, identityOf } from '$lib/server/profile/anonymity';
-import { getLatestExportWithFile } from '$lib/server/profile/export-files';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
+import type { LeakHit, LeakKind } from '#lib/resume-anonymity.ts';
+import { foldText, identityOf } from '#lib/server/profile/anonymity.ts';
+import { getLatestExportWithFile } from '#lib/server/profile/export-files.ts';
 
 export interface IdentityTerm {
 	kind: LeakKind;

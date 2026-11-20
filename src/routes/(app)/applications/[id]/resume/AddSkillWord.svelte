@@ -2,8 +2,8 @@
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCircleNotch, faPen, faPlus } from '@fortawesome/free-solid-svg-icons';
-	import { clickOutside, keepInView } from '$lib/actions/popover';
-	import type { DocType } from '$lib/utils/profile-doc-url';
+	import { clickOutside, keepInView } from '#lib/actions/popover.ts';
+	import type { DocType } from '#lib/utils/profile-doc-url.ts';
 
 	/**
 	 * A word this job's match credits through a related skill, and the one-step

@@ -16,9 +16,9 @@
  * in `sort` order.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, asc, eq } from 'drizzle-orm';
-import { profile_document_files, profile_document_projects } from '$lib/server/db/schema';
+import { profile_document_files, profile_document_projects } from '#lib/server/db/schema.ts';
 
 export const DOCUMENT_PAGE_DEFAULT = 20;
 export const DOCUMENT_PAGE_MAX = 50;

@@ -1,6 +1,6 @@
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { search_tasks, match_config, profiles, job_platforms } from '$lib/server/db/schema';
+import { search_tasks, match_config, profiles, job_platforms } from '#lib/server/db/schema.ts';
 import type {
 	SettingsExportData,
 	ExportedSearchTask,
@@ -9,8 +9,8 @@ import type {
 	ExportedSalary,
 	ExportedDirective
 } from './settings-types';
-import { loadDirectives } from '$lib/server/ai-chat/directives';
-import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import { loadDirectives } from '#lib/server/ai-chat/directives.ts';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 
 export interface SettingsExportOptions {
 	includeTasks: boolean;

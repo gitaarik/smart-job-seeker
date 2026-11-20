@@ -8,12 +8,12 @@
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	isGitHubAppConfigured,
 	listAccessibleRepos,
 	listInstallations
-} from '$lib/server/github/app-auth';
+} from '#lib/server/github/app-auth.ts';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = requireAuth(locals);

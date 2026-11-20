@@ -19,7 +19,7 @@
  */
 
 import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	applications,
 	education,
@@ -37,11 +37,15 @@ import {
 	work_experience_achievements,
 	work_experience_technologies,
 	work_experiences
-} from '$lib/server/db/schema';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
-import { isReservedVersionSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
-import { withAnonymous } from '$lib/resume-anonymity';
+} from '#lib/server/db/schema.ts';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
+import { createProfileFilter } from '#lib/components/ProfileDisplay/profile-filter.ts';
+import {
+	isReservedVersionSlug,
+	OVERRIDE_ENTITIES,
+	tailoredSlugFor
+} from '#lib/version-overrides.ts';
+import { withAnonymous } from '#lib/resume-anonymity.ts';
 import {
 	beyondReach,
 	canBringBack,
@@ -67,14 +71,14 @@ import {
 	type ItemGroup,
 	type ItemRow,
 	type SelectionOptions
-} from '$lib/tailoring';
+} from '#lib/tailoring.ts';
 import {
 	carrierOf,
 	carriesName,
 	carriesNameLoosely,
 	hiddenSkillsKey,
 	mentions
-} from '$lib/version-coverage';
+} from '#lib/version-coverage.ts';
 import {
 	isPrintedVariantField,
 	resolveWordings,
@@ -86,7 +90,7 @@ import {
 	variantsForTarget,
 	type FieldVariant,
 	type VariantEntity
-} from '$lib/field-variants';
+} from '#lib/field-variants.ts';
 import {
 	createFieldVariant,
 	isVariantOwned,
@@ -94,20 +98,24 @@ import {
 	setVersionWording,
 	versionChainFor,
 	wordingRowsFor
-} from '$lib/server/profile/field-variants';
-import { loadSkillWords, versionChain, wordsToPrint } from '$lib/server/profile/skill-words';
-import { provenanceFor } from '$lib/match-provenance';
-import { BUILT_IN_SECTIONS, type DocumentSections } from '$lib/resume-templates';
-import { documentSectionsFor } from '$lib/server/profile/resume-templates';
-import { assumedLevels, expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
-import { careerLevel, takenForGranted } from '$lib/server/job/assumed-levels';
-import { normalizeSkill } from '$lib/skills';
+} from '#lib/server/profile/field-variants.ts';
+import { loadSkillWords, versionChain, wordsToPrint } from '#lib/server/profile/skill-words.ts';
+import { provenanceFor } from '#lib/match-provenance.ts';
+import { BUILT_IN_SECTIONS, type DocumentSections } from '#lib/resume-templates.ts';
+import { documentSectionsFor } from '#lib/server/profile/resume-templates.ts';
+import {
+	assumedLevels,
+	expandUpwardBySeed,
+	resolveConcepts
+} from '#lib/server/job/skill-ontology.ts';
+import { careerLevel, takenForGranted } from '#lib/server/job/assumed-levels.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 import {
 	DOCUMENT_TEMPLATE_TAGS,
 	heldBackByTemplate,
 	isHiddenFromDocuments,
 	REFERENCE_TAGS
-} from '$lib/profile-visibility';
+} from '#lib/profile-visibility.ts';
 import { retagVersionSlug } from './version-tags';
 // Moved to version-tags.ts so the capability registry can reach them without
 // this module; re-exported for the callers that have always imported them here.
@@ -117,23 +125,23 @@ import {
 	semanticScoreUnitsByLine,
 	poolKey,
 	type ContentUnit
-} from '$lib/server/documents/content-embeddings';
-import { scoreUnitAgainstQuery } from '$lib/server/documents/content-retrieval';
-import { countVersionPages } from '$lib/server/profile/page-fit';
-import { translatedLocales } from '$lib/server/profile/translations';
+} from '#lib/server/documents/content-embeddings.ts';
+import { scoreUnitAgainstQuery } from '#lib/server/documents/content-retrieval.ts';
+import { countVersionPages } from '#lib/server/profile/page-fit.ts';
+import { translatedLocales } from '#lib/server/profile/translations.ts';
 import {
 	choicesForPrintedRoles,
 	chooseFieldVariants,
 	variantDecisions
-} from '$lib/server/profile/tailor-field-variants';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
+} from '#lib/server/profile/tailor-field-variants.ts';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
 import {
 	COMPACT_COLUMNS,
 	promptJobDescription,
 	type CompactableJob,
 	type PromptDescription
-} from '$lib/server/jobs/compact-description';
-import { config } from '$lib/server/config';
+} from '#lib/server/jobs/compact-description.ts';
+import { config } from '#lib/server/config.ts';
 
 /** Lexical scores are small integers; cosine scores sit in 0..1. */
 const LEXICAL_FLOOR = 1;

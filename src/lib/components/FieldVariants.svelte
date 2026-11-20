@@ -15,14 +15,14 @@
 <script lang="ts">
 	import { faPlus, faTrash, faPen, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
 	import {
 		FIELD_VARIANT_ENTITY,
 		FIELD_VARIANT_VALUE,
 		variantField,
 		type FieldVariant,
 		type VariantEntity
-	} from '$lib/field-variants';
+	} from '#lib/field-variants.ts';
 
 	interface Props {
 		/**

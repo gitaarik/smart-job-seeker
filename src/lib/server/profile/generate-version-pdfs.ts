@@ -1,12 +1,12 @@
-import { launchBrowser } from '$lib/server/browser/utils';
-import { config } from '$lib/server/config';
-import { dbDirect as db } from '$lib/server/db';
+import { launchBrowser } from '#lib/server/browser/utils.ts';
+import { config } from '#lib/server/config.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, inArray } from 'drizzle-orm';
-import { profile_exports, profiles } from '$lib/server/db/schema';
-import { createProfileExport } from '$lib/server/profile/exports';
-import { isAnonymousVersion } from '$lib/server/profile/anonymity';
-import { printKeepingEntriesWhole } from '$lib/server/profile/page-breaks';
-import { buildExportUrl } from '$lib/server/utils/export-url-builder';
+import { profile_exports, profiles } from '#lib/server/db/schema.ts';
+import { createProfileExport } from '#lib/server/profile/exports.ts';
+import { isAnonymousVersion } from '#lib/server/profile/anonymity.ts';
+import { printKeepingEntriesWhole } from '#lib/server/profile/page-breaks.ts';
+import { buildExportUrl } from '#lib/server/utils/export-url-builder.ts';
 
 const APP_INTERNAL_URL = 'http://localhost:5173';
 

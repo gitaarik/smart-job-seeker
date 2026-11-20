@@ -14,15 +14,15 @@
  * prompt — the version trail stays Markdown-consistent.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { cheat_sheets } from '$lib/server/db/schema';
+import { cheat_sheets } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import { CHEATSHEET_VERSIONS, ensureBaselineVersion, recordVersion } from './entity-versions';
-import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
+import { htmlToMarkdown } from '#lib/utils/html-to-markdown.ts';
 import type { GenerationContextOption } from './generation-context';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 
 /** Profile data fields relevant for building an interview cheat sheet. */
 export const CHEATSHEET_PROFILE_FIELDS: ExportedProfileKey[] = [

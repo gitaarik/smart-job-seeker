@@ -17,7 +17,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import { and, eq, gte, inArray } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import {
 	application_records,
 	applications,
@@ -29,10 +29,10 @@ import {
 	mcp_keys,
 	notifications,
 	profiles
-} from '$lib/server/db/schema';
-import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
-import { callTool } from '$lib/server/mcp/call';
-import { createMcpKey, type VerifiedMcpKey } from '$lib/server/mcp/keys';
+} from '#lib/server/db/schema.ts';
+import { readEditLog, revertEdit } from '#lib/server/ai-chat/edit-log.ts';
+import { callTool } from '#lib/server/mcp/call.ts';
+import { createMcpKey, type VerifiedMcpKey } from '#lib/server/mcp/keys.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {

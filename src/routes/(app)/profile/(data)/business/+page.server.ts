@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
 
 /**
  * The business columns only. Basic Info loads the whole profile with its

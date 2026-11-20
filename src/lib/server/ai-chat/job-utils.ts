@@ -6,18 +6,18 @@
  */
 
 import { createAndGenerateAiChat, reserveAiChatId } from './utils.js';
-import { db, dbDirect } from '$lib/server/db';
+import { db, dbDirect } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { ai_chats, profiles, search_tasks } from '$lib/server/db/schema';
-import { tokensToCost } from '$lib/server/billing/credits';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
+import { ai_chats, profiles, search_tasks } from '#lib/server/db/schema.ts';
+import { tokensToCost } from '#lib/server/billing/credits.ts';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
 import {
 	isOversize,
 	systemOne,
 	type SystemOneRequest,
 	type SystemOneResponse
-} from '$lib/server/llm/typesafe';
-import { recordedTraceId, traceGeneration } from '$lib/server/monitoring/telemetry';
+} from '#lib/server/llm/typesafe.ts';
+import { recordedTraceId, traceGeneration } from '#lib/server/monitoring/telemetry.ts';
 import {
 	MATCH_PROFILE_LEAVES_OUT,
 	MATCH_SCORE_MODEL,
@@ -346,7 +346,7 @@ async function recordDecision<T>(decision: {
 			columns: { user_id: true }
 		});
 		if (owner?.user_id) {
-			const { chargeCredits } = await import('$lib/server/billing/credits');
+			const { chargeCredits } = await import('#lib/server/billing/credits.ts');
 			await chargeCredits(
 				owner.user_id,
 				credits,

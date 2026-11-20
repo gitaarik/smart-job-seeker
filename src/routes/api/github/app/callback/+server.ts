@@ -24,15 +24,15 @@
  */
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	createAppJwt,
 	exchangeUserCode,
 	isGitHubAppConfigured,
 	saveInstallation,
 	userInstallationIds
-} from '$lib/server/github/app-auth';
-import { verifyInstallState } from '$lib/server/github/app-state';
+} from '#lib/server/github/app-auth.ts';
+import { verifyInstallState } from '#lib/server/github/app-state.ts';
 
 /** The account an installation sits on, straight from GitHub. */
 async function fetchInstallationAccount(installationId: number) {

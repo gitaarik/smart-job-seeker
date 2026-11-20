@@ -17,7 +17,7 @@
 		emptyJobFields,
 		type JobFields
 	} from '../../components/JobFieldsForm.svelte';
-	import { today } from '$lib/application-records';
+	import { today } from '#lib/application-records.ts';
 
 	let { form }: { form: ActionData } = $props();
 
@@ -189,7 +189,7 @@
 <div class="max-w-3xl space-y-6 pb-8">
 	<div>
 		<a
-			href={resolve('/applications/active')}
+			href={resolve('applications/active')}
 			class="mb-2 inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-3 w-3" />
@@ -259,7 +259,7 @@
 			</button>
 			<div class="flex items-center gap-2">
 				<a
-					href={resolve('/applications/active')}
+					href={resolve('applications/active')}
 					class="rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 				>
 					Cancel
@@ -397,7 +397,7 @@
 				</button>
 				<div class="flex items-center gap-2">
 					<a
-						href={resolve('/applications/active')}
+						href={resolve('applications/active')}
 						class="rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 					>
 						Cancel

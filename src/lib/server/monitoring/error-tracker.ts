@@ -4,7 +4,7 @@
  * Integrates with Sentry/GlitchTip when SENTRY_DSN is configured
  */
 
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 import { Sentry } from './sentry';
 
 export interface ErrorContext {

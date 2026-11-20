@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { resolve } from '$app/paths';
 
 	let email = $state('');
@@ -58,7 +58,7 @@
 			</div>
 			<div class="text-center">
 				<a
-					href={resolve('/login')}
+					href={resolve('login')}
 					class="font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 				>
 					Back to sign in
@@ -102,7 +102,7 @@
 
 				<div class="text-center">
 					<a
-						href={resolve('/login')}
+						href={resolve('login')}
 						class="font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 					>
 						Back to sign in

@@ -1,19 +1,19 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { armOn } from '$lib/actions/arm-on';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import ToggleSwitch from '../../../components/ToggleSwitch.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import { resolve } from '$app/paths';
-	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import PlacePicker from '$lib/components/PlacePicker.svelte';
-	import { DEFAULT_RADIUS_KM, type PreferredPlace } from '$lib/data/places';
-	import { formatCurrency } from '$lib/salary/conversion';
+	import { autoSaveField, diffPayload, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import PlacePicker from '#lib/components/PlacePicker.svelte';
+	import { DEFAULT_RADIUS_KM, type PreferredPlace } from '#lib/data/places.ts';
+	import { formatCurrency } from '#lib/salary/conversion.ts';
 
 	let { data }: { data: PageData } = $props();
 

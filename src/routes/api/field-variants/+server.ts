@@ -10,19 +10,19 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, inArray } from 'drizzle-orm';
-import { profile_field_variants } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { touchProfile } from '$lib/server/profile/touch-profile';
-import { isVariantEntity, isVariantField } from '$lib/field-variants';
+import { profile_field_variants } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
+import { isVariantEntity, isVariantField } from '#lib/field-variants.ts';
 import {
 	createFieldVariant,
 	isVariantOwned,
 	isVariantTargetOwned,
 	listFieldVariants
-} from '$lib/server/profile/field-variants';
+} from '#lib/server/profile/field-variants.ts';
 
 /**
  * Every variant this profile holds, for the editor.

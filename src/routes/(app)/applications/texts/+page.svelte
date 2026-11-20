@@ -6,7 +6,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -19,12 +19,12 @@
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import EmptyState from '../../profile/components/EmptyState.svelte';
 	import FilterTabs from '../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
-	import { letterLabel } from '$lib/texts/letter-label';
+	import { letterLabel } from '#lib/texts/letter-label.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -132,7 +132,7 @@
 				aiError = result.message || 'Generation failed';
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			aiError = 'Network error. Please try again.';
 		} finally {

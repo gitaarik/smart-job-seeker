@@ -73,11 +73,11 @@ import {
 	work_experience_projects,
 	work_experience_technologies,
 	work_experiences
-} from '$lib/server/db/schema';
-import { SKILL_LEVELS } from '$lib/data/field-labels';
-import { WORK_MODES } from '$lib/work-mode';
-import type { FieldKind } from '$lib/server/utils/field-kinds';
-import { versionsOf } from '$lib/profile-visibility';
+} from '#lib/server/db/schema.ts';
+import { SKILL_LEVELS } from '#lib/data/field-labels.ts';
+import { WORK_MODES } from '#lib/work-mode.ts';
+import type { FieldKind } from '#lib/server/utils/field-kinds.ts';
+import { versionsOf } from '#lib/profile-visibility.ts';
 import {
 	certificateBasicSchema,
 	certificateSkillBasicSchema,
@@ -95,7 +95,7 @@ import {
 	workExperienceProjectBasicSchema,
 	workExperienceProjectTechnologyBasicSchema,
 	workExperienceTechnologyBasicSchema
-} from '$lib/server/validation/api-schemas';
+} from '#lib/server/validation/api-schemas.ts';
 
 export type ProfileResourceName =
 	| 'work_experience'
@@ -437,7 +437,7 @@ export interface ProfileResource {
 	 * sections whose text also prints in another language.
 	 *
 	 * The overlay has its own vocabulary (see `TRANSLATABLE_FIELDS` in
-	 * `$lib/resume-translations`), and it is persisted, so it cannot simply be
+	 * `#lib/resume-translations.ts`), and it is persisted, so it cannot simply be
 	 * renamed to match: a skill group's translations are stored under
 	 * `tech_skill_category`, after its table, where this layer calls the section
 	 * `skill_category`. Which of a section's columns are translatable is that
@@ -459,7 +459,7 @@ export interface ProfileResource {
  * three cannot.
  *
  * Visibility on a rendered resume or CV is decided by `tags`, through
- * `profile-filter.ts`: the `!resume` + `!cv` pair (`$lib/profile-visibility`'s
+ * `profile-filter.ts`: the `!resume` + `!cv` pair (`#lib/profile-visibility`'s
  * "profile-only") holds an item back from every base template while leaving any
  * per-version tag it carries intact. A section qualifies when it has a `tags`
  * column AND every document renderer that prints it puts it through that

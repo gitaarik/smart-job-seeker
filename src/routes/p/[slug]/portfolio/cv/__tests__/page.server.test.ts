@@ -18,42 +18,42 @@ const mockThemeBySlug = vi.fn();
 const mockThemes = vi.fn();
 const mockVersionBySlug = vi.fn();
 
-vi.mock('$lib/server/profile/default', () => ({
+vi.mock('#lib/server/profile/default.ts', () => ({
 	getProfileByIdentifier: () => mockProfile()
 }));
-vi.mock('$lib/server/profile/access-control', () => ({
+vi.mock('#lib/server/profile/access-control.ts', () => ({
 	getVersionIdBySlug: (...a: unknown[]) => mockVersionBySlug(...a)
 }));
-vi.mock('$lib/server/auth/token-validation', () => ({
+vi.mock('#lib/server/auth/token-validation.ts', () => ({
 	validateToken: (...a: unknown[]) => mockValidate(...a),
 	incrementTokenVisit: (...a: unknown[]) => mockIncrement(...a),
 	touchTokenVisit: (...a: unknown[]) => mockTouch(...a)
 }));
-vi.mock('$lib/server/profile/portfolio-key', () => ({
+vi.mock('#lib/server/profile/portfolio-key.ts', () => ({
 	readPortfolioKey: (...a: unknown[]) => mockReadKey(...a),
 	givePortfolioKey: (...a: unknown[]) => mockGiveKey(...a)
 }));
-vi.mock('$lib/server/profile/portfolio-themes', () => ({
+vi.mock('#lib/server/profile/portfolio-themes.ts', () => ({
 	getPortfolioThemeById: () => mockThemeById(),
 	getPortfolioTheme: (...a: unknown[]) => mockThemeBySlug(...a),
 	getPortfolioThemesForProfile: () => mockThemes()
 }));
-vi.mock('$lib/server/profile/translations', () => ({
+vi.mock('#lib/server/profile/translations.ts', () => ({
 	loadTranslator: async () => ({ locale: null }),
 	applyTranslations: () => {}
 }));
-vi.mock('$lib/server/profile/field-variants', () => ({
+vi.mock('#lib/server/profile/field-variants.ts', () => ({
 	loadFieldVariants: async () => [],
 	applyFieldVariants: () => {}
 }));
-vi.mock('$lib/server/profile/skill-words', () => ({
+vi.mock('#lib/server/profile/skill-words.ts', () => ({
 	loadDocumentSkillWords: async () => [],
 	applySkillWords: () => {}
 }));
-vi.mock('$lib/server/profile/page-profile', () => ({
+vi.mock('#lib/server/profile/page-profile.ts', () => ({
 	pageProfile: (profile: unknown) => profile
 }));
-vi.mock('$lib/server/auth/turnstile', () => ({
+vi.mock('#lib/server/auth/turnstile.ts', () => ({
 	turnstileConfigured: () => false,
 	turnstileSiteKey: () => null
 }));

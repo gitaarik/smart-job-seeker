@@ -13,7 +13,7 @@
  *    already belong to `edit_job_details` and the wire schema is flat.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Place, PreferredPlace } from '$lib/data/places';
+import type { Place, PreferredPlace } from '#lib/data/places.ts';
 
 const place = (id: number, label: string, country: string | null, countries: string[]): Place => ({
 	id,
@@ -43,8 +43,8 @@ const stored = {
 	below_ask_tolerance_pct: 10
 };
 
-vi.mock('$lib/server/job/match-preferences', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('$lib/server/job/match-preferences')>();
+vi.mock('#lib/server/job/match-preferences.ts', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/job/match-preferences.ts')>();
 	return {
 		...actual,
 		readMatchPreferences: vi.fn(async () => stored),
@@ -56,7 +56,7 @@ vi.mock('$lib/server/job/match-preferences', async (importOriginal) => {
 });
 
 // The gazetteer, as far as these names go.
-vi.mock('$lib/server/places', () => ({
+vi.mock('#lib/server/places.ts', () => ({
 	resolvePlaceText: vi.fn(async (text: string) => ({
 		place: /^haarlem/i.test(text) ? HAARLEM : /^europe$/i.test(text) ? EUROPE : null,
 		candidates: []
@@ -64,7 +64,7 @@ vi.mock('$lib/server/places', () => ({
 }));
 
 let ownedRow: unknown = { id: 7 };
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: { query: { match_config: { findFirst: () => Promise.resolve(ownedRow) } } },
 	dbDirect: { query: { match_config: { findFirst: () => Promise.resolve(ownedRow) } } }
 }));

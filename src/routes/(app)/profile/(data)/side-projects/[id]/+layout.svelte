@@ -10,7 +10,7 @@
 	 */
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -37,11 +37,11 @@
 	 * from Files & code.
 	 */
 	const basePath = $derived.by(() => {
-		void $page.url.pathname;
+		void page.url.pathname;
 		return resolve('/(app)/profile/(data)/side-projects/[id]', { id: String(data.project.id) });
 	});
 	const listPath = $derived.by(() => {
-		void $page.url.pathname;
+		void page.url.pathname;
 		return resolve('/(app)/profile/(data)/side-projects');
 	});
 
@@ -59,7 +59,7 @@
 	]);
 
 	function isTabActive(href: string): boolean {
-		const current = $page.url.pathname;
+		const current = page.url.pathname;
 		return href === basePath ? current === basePath : current.startsWith(href);
 	}
 </script>

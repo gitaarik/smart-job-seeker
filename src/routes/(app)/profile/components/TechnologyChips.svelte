@@ -32,19 +32,19 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { clickOutside, keepInView } from '$lib/actions/popover';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
-	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
-	import VersionTagPicker from '$lib/components/VersionTagPicker.svelte';
-	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
-	import { sectionRows } from '$lib/components/section-rows.svelte';
+	import { clickOutside, keepInView } from '#lib/actions/popover.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import SectionSaveButton from '#lib/components/SectionSaveButton.svelte';
+	import ShowOnSwitches from '#lib/components/ShowOnSwitches.svelte';
+	import VersionTagPicker from '#lib/components/VersionTagPicker.svelte';
+	import VisibilityMark from '#lib/components/VisibilityMark.svelte';
+	import { sectionRows } from '#lib/components/section-rows.svelte.ts';
 	import {
 		BASE_TEMPLATE_TAGS,
 		setShownOn,
 		versionTagsOf,
 		visibilityAmong
-	} from '$lib/profile-visibility';
+	} from '#lib/profile-visibility.ts';
 
 	let {
 		resource,

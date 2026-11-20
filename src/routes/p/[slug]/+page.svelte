@@ -4,7 +4,7 @@
   `data.profile.*` heavily; that is preserved in git history.
 
   The `./portfolio/` sibling is no longer disabled: it renders the public
-  portfolio site through `$lib/components/PortfolioSite`. Its old
+  portfolio site through `#lib/components/PortfolioSite`. Its old
   `components/` subtree was deleted on 2026-09-11 — those 26 files were a copy
   of the standalone rikwanders.tech site and read a hardcoded `resume` object
   rather than any profile, so they could never have served anyone else. The

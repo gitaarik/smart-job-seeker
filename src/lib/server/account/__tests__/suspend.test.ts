@@ -22,7 +22,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: Object.assign(() => ({ op: 'sql' }), { raw: () => ({ op: 'raw' }) })
 }));
 
-vi.mock('$lib/server/db/schema', () => {
+vi.mock('#lib/server/db/schema.ts', () => {
 	// vitest checks a mock's exports by name, so the tables are listed rather
 	// than conjured by a proxy. Columns are addressed as `table.col`.
 	const names = [
@@ -54,7 +54,7 @@ vi.mock('$lib/server/db/schema', () => {
 	return out;
 });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		update: (t: { __table: string }) => ({
 			set: (v: Record<string, unknown>) => ({
@@ -73,8 +73,8 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/profile/delete', () => ({ deleteProfile: vi.fn() }));
-vi.mock('$lib/server/uploads/reap', () => ({
+vi.mock('#lib/server/profile/delete.ts', () => ({ deleteProfile: vi.fn() }));
+vi.mock('#lib/server/uploads/reap.ts', () => ({
 	collectUserFileRefs: vi.fn(),
 	reapFileRefs: vi.fn()
 }));

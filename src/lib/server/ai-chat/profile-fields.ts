@@ -1,4 +1,4 @@
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 
 /**
  * Shared profile-blob field selection for AI generation.

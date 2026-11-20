@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
-	import { adjacencyExplanation, matchExplanation, type MatchVia } from '$lib/match-provenance';
+	import { adjacencyExplanation, matchExplanation, type MatchVia } from '#lib/match-provenance.ts';
 
 	/**
 	 * - "strong": skill matched + the user is proficient/expert

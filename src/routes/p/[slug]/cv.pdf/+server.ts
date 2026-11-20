@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { getLatestExportWithFile } from '$lib/server/profile/export-files';
-import { checkProfileAccess, getVersionSlugById } from '$lib/server/profile/access-control';
-import { incrementTokenVisit } from '$lib/server/auth/token-validation';
-import { templateForStorage } from '$lib/resume-templates';
-import { isAnonymousChain } from '$lib/server/profile/anonymity';
-import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
+import { getLatestExportWithFile } from '#lib/server/profile/export-files.ts';
+import { checkProfileAccess, getVersionSlugById } from '#lib/server/profile/access-control.ts';
+import { incrementTokenVisit } from '#lib/server/auth/token-validation.ts';
+import { templateForStorage } from '#lib/resume-templates.ts';
+import { isAnonymousChain } from '#lib/server/profile/anonymity.ts';
+import { BASE_LOCALE, isKnownLocale } from '#lib/resume-translations.ts';
 
 /**
  * Transform version slug to export_format

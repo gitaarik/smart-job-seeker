@@ -27,8 +27,8 @@
 		faPlus,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { LOGIN_PAGE_URL_MAX } from '$lib/import-tasks/custom-site';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { LOGIN_PAGE_URL_MAX } from '#lib/import-tasks/custom-site.ts';
 
 	interface Props {
 		platformId: number;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { OpenRows } from '$lib/components/open-rows';
+	import { OpenRows } from '#lib/components/open-rows.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -8,10 +8,10 @@
 		faPlus,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { SideProject } from '$lib/server/resume/types';
+	import type { SideProject } from '#lib/server/resume/types.ts';
 	import Card from '../../../../components/Card.svelte';
-	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
-	import AchievementsList from '$lib/components/AchievementsList.svelte';
+	import TechnologyTagsEditor from '#lib/components/TechnologyTagsEditor.svelte';
+	import AchievementsList from '#lib/components/AchievementsList.svelte';
 
 	interface Props {
 		projects: SideProject[];

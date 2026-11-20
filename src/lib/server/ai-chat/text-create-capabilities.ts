@@ -49,14 +49,14 @@
  * a loop fills a review queue rather than the applicant's pages.
  */
 
-import { readProfileApplication } from '$lib/server/applications/profile-applications';
+import { readProfileApplication } from '#lib/server/applications/profile-applications.ts';
 import {
 	TEXT_CREATE_KIND_NAMES,
 	TEXT_KINDS,
 	shorten,
 	type CreatableTextKind,
 	type TextCreateDef
-} from '$lib/server/texts/profile-texts';
+} from '#lib/server/texts/profile-texts.ts';
 import { countVersions } from './entity-versions';
 import type { CapabilityDef, CapabilityTarget } from './capabilities';
 

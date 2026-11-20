@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms';
 	import { faUsers } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import EmptyState from '../../profile/components/EmptyState.svelte';
 	import Card from '../../components/Card.svelte';
 

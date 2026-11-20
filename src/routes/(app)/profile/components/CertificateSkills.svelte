@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { sectionRows } from '$lib/components/section-rows.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
+	import { sectionRows } from '#lib/components/section-rows.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import TechnologyTagsEditor from '#lib/components/TechnologyTagsEditor.svelte';
 
 	/**
 	 * One certificate's skills, each chip saving itself.

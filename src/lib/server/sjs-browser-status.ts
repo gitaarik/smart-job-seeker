@@ -11,8 +11,8 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { api_keys, device_shares, users } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { api_keys, device_shares, users } from '#lib/server/db/schema.ts';
 
 const TUNNEL_REQUEST_TIMEOUT_MS = 2000;
 

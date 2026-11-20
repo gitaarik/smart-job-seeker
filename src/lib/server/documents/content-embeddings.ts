@@ -24,16 +24,16 @@
 
 import { createHash } from 'node:crypto';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { content_embeddings } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { content_embeddings } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import {
 	cosineSimilarity,
 	embed,
 	embedBatch,
 	isEmbeddingConfigured,
 	truncateVector
-} from '$lib/server/llm/embeddings';
+} from '#lib/server/llm/embeddings.ts';
 
 /**
  * One embeddable content unit. `subId` 0 is the unit's own text; a positive

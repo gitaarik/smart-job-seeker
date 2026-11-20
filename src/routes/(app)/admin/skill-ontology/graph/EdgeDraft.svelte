@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { RELATION_STYLES, verbFor } from './graph-shared';
 
 	export interface DraftEnd {
@@ -67,7 +67,7 @@
 			error = result.error?.message ?? 'Could not create that relation.';
 			return;
 		}
-		await invalidateAll();
+		await refreshAll();
 		oncancel();
 	}
 </script>

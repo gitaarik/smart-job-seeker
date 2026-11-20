@@ -10,7 +10,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 let flagOn = true;
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		get assistantDirectLogs() {
 			return flagOn;
@@ -21,7 +21,7 @@ vi.mock('$lib/server/config', () => ({
 /** Rows `lastThreadLogs` reads: the thread's latest entry per application. */
 let threadLogs: { application: number; at: Date | null }[] = [];
 const mockUpdate = vi.fn();
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const selectChain = {
 		from: () => selectChain,
 		innerJoin: () => selectChain,
@@ -51,7 +51,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: vi.fn(() => 'sql')
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	agent_message_proposals: {
 		name: 'agent_message_proposals',
 		id: 'amp.id',
@@ -65,10 +65,10 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 const mockRecent = vi.fn();
-vi.mock('$lib/server/mcp/burst', () => ({
+vi.mock('#lib/server/mcp/burst.ts', () => ({
 	recentDirectWrites: (...a: unknown[]) => mockRecent(...a)
 }));
-vi.mock('$lib/server/mcp/tiers', () => ({ DIRECT_WRITE_BURST: 20 }));
+vi.mock('#lib/server/mcp/tiers.ts', () => ({ DIRECT_WRITE_BURST: 20 }));
 
 const mockExecute = vi.fn();
 vi.mock('../capabilities', () => ({

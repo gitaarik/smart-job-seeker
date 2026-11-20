@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { searchPlaces } from '$lib/server/places';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { searchPlaces } from '#lib/server/places.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 
 /**
  * GET /api/places?q=haar[&limit=8]

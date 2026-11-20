@@ -24,14 +24,14 @@
  * English.
  */
 
-import { BASE_LOCALE } from '$lib/resume-translations';
-import { templateForStorage } from '$lib/resume-templates';
-import { pdfSettingsFor, settleForPrint } from '$lib/server/profile/generate-version-pdfs';
-import { launchBrowser } from '$lib/server/browser/utils';
-import { config } from '$lib/server/config';
-import { dbDirect as db } from '$lib/server/db';
+import { BASE_LOCALE } from '#lib/resume-translations.ts';
+import { templateForStorage } from '#lib/resume-templates.ts';
+import { pdfSettingsFor, settleForPrint } from '#lib/server/profile/generate-version-pdfs.ts';
+import { launchBrowser } from '#lib/server/browser/utils.ts';
+import { config } from '#lib/server/config.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { profiles } from '#lib/server/db/schema.ts';
 
 const APP_INTERNAL_URL = 'http://localhost:5173';
 

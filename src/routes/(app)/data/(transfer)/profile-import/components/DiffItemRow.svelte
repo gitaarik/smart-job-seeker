@@ -8,7 +8,7 @@
 		faMinus,
 		faPen
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { FieldDiff, ItemDiffType } from '$lib/resume-diff';
+	import type { FieldDiff, ItemDiffType } from '#lib/resume-diff.ts';
 	import DiffFieldRow from './DiffFieldRow.svelte';
 
 	interface Props {

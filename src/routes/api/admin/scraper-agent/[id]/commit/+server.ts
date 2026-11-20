@@ -1,10 +1,10 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { scraper_agent_sessions } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { searchTaskDisplayName } from '$lib/format';
+import { scraper_agent_sessions } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { searchTaskDisplayName } from '#lib/format.ts';
 import { execFileSync } from 'child_process';
 
 const CLOUD_DIR = '/cloud';

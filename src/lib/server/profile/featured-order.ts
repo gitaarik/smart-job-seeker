@@ -16,14 +16,18 @@
 
 import { and, asc, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { dbDirect as db } from '$lib/server/db';
-import { side_projects, work_experience_projects, work_experiences } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import {
+	side_projects,
+	work_experience_projects,
+	work_experiences
+} from '#lib/server/db/schema.ts';
 import {
 	featuredKey,
 	featuredSort,
 	featuredWork,
 	type FeaturedWork
-} from '$lib/components/PortfolioSite/site-lists';
+} from '#lib/components/PortfolioSite/site-lists.ts';
 
 /** One featured entry as the reorder card lists it. */
 export interface FeaturedOrderItem {

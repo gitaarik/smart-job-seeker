@@ -1,20 +1,20 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { invalidateAll } from '$app/navigation';
-	import { afterAppliedChange } from '$lib/components/applied-change.svelte';
+	import { page } from '$app/state';
+	import { refreshAll } from '$app/navigation';
+	import { afterAppliedChange } from '#lib/components/applied-change.svelte.ts';
 	import { resolve } from '$app/paths';
 	import { tick } from 'svelte';
-	import { browser } from '$app/environment';
-	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
-	import { timeAgo } from '$lib/format';
+	import { browser } from '$app/env';
+	import { renderSafeMarkdown } from '#lib/utils/safe-markdown.ts';
+	import { timeAgo } from '#lib/format.ts';
 	import { agentChatState } from './agent-chat-state.svelte';
-	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
+	import AutoGrowTextarea from '#lib/components/AutoGrowTextarea.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import ProposalCard, { type Proposal } from './ProposalCard.svelte';
 	import CapabilityTrace from './CapabilityTrace.svelte';
-	import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
-	import type { ReadRecord } from '$lib/server/documents/retrieval-record';
-	import type { TurnEvent, TurnNode } from '$lib/server/ai-chat/agent/events';
+	import type { CapabilityRecord } from '#lib/server/ai-chat/capability-record.ts';
+	import type { ReadRecord } from '#lib/server/documents/retrieval-record.ts';
+	import type { TurnEvent, TurnNode } from '#lib/server/ai-chat/agent/events.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronLeft,
@@ -128,9 +128,9 @@
 
 	// Label for the "the assistant can see this page" chip. Purely cosmetic — the
 	// context itself is resolved server-side from the route.
-	let pageContext = $derived(($page.data as { chatContext?: { label?: string } }).chatContext);
+	let pageContext = $derived((page.data as { chatContext?: { label?: string } }).chatContext);
 	let profileId = $derived(
-		($page.data as { selectedProfile?: { id?: number } }).selectedProfile?.id
+		(page.data as { selectedProfile?: { id?: number } }).selectedProfile?.id
 	);
 
 	// Switching profile ends the thread rather than carrying it over. The server
@@ -186,8 +186,8 @@
 	let abilitiesKey: string | undefined;
 
 	$effect(() => {
-		const route = $page.route.id;
-		const params = $page.params;
+		const route = page.route.id;
+		const params = page.params;
 		const profile = profileId;
 		// Reading `messages.length` here is what re-arms this after newChat().
 		if (!isOpen || !profile || messages.length > 0) return;
@@ -366,8 +366,8 @@
 					message: text,
 					// Where the user is as they send this — the server resolves what
 					// that means (and what they're allowed to see) from the route.
-					route: $page.route.id,
-					routeParams: $page.params,
+					route: page.route.id,
+					routeParams: page.params,
 					pasted: marks
 				})
 			});
@@ -407,7 +407,7 @@
 		// An entry logged without a click is already on the timeline, and the
 		// page behind the panel is very often that timeline.
 		if ((data.proposals ?? []).some((p: Proposal) => p.disposition === 'direct')) {
-			await invalidateAll();
+			await refreshAll();
 			afterAppliedChange();
 		}
 	}
@@ -659,7 +659,7 @@
 						{/if}
 						<p class="mt-4 text-center text-xs">
 							<a
-								href={resolve('/guide')}
+								href={resolve('guide')}
 								class="underline underline-offset-2 hover:text-[var(--dash-text-secondary)]"
 							>
 								What Smart Job Seeker can do

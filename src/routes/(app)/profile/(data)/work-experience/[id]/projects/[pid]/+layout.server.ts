@@ -12,14 +12,14 @@
 
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { projectDetailDep } from '$lib/project-detail';
-import { dbDirect as db } from '$lib/server/db';
+import { projectDetailDep } from '#lib/project-detail.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, count, eq } from 'drizzle-orm';
 import {
 	profile_document_projects,
 	work_experience_project_technologies,
 	work_experience_projects
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 	const layoutData = await parent();

@@ -4,7 +4,7 @@
  * that starts with each typed word; `rankPlaces` orders them.
  */
 import { sql } from 'drizzle-orm';
-import { queryRaw } from '$lib/server/db';
+import { queryRaw } from '#lib/server/db/index.ts';
 import {
 	foldPlaceName,
 	type Place,
@@ -12,7 +12,7 @@ import {
 	type PlaceKind,
 	placeTsQuery,
 	rankPlaces
-} from '$lib/data/places';
+} from '#lib/data/places.ts';
 
 /**
  * How many hits reach the ranking. "ne" matches thousands; the database hands

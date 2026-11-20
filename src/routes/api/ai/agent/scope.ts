@@ -15,7 +15,7 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { requireProfileAccess } from '$lib/server/utils/api-helpers';
+import { requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
 
 /**
  * Read and authorize `?profile_id=`. Throws 400 when absent or unparseable and

@@ -19,12 +19,12 @@ vi.mock('../langchain.js', async (importOriginal) => ({
 	generateChatCompletionTracked: mockTracked
 }));
 
-vi.mock('$lib/server/billing/credits', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/billing/credits')>()),
+vi.mock('#lib/server/billing/credits.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/billing/credits.ts')>()),
 	chargeCredits: mockCharge
 }));
 
-vi.mock('$lib/server/monitoring/error-tracker', () => ({
+vi.mock('#lib/server/monitoring/error-tracker.ts', () => ({
 	errorTracker: { logWarning: mockWarn }
 }));
 

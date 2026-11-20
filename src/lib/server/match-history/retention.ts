@@ -37,8 +37,8 @@
  */
 
 import { inArray, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { job_match_history } from '$lib/server/db/schema';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { job_match_history } from '#lib/server/db/schema.ts';
 
 export interface MatchHistoryRetentionResult {
 	rowsDeleted: number;

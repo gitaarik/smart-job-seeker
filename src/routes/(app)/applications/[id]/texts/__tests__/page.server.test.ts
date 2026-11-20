@@ -19,7 +19,7 @@ const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdate = vi.fn().mockReturnValue({ set: mockUpdateSet });
 const mockGetSelectedProfileId = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			applications: { findFirst: (...a: unknown[]) => mockAppFindFirst(...a) },
@@ -39,7 +39,7 @@ vi.mock('drizzle-orm', () => ({
 	and: vi.fn((...a: unknown[]) => a)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	applications: { id: 'applications.id', profile_id: 'applications.profile_id' },
 	application_letters: { id: 'al.id', application_id: 'al.application_id', sort: 'al.sort' },
 	application_questions: {
@@ -49,7 +49,7 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-vi.mock('$lib/server/profile/selected-profile', () => ({
+vi.mock('#lib/server/profile/selected-profile.ts', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 

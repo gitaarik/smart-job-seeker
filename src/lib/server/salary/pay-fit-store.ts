@@ -20,10 +20,10 @@
  */
 
 import { sql, type SQL } from 'drizzle-orm';
-import { queryRawDirect, sqlJoin } from '$lib/server/db';
+import { queryRawDirect, sqlJoin } from '#lib/server/db/index.ts';
 import { getFxRates } from './fx';
-import { payFit, payFloor, type Asks } from '$lib/salary/pay-fit';
-import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import { payFit, payFloor, type Asks } from '#lib/salary/pay-fit.ts';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 
 /** Which matches to work out again. */
 export type PayFitScope =

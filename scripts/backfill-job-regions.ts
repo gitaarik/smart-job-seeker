@@ -18,10 +18,10 @@
  *   npx dotenvx run -f ../.env -- npx tsx scripts/backfill-job-regions.ts --apply
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, isNotNull } from 'drizzle-orm';
-import { jobs } from '$lib/server/db/schema';
-import { classifyRegion } from '$lib/data/job-taxonomy';
+import { jobs } from '#lib/server/db/schema.ts';
+import { classifyRegion } from '#lib/data/job-taxonomy.ts';
 
 const APPLY = process.argv.includes('--apply');
 

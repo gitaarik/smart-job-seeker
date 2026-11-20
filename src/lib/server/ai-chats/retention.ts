@@ -36,8 +36,8 @@
  */
 
 import { and, inArray, isNotNull, lt, or } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { ai_chats } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { ai_chats } from '#lib/server/db/schema.ts';
 
 export interface AiChatRetentionResult {
 	rowsPruned: number;

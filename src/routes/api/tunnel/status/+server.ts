@@ -1,11 +1,11 @@
 import { json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { hasDeviceAccess } from '$lib/server/device-shares';
-import { db } from '$lib/server/db';
-import { api_keys } from '$lib/server/db/schema';
-import { fetchUserSjsBrowserStatus } from '$lib/server/sjs-browser-status';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { hasDeviceAccess } from '#lib/server/device-shares.ts';
+import { db } from '#lib/server/db/index.ts';
+import { api_keys } from '#lib/server/db/schema.ts';
+import { fetchUserSjsBrowserStatus } from '#lib/server/sjs-browser-status.ts';
 
 /**
  * GET /api/tunnel/status — status for the logged-in user's connected devices.

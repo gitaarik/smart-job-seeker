@@ -1,9 +1,9 @@
 <script lang="ts">
 	/*
-	 * Every href here comes from filterUrl(), which calls resolve('/admin/inbox')
+	 * Every href here comes from filterUrl(), which calls resolve('admin/inbox')
 	 * itself and appends the query. The rule does not follow a function call.
 	 */
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -69,7 +69,7 @@
 		for (const [k, v] of Object.entries(params)) {
 			if (v) parts.push(`${k}=${v}`);
 		}
-		return `${resolve('/admin/inbox')}${parts.length ? '?' + parts.join('&') : ''}`;
+		return `${resolve('admin/inbox')}${parts.length ? '?' + parts.join('&') : ''}`;
 	}
 
 	function toggleExpand(id: number) {

@@ -9,8 +9,8 @@
 	 * label inside an accordion row, so the same feature was described twice, in
 	 * two voices, in two places. It is described here.
 	 *
-	 * It lives beside `ProjectDocuments` rather than in `$lib` because that is
-	 * where `ProjectDocuments` and `ConfirmModal` already are, and a `$lib`
+	 * It lives beside `ProjectDocuments` rather than in `#lib` because that is
+	 * where `ProjectDocuments` and `ConfirmModal` already are, and a `#lib`
 	 * component reaching back into `routes/` to import them would invert the one
 	 * direction those imports have always run.
 	 */

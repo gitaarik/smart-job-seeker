@@ -4,7 +4,7 @@ import { AIMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 
 // Mock getEnv
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn(() => 'test-api-key')
 }));
 

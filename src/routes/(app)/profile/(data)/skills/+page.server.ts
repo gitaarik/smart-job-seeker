@@ -1,9 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc, asc } from 'drizzle-orm';
-import { tech_skill_categories, tech_skills } from '$lib/server/db/schema';
-import { SKILL_LEVELS } from '$lib/data/field-labels';
+import { tech_skill_categories, tech_skills } from '#lib/server/db/schema.ts';
+import { SKILL_LEVELS } from '#lib/data/field-labels.ts';
 import { getSelectedProfileId, touchProfile } from '../../utils';
 
 export const load: PageServerLoad = async ({ parent }) => {

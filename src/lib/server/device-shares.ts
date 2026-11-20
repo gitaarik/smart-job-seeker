@@ -5,12 +5,12 @@
  * are a direct comparison rather than a profile traversal.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, gt, inArray } from 'drizzle-orm';
-import { api_keys, device_shares, users, verifications } from '$lib/server/db/schema';
-import { areContacts, ensureAcceptedContact } from '$lib/server/contacts';
-import { createNotification } from '$lib/server/notifications';
-import { revokeOrphanedCredentialShares } from '$lib/server/credential-shares';
+import { api_keys, device_shares, users, verifications } from '#lib/server/db/schema.ts';
+import { areContacts, ensureAcceptedContact } from '#lib/server/contacts.ts';
+import { createNotification } from '#lib/server/notifications.ts';
+import { revokeOrphanedCredentialShares } from '#lib/server/credential-shares.ts';
 import { randomBytes } from 'node:crypto';
 
 /**

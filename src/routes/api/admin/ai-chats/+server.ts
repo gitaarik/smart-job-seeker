@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { ai_chats } from '$lib/server/db/schema';
+import { ai_chats } from '#lib/server/db/schema.ts';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!locals.user?.is_admin) {

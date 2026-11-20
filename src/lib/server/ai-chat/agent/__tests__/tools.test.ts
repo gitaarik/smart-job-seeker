@@ -7,16 +7,16 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/profile/write', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/write')>()),
+vi.mock('#lib/server/profile/write.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/write.ts')>()),
 	parentNames: () => Promise.resolve(['Backend (Python / Django)'])
 }));
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>()),
 	translatedLocales: () => Promise.resolve(['nl'])
 }));
-vi.mock('$lib/server/ai-chat/tag-capabilities', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/ai-chat/tag-capabilities')>()),
+vi.mock('#lib/server/ai-chat/tag-capabilities.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/ai-chat/tag-capabilities.ts')>()),
 	libraryVersions: () => Promise.resolve(['citrus'])
 }));
 
@@ -27,8 +27,8 @@ import {
 	toolsFor,
 	withoutProfileId,
 	writeToolsFor
-} from '$lib/server/mcp/tools';
-import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
+} from '#lib/server/mcp/tools.ts';
+import { CAPABILITIES, type Capability } from '#lib/server/ai-chat/capabilities.ts';
 import { CHAT_SLICE_CHARS, chatToolSet, toolDefinition } from '../tools';
 
 const actor = { profileId: 12, isStaff: false };

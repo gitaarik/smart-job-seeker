@@ -4,7 +4,7 @@
  * Deliberately NOT in `billing/__tests__/`. Cloud bind-mounts its own
  * `src/lib/server/billing/` over the OSS one (docker-compose.yml), so a test
  * living in that directory is replaced along with it and would only run if both
- * copies carried it. From here it imports through `$lib`, which means it tests
+ * copies carried it. From here it imports through `#lib`, which means it tests
  * whichever copy is actually mounted — the one that prices real generations.
  */
 import { describe, expect, it, vi } from 'vitest';
@@ -12,7 +12,7 @@ import {
 	estimateGroupCostUsd,
 	estimateProviderCostUsd,
 	hasProviderPricing
-} from '$lib/server/billing/provider-costs';
+} from '#lib/server/billing/provider-costs.ts';
 
 const PRO = ['gemini', 'gemini-2.5-pro'] as const;
 

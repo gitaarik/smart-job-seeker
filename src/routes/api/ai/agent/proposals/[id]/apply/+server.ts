@@ -1,21 +1,21 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
 	agent_messages,
 	capability_edits
-} from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+} from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	CAPABILITIES,
 	type Capability,
 	type CapabilityRefusal,
 	executeCapability
-} from '$lib/server/ai-chat/capabilities';
-import { scoreGeneration } from '$lib/server/monitoring/product-scores';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { scoreGeneration } from '#lib/server/monitoring/product-scores.ts';
 
 /**
  * POST /api/ai/agent/proposals/:id/apply — commit an edit the assistant

@@ -23,9 +23,9 @@
  *   ... --before 2026-08-22            # only accounts older than this
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, lt, ne, or, isNull } from 'drizzle-orm';
-import { users } from '$lib/server/db/schema';
+import { users } from '#lib/server/db/schema.ts';
 
 const APPLY = process.argv.includes('--apply');
 

@@ -3,14 +3,14 @@
  * Creates an ai_chats record with context from collected_data, job description, and the question
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { application_questions } from '$lib/server/db/schema';
+import { application_questions } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import { type ContextSource, type RelevanceQuery } from './generation-context';
 import { applicationQuestionQuery } from './relevance-queries';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 import { ensureBaselineVersion, QUESTION_VERSIONS, recordVersion } from './entity-versions';
 
 /** Profile data fields relevant for answering application questions */

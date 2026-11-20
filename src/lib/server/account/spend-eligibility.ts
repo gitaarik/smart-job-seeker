@@ -41,8 +41,8 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles, users } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles, users } from '#lib/server/db/schema.ts';
 
 export type SpendBlockReason =
 	'user_missing' | 'not_approved' | 'deletion_pending' | 'suspended' | 'idle';

@@ -13,11 +13,11 @@
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import { getSelectedProfileId } from '../../../../(app)/profile/utils';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
-import { extractQaPairsSchema } from '$lib/server/schemas/ai-prompt-schemas';
-import { requireCredits } from '$lib/server/billing/require-credits';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
+import { extractQaPairsSchema } from '#lib/server/schemas/ai-prompt-schemas.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
 
 /** Cap the paste size so a runaway input can't blow up token spend. */
 const MAX_TEXT_LENGTH = 20000;

@@ -10,10 +10,10 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTimes, faImage, faExpand, faCheck } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { portalToBody } from '$lib/actions/portal';
-	import MediaPicker from '$lib/components/media/MediaPicker.svelte';
-	import { entitySlotSpec, type Crop } from '$lib/media-library';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { portalToBody } from '#lib/actions/portal.ts';
+	import MediaPicker from '#lib/components/media/MediaPicker.svelte';
+	import { entitySlotSpec, type Crop } from '#lib/media-library.ts';
 
 	interface Props {
 		entityType: string;

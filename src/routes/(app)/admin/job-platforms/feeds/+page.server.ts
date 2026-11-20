@@ -6,17 +6,17 @@
  */
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, ilike, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
-import { ats_boards, job_platforms } from '$lib/server/db/schema';
-import { requireAdmin } from '$lib/server/auth/guards';
+import { ats_boards, job_platforms } from '#lib/server/db/schema.ts';
+import { requireAdmin } from '#lib/server/auth/guards.ts';
 import {
 	enqueueAtsBoard,
 	enqueueAtsSweep,
 	getAtsBoardQueueStats,
 	type AtsBoardQueueStats
-} from '$lib/server/queue';
-import { ATS_BOARD_STATUSES } from '$lib/job-platforms/ats-boards';
+} from '#lib/server/queue/index.ts';
+import { ATS_BOARD_STATUSES } from '#lib/job-platforms/ats-boards.ts';
 
 const BOARD_LIST_LIMIT = 50;
 const RECENT_ERRORS_LIMIT = 20;

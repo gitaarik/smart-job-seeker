@@ -3,13 +3,13 @@
 	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../../../components/Card.svelte';
-	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
-	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
-	import type { DeleteScope, TurnLabels } from '$lib/server/ai-chat/entity-versions';
+	import AutoGrowTextarea from '#lib/components/AutoGrowTextarea.svelte';
+	import ConversationTimeline from '#lib/components/conversation/ConversationTimeline.svelte';
+	import type { DeleteScope, TurnLabels } from '#lib/server/ai-chat/entity-versions.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -115,7 +115,7 @@
 
 	async function onGenerate(mode: 'generate' | 'advice' | 'auto', instructions?: string) {
 		await apiGenerate(mode, instructions);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function onReview(content: string) {
@@ -123,7 +123,7 @@
 		const latestContent = conversation.findLast((e) => e.content)?.content;
 		if (content !== latestContent) {
 			await apiSaveContent(content);
-			await invalidateAll();
+			await refreshAll();
 		}
 		if (question.ai_chat_id) {
 			await apiFollowup(
@@ -134,7 +134,7 @@
 		} else {
 			await apiGenerate('review');
 		}
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function onSendFollowup(
@@ -142,12 +142,12 @@
 		opts: { updateContent: boolean; replaceVersionId?: number; mode?: 'apply_advice' }
 	) {
 		await apiFollowup(text, opts.updateContent, opts.mode, opts.replaceVersionId);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function onSaveVersion(content: string, opts: { deleteAfterVersionId?: number }) {
 		await apiSaveContent(content, opts.deleteAfterVersionId);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	// Non-destructive: make a chosen version the live answer without trimming.
@@ -155,7 +155,7 @@
 		const fd = new FormData();
 		fd.set('content', content);
 		await postAction('applyVersion', fd);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	// Remove one entry from the version trail, rewinding the thread to just
@@ -165,7 +165,7 @@
 		fd.set('versionId', String(versionId));
 		fd.set('scope', scope);
 		await postAction('deleteEntry', fd);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function handleQuestionSave() {
@@ -177,7 +177,7 @@
 			update: () => Promise<void>;
 		}) => {
 			await update();
-			if (result.type === 'success') await invalidateAll();
+			if (result.type === 'success') await refreshAll();
 		};
 	}
 </script>

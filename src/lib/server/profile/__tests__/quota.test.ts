@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { error } from '@sveltejs/kit';
 
 const mockRequire = vi.fn();
-vi.mock('$lib/server/billing/require-profile-quota', () => ({
+vi.mock('#lib/server/billing/require-profile-quota.ts', () => ({
 	requireProfileQuota: (...a: unknown[]) => mockRequire(...a)
 }));
 
@@ -37,7 +37,7 @@ describe('profileQuotaFailure', () => {
 
 	it("turns the guard's 403 into a fail() carrying its message", async () => {
 		mockRequire.mockImplementation(async () => {
-			error(403, { message: 'Profile limit reached (2 of 2 profiles used).' });
+			error(403, 'Profile limit reached (2 of 2 profiles used).');
 		});
 
 		const r = await profileQuotaFailure('user-1');

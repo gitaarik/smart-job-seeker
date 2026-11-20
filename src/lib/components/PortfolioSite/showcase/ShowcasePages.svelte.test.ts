@@ -5,7 +5,7 @@ import { tick } from 'svelte';
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/p/alex/portfolio') } }));
 
 import ShowcaseSite from './ShowcaseSite.svelte';
-import type { PortfolioPage } from '$lib/portfolio-themes';
+import type { PortfolioPage } from '#lib/portfolio-themes.ts';
 
 // jsdom has no matchMedia, and no scrolling: the layout reads the first on
 // mount, and the carousel moves with the other two.

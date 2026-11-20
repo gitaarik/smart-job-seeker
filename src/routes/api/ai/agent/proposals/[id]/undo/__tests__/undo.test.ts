@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 /** What each select in turn returns: the proposal row, then the edit row. */
 let results: unknown[][] = [];
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const selectChain = {
 		from: () => selectChain,
 		innerJoin: () => selectChain,
@@ -29,7 +29,7 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn((c: unknown) => c)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	agent_conversations: { id: 'ac.id', user_id: 'ac.user_id' },
 	agent_messages: {
 		id: 'am.id',
@@ -45,11 +45,11 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 const mockRevert = vi.fn();
-vi.mock('$lib/server/ai-chat/edit-log', () => ({
+vi.mock('#lib/server/ai-chat/edit-log.ts', () => ({
 	revertEdit: (...a: unknown[]) => mockRevert(...a)
 }));
 
-vi.mock('$lib/server/utils/api-helpers', () => ({
+vi.mock('#lib/server/utils/api-helpers.ts', () => ({
 	requireAuth: () => ({ id: 'user-1' })
 }));
 

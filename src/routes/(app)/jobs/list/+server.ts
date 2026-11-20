@@ -6,7 +6,7 @@ import {
 	listJobs,
 	markJobsShown,
 	parseJobListFilters
-} from '$lib/server/job/list-jobs';
+} from '#lib/server/job/list-jobs.ts';
 
 /**
  * GET /jobs/list — JSON page of jobs for infinite scroll on /jobs.

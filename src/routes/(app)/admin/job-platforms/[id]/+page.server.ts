@@ -1,19 +1,23 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { desc, eq } from 'drizzle-orm';
-import { job_platform_changes, job_platforms, search_form_probe_runs } from '$lib/server/db/schema';
+import {
+	job_platform_changes,
+	job_platforms,
+	search_form_probe_runs
+} from '#lib/server/db/schema.ts';
 import {
 	countPlatformReferences,
 	deletePlatform,
 	describePlatformReferences,
 	updatePlatformWithAudit
-} from '$lib/server/job-platforms/admin';
-import { markableUnsupportedValues } from '$lib/job-platforms/search-filters';
+} from '#lib/server/job-platforms/admin.ts';
+import { markableUnsupportedValues } from '#lib/job-platforms/search-filters.ts';
 import {
 	mergeUnsupported,
 	type UnsupportedFilters
-} from '$lib/server/job-platforms/unsupported-filters';
+} from '#lib/server/job-platforms/unsupported-filters.ts';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const platformId = parseInt(params.id, 10);

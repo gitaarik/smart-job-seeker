@@ -19,7 +19,7 @@
 		defaultValueKey,
 		type SearchFilterName,
 		type SearchFilterValue
-	} from '$lib/job-platforms/search-filters';
+	} from '#lib/job-platforms/search-filters.ts';
 
 	interface Props {
 		filters: Record<string, SearchFilterValue>;

@@ -11,9 +11,9 @@
  */
 
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, desc, eq } from 'drizzle-orm';
-import { profile_document_projects } from '$lib/server/db/schema';
+import { profile_document_projects } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { project } = await parent();

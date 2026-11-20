@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
-import { CAPABILITIES, executeCapability } from '$lib/server/ai-chat/capabilities';
-import { directiveField } from '$lib/server/ai-chat/directive-capability';
+import { CAPABILITIES, executeCapability } from '#lib/server/ai-chat/capabilities.ts';
+import { directiveField } from '#lib/server/ai-chat/directive-capability.ts';
 import {
 	CONSUMER_LABELS,
 	DIRECTIVE_TOPIC_NAMES,
@@ -13,7 +13,7 @@ import {
 	MAX_STATEMENT_CHARS,
 	topicLabel,
 	type DirectiveConsumer
-} from '$lib/server/ai-chat/directives';
+} from '#lib/server/ai-chat/directives.ts';
 
 /** "the assistant, cover letters and …", from the consumer keys a row carries. */
 function usedBy(appliesTo: string[]): string[] {

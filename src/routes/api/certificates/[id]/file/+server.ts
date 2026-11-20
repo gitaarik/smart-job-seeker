@@ -16,17 +16,17 @@
 import { error, json } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
-import { certificates } from '$lib/server/db/schema';
-import { contentDisposition, getFile } from '$lib/server/files';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { requireRowActor } from '$lib/server/profile/write-http';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { certificates } from '#lib/server/db/schema.ts';
+import { contentDisposition, getFile } from '#lib/server/files.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { requireRowActor } from '#lib/server/profile/write-http.ts';
 import {
 	attachCertificateFile,
 	CertificateFileError,
 	detachCertificateFile,
 	prepareCertificateFile
-} from '$lib/server/profile/certificate-file';
+} from '#lib/server/profile/certificate-file.ts';
 
 /**
  * Types that may render in place: raster images, which only an image decoder

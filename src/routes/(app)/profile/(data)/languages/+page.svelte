@@ -12,13 +12,13 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import Card from '../../../components/Card.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -151,7 +151,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ profile_id: data.profileId, order: ids })
 			});
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			// silently fail
 		}

@@ -1,9 +1,9 @@
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { user_feedback_files, files } from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
+import { user_feedback_files, files } from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const user = locals.user;

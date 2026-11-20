@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
+import { dbDirect as db, queryRaw, sql } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { jobs, job_statuses } from '$lib/server/db/schema';
+import { jobs, job_statuses } from '#lib/server/db/schema.ts';
 
 /**
  * Shared form action handlers for save/unsave/reject/unreject job statuses.

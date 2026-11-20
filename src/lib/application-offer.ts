@@ -6,7 +6,7 @@
  * application-summary.ts`) and read by the overview card, so the shape and its
  * formatting live here rather than on either side of that. The same shape is
  * also inlined on the `applications.offer_terms` column, which cannot import
- * it — drizzle-kit runs outside Vite and does not resolve `$lib`.
+ * it — drizzle-kit runs outside Vite and does not resolve `#lib`.
  *
  * Every field is nullable and every one of them arrived from a model reading
  * free text, so the rules below are mostly about not dressing up a shaky

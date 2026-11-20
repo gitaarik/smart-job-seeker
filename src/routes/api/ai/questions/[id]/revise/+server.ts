@@ -13,14 +13,14 @@
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { application_questions } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
-import { QUESTION_PROFILE_FIELDS } from '$lib/server/ai-chat/application-question';
-import { reviseAnswerSchema } from '$lib/server/schemas/ai-prompt-schemas';
-import { requireCredits } from '$lib/server/billing/require-credits';
+import { application_questions } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
+import { QUESTION_PROFILE_FIELDS } from '#lib/server/ai-chat/application-question.ts';
+import { reviseAnswerSchema } from '#lib/server/schemas/ai-prompt-schemas.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
 
 const MAX_DRAFT_LENGTH = 20000;
 

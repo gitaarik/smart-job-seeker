@@ -8,7 +8,7 @@
  * nothing.
  */
 import { describe, expect, it } from 'vitest';
-import type { ChatMessage, CompletionResult, ToolCall } from '$lib/server/llm';
+import type { ChatMessage, CompletionResult, ToolCall } from '#lib/server/llm/index.ts';
 import type { ExecutedCall } from '../executor';
 import {
 	type AssistantTurnDeps,

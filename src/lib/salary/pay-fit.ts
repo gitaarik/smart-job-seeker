@@ -20,7 +20,12 @@
  * Hiding a good job on a misread is worse than showing a poor one.
  */
 
-import { JOB_TYPES, WORK_LOCATIONS, buildNormalizeMap, getPatterns } from '$lib/data/job-taxonomy';
+import {
+	JOB_TYPES,
+	WORK_LOCATIONS,
+	buildNormalizeMap,
+	getPatterns
+} from '#lib/data/job-taxonomy.ts';
 import {
 	convertCurrency,
 	normalizeSalaryPeriod,

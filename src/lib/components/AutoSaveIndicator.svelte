@@ -14,7 +14,7 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faExclamationTriangle, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import type { SaveStatus } from './auto-save.svelte';
 
 	interface Props {

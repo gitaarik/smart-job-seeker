@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { listContacts } from '$lib/server/contacts';
-import { listDevicesSharedByMe } from '$lib/server/device-shares';
+import { listContacts } from '#lib/server/contacts.ts';
+import { listDevicesSharedByMe } from '#lib/server/device-shares.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

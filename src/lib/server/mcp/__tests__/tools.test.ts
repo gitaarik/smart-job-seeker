@@ -7,31 +7,31 @@
  * fields" by a server that could have said so in the schema.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
-import { parseTranslationField } from '$lib/server/profile/section-translations';
+import { APP_AREAS } from '#lib/server/ai-chat/ability-manifest.ts';
+import { parseTranslationField } from '#lib/server/profile/section-translations.ts';
 
 // A profile, for the tests that pass one: no parent groups to list, and Dutch
 // as the one language it writes in besides English.
-vi.mock('$lib/server/profile/write', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/write')>()),
+vi.mock('#lib/server/profile/write.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/write.ts')>()),
 	parentNames: () => Promise.resolve([])
 }));
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>()),
 	translatedLocales: () => Promise.resolve(['nl'])
 }));
 // And two library versions, which is what a tag may name besides the documents.
-vi.mock('$lib/server/ai-chat/tag-capabilities', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/ai-chat/tag-capabilities')>()),
+vi.mock('#lib/server/ai-chat/tag-capabilities.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/ai-chat/tag-capabilities.ts')>()),
 	libraryVersions: () => Promise.resolve(['citrus', 'fullstack-django'])
 }));
-import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
+import { CAPABILITIES } from '#lib/server/ai-chat/capabilities.ts';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
 import {
 	TEXT_CREATE_CAPABILITY_NAMES,
 	kindForTextCreateCapability,
 	textCreateOwner
-} from '$lib/server/ai-chat/text-create-capabilities';
+} from '#lib/server/ai-chat/text-create-capabilities.ts';
 import {
 	DOCUMENT_TOOLS,
 	instructionsFor,

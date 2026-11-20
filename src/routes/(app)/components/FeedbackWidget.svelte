@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -72,8 +72,8 @@
 		const formData = new FormData();
 		formData.set('message', message.trim());
 		formData.set('category', category);
-		formData.set('page_url', $page.url.pathname + $page.url.search);
-		const profileId = $page.data.selectedProfile?.id;
+		formData.set('page_url', page.url.pathname + page.url.search);
+		const profileId = page.data.selectedProfile?.id;
 		if (profileId) formData.set('profile_id', String(profileId));
 		for (const file of files) {
 			formData.append('files', file);
@@ -150,7 +150,7 @@
 					<p class="mt-1 text-xs text-[var(--dash-text-muted)]">We'll look into it.</p>
 					<div class="mt-4 flex items-center justify-center gap-3">
 						<a
-							href={resolve('/feedback')}
+							href={resolve('feedback')}
 							onclick={close}
 							class="rounded-lg px-4 py-1.5 text-sm text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10"
 						>

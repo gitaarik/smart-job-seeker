@@ -23,7 +23,7 @@
 		isHiddenFromDocuments,
 		tagSlug,
 		versionTagsOf
-	} from '$lib/profile-visibility';
+	} from '#lib/profile-visibility.ts';
 
 	interface Props {
 		/** The item's tags as stored, base templates included. */

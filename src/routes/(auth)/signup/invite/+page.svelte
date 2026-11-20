@@ -2,8 +2,8 @@
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import TermsCheckbox from '$lib/components/legal/TermsCheckbox.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import TermsCheckbox from '#lib/components/legal/TermsCheckbox.svelte';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let password = $state('');
@@ -34,7 +34,7 @@
 					{data.error}
 				</p>
 				<a
-					href={resolve('/login')}
+					href={resolve('login')}
 					class="mt-6 inline-block font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 				>
 					Go to login

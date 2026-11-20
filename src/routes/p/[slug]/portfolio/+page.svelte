@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import PortfolioSite from '$lib/components/PortfolioSite/PortfolioSite.svelte';
-	import ShowcaseSite from '$lib/components/PortfolioSite/showcase/ShowcaseSite.svelte';
-	import { themeLayout } from '$lib/portfolio-themes';
+	import PortfolioSite from '#lib/components/PortfolioSite/PortfolioSite.svelte';
+	import ShowcaseSite from '#lib/components/PortfolioSite/showcase/ShowcaseSite.svelte';
+	import { themeLayout } from '#lib/portfolio-themes.ts';
 
 	let { data }: { data: PageData } = $props();
 </script>

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import { onMount, untrack } from 'svelte';
-	import { page } from '$app/stores';
-	import { formatDateTime } from '$lib/format-date';
-	import type { TimeFormat } from '$lib/format-date';
+	import { page } from '$app/state';
+	import { formatDateTime } from '#lib/format-date.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBan,
@@ -19,9 +19,9 @@
 		faTimesCircle
 	} from '@fortawesome/free-solid-svg-icons';
 	import BrowserView from './BrowserView.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import LogViewer from './LogViewer.svelte';
-	import { portalToBody } from '$lib/actions/portal';
+	import { portalToBody } from '#lib/actions/portal.ts';
 	import CredentialSelector from '../jobs/components/CredentialSelector.svelte';
 	import BrowserProviderToggle from '../jobs/components/BrowserProviderToggle.svelte';
 
@@ -267,7 +267,7 @@
 	}
 
 	function formatRunDate(dateStr: string): string {
-		return formatDateTime(dateStr, ($page.data as { timeFormat: TimeFormat }).timeFormat);
+		return formatDateTime(dateStr, (page.data as { timeFormat: TimeFormat }).timeFormat);
 	}
 
 	function statusColor(s: string): string {
@@ -446,7 +446,7 @@
 						{logs}
 						loading={isActive}
 						maxHeight="max-h-48"
-						timeFormat={($page.data as { timeFormat: import('$lib/format-date').TimeFormat })
+						timeFormat={(page.data as { timeFormat: import('#lib/format-date.ts').TimeFormat })
 							.timeFormat}
 					/>
 

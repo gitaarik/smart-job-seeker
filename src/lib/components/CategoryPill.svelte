@@ -8,8 +8,8 @@
 -->
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { getIcon, CATEGORY_COLORS } from '$lib/data/job-icons';
-	import { formatJobType, formatWorkLocation, formatExperienceLevel } from '$lib/format';
+	import { getIcon, CATEGORY_COLORS } from '#lib/data/job-icons.ts';
+	import { formatJobType, formatWorkLocation, formatExperienceLevel } from '#lib/format.ts';
 
 	interface Props {
 		category: 'job_type' | 'work_location' | 'experience_level';

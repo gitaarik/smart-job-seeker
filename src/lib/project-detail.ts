@@ -19,8 +19,8 @@
  * switch flushes pending saves on the way out, and a refresh racing its own
  * PATCH would re-read the value the user just replaced.
  *
- * Targeted rather than `invalidateAll()` because this fires on a debounce tick
- * while the user is typing, and `invalidateAll()` would re-run the dashboard
+ * Targeted rather than `refreshAll()` because this fires on a debounce tick
+ * while the user is typing, and `refreshAll()` would re-run the dashboard
  * layout's auth, profile list, credit balance and notification count with it.
  */
 

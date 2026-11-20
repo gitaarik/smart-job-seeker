@@ -14,21 +14,21 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { and, desc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profile_document_projects } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { requireRowActor } from '$lib/server/profile/write-http';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
-import { DocumentExtractError, extractUpload } from '$lib/server/documents/extract';
-import { saveExtractedProject } from '$lib/server/documents/store';
-import { setProjectSummary } from '$lib/server/documents/store';
-import { summarizeProject } from '$lib/server/documents/summarize';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_document_projects } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { requireRowActor } from '#lib/server/profile/write-http.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { requireDocumentQuota } from '#lib/server/billing/require-document-quota.ts';
+import { DocumentExtractError, extractUpload } from '#lib/server/documents/extract.ts';
+import { saveExtractedProject } from '#lib/server/documents/store.ts';
+import { setProjectSummary } from '#lib/server/documents/store.ts';
+import { summarizeProject } from '#lib/server/documents/summarize.ts';
 import {
 	loadProjectContext,
 	parseProjectKind,
 	type ProjectKind
-} from '$lib/server/documents/project-corpus';
+} from '#lib/server/documents/project-corpus.ts';
 import {
 	fetchRepoArchive,
 	fetchRepoHeadSha,
@@ -37,8 +37,8 @@ import {
 	GitHubFetchError,
 	parseGitHubRepoUrl,
 	technologyProposalsFor
-} from '$lib/server/github/repo-metadata';
-import { tokenForRepo } from '$lib/server/github/app-auth';
+} from '#lib/server/github/repo-metadata.ts';
+import { tokenForRepo } from '#lib/server/github/app-auth.ts';
 
 /** Has this exact commit already been scanned into this project? */
 async function existingScan(kind: ProjectKind, projectId: number, sha: string) {

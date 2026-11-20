@@ -1,9 +1,9 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { redirectIfAuthenticated } from '$lib/server/auth/guards';
-import { turnstileConfigured, turnstileSiteKey } from '$lib/server/auth/turnstile';
-import { registrationOpen } from '$lib/server/auth/registration';
-import { termsVersion } from '$lib/server/legal/texts';
+import { redirectIfAuthenticated } from '#lib/server/auth/guards.ts';
+import { turnstileConfigured, turnstileSiteKey } from '#lib/server/auth/turnstile.ts';
+import { registrationOpen } from '#lib/server/auth/registration.ts';
+import { termsVersion } from '#lib/server/legal/texts.ts';
 
 /**
  * Registration is open.

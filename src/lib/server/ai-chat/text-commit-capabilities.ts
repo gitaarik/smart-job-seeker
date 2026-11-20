@@ -48,9 +48,9 @@ import {
 	TEXT_KIND_NAMES,
 	readOwnedText,
 	type TextKind
-} from '$lib/server/texts/profile-texts';
+} from '#lib/server/texts/profile-texts.ts';
 import { normalizeForKind } from './text-version-capabilities';
-import { sameText } from '$lib/utils/same-text';
+import { sameText } from '#lib/utils/same-text.ts';
 import type { VersionSource } from './entity-versions';
 import type {
 	CapabilityActor,

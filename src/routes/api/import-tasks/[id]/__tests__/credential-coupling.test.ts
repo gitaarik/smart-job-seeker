@@ -34,7 +34,7 @@ const mockInsertValues = vi.fn().mockReturnValue({
 });
 const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			search_tasks: {
@@ -59,7 +59,7 @@ vi.mock('drizzle-orm', () => ({
 	and: vi.fn((...args: unknown[]) => ({ kind: 'and', args }))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	api_keys: { id: 'api_keys.id' },
 	platform_credentials: { id: 'platform_credentials.id' },
 	platform_profiles: {
@@ -71,7 +71,7 @@ vi.mock('$lib/server/db/schema', () => ({
 	users: { id: 'users.id' }
 }));
 
-vi.mock('$lib/server/utils/api-helpers', () => ({
+vi.mock('#lib/server/utils/api-helpers.ts', () => ({
 	requireAuth: (locals: App.Locals | undefined) => {
 		if (!locals?.user) throw new Error('not authed');
 		return locals.user;
@@ -79,18 +79,18 @@ vi.mock('$lib/server/utils/api-helpers', () => ({
 	parseIntParam: (val: string) => parseInt(val, 10)
 }));
 
-vi.mock('$lib/server/validation/api-schemas', () => ({
+vi.mock('#lib/server/validation/api-schemas.ts', () => ({
 	searchTaskUpdateSchema: { _: 'schema' },
 	parseBody: (_schema: unknown, body: unknown) => body
 }));
 
 const mockHasDeviceAccess = vi.fn();
-vi.mock('$lib/server/device-shares', () => ({
+vi.mock('#lib/server/device-shares.ts', () => ({
 	hasDeviceAccess: (...a: unknown[]) => mockHasDeviceAccess(...a)
 }));
 
 const mockHasCredentialAccess = vi.fn();
-vi.mock('$lib/server/credential-shares', () => ({
+vi.mock('#lib/server/credential-shares.ts', () => ({
 	hasCredentialAccess: (...a: unknown[]) => mockHasCredentialAccess(...a)
 }));
 

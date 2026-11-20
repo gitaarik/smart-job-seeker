@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { ProfileDisplay } from '$lib/components/ProfileDisplay';
-	import StructuredResume from '$lib/components/StructuredResume/StructuredResume.svelte';
+	import { ProfileDisplay } from '#lib/components/ProfileDisplay/index.ts';
+	import StructuredResume from '#lib/components/StructuredResume/StructuredResume.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>

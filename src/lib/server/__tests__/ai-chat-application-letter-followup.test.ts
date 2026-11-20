@@ -15,7 +15,7 @@ const mockInsertValues = vi.fn().mockResolvedValue({});
 const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 
 // Mock the database with Drizzle-style API
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			application_letters: {
@@ -33,14 +33,14 @@ vi.mock('$lib/server/db', () => ({
 }));
 
 // Mock the core followup creation function
-vi.mock('$lib/server/ai-chat/create-followup', () => ({
+vi.mock('#lib/server/ai-chat/create-followup.ts', () => ({
 	createFollowupAiChat: vi.fn()
 }));
 
 // The shared version engine writes via dbDirect (not mocked here); stub it so
 // the updateEntity callback's recordVersion is a no-op. Its own behavior is
 // covered by entity-versions.test.ts.
-vi.mock('$lib/server/ai-chat/entity-versions', () => ({
+vi.mock('#lib/server/ai-chat/entity-versions.ts', () => ({
 	LETTER_VERSIONS: { fkName: 'letter' },
 	recordVersion: vi.fn().mockResolvedValue(undefined),
 	ensureBaselineVersion: vi.fn().mockResolvedValue(undefined)
@@ -55,7 +55,7 @@ vi.mock('drizzle-orm', () => ({
 	asc: vi.fn()
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	application_letters: {
 		id: 'application_letters.id',
 		ai_chat_id: 'application_letters.ai_chat_id',
@@ -71,8 +71,8 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-import { db } from '$lib/server/db';
-import { createFollowupAiChat } from '$lib/server/ai-chat/create-followup';
+import { db } from '#lib/server/db/index.ts';
+import { createFollowupAiChat } from '#lib/server/ai-chat/create-followup.ts';
 import { createApplicationLetterFollowup } from '../ai-chat/application-letter-followup';
 import { findFirst } from './db-mocks';
 

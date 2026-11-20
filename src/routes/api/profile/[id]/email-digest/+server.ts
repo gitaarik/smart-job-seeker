@@ -1,11 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles, users } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { sendDigestEmail } from '$lib/server/email/digest';
-import { loadDigestMatches } from '$lib/server/email/digest-matches';
+import { profiles, users } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
+import { sendDigestEmail } from '#lib/server/email/digest.ts';
+import { loadDigestMatches } from '#lib/server/email/digest-matches.ts';
 
 const ALLOWED_FREQUENCIES = [1, 2, 3, 5, 7, 14];
 const ALLOWED_MIN_SCORES = [50, 60, 70, 80, 90];

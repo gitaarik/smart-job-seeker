@@ -1,9 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, isNull } from 'drizzle-orm';
-import { profile_versions } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+import { profile_versions } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import { getSelectedProfileId } from '../../profile/utils';
 
 export const GET: RequestHandler = async ({ locals, cookies }) => {

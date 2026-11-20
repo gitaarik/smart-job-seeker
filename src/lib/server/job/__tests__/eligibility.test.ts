@@ -7,7 +7,7 @@
  * disagreed about 47% of the corpus for as long as both existed. A rule stated
  * in two places with assertions on one of them is a rule with no assertions.
  *
- * `$lib/server/db` is mocked down to the two things this module actually uses,
+ * `#lib/server/db/index.ts` is mocked down to the two things this module actually uses,
  * so importing it does not drag in a database connection.
  */
 
@@ -15,7 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { sql as drizzleSql, type SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	sql: drizzleSql,
 	sqlJoin: (values: unknown[]) =>
 		drizzleSql.join(

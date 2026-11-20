@@ -16,16 +16,20 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq } from 'drizzle-orm';
-import { profile_document_files, profile_document_projects } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
-import { deriveNoteTitle, DocumentExtractError, extractNote } from '$lib/server/documents/extract';
-import { replaceNoteContent, setProjectSummary } from '$lib/server/documents/store';
-import { summarizeProject } from '$lib/server/documents/summarize';
-import { reapFileRefs } from '$lib/server/uploads/reap';
+import { profile_document_files, profile_document_projects } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { requireDocumentQuota } from '#lib/server/billing/require-document-quota.ts';
+import {
+	deriveNoteTitle,
+	DocumentExtractError,
+	extractNote
+} from '#lib/server/documents/extract.ts';
+import { replaceNoteContent, setProjectSummary } from '#lib/server/documents/store.ts';
+import { summarizeProject } from '#lib/server/documents/summarize.ts';
+import { reapFileRefs } from '#lib/server/uploads/reap.ts';
 
 /** The note, or a 404/400 — scoped to the profile so nobody reads another's. */
 async function requireNote(docId: number, profileId: number) {

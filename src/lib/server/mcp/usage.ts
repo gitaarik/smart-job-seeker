@@ -9,8 +9,8 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { mcp_usage } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { mcp_usage } from '#lib/server/db/schema.ts';
 
 /** Add one call to the user's count for `period`, and return the new count. */
 export async function countMcpCall(userId: string, period: string): Promise<number> {

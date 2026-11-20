@@ -17,7 +17,7 @@ const state = {
 	rows: [] as Record<string, unknown>[]
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const dbMock = {
 		insert: () => ({
 			values: (values: Record<string, unknown>) => {
@@ -51,7 +51,7 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	capability_requests: {
 		id: 'id',
 		profile_id: 'profile_id',
@@ -63,7 +63,7 @@ vi.mock('$lib/server/db/schema', () => ({
 
 const executeCapability = vi.fn();
 
-vi.mock('$lib/server/ai-chat/capabilities', () => ({
+vi.mock('#lib/server/ai-chat/capabilities.ts', () => ({
 	CAPABILITIES: {
 		edit_work_experience: { title: 'Correct this work experience' },
 		delete_work_experience_project: { title: 'Delete this role project', irreversible: true }

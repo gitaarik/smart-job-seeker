@@ -9,9 +9,9 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { side_projects, work_experience_projects } from '$lib/server/db/schema';
-import type { ProjectKind } from '$lib/server/documents/project-corpus';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { side_projects, work_experience_projects } from '#lib/server/db/schema.ts';
+import type { ProjectKind } from '#lib/server/documents/project-corpus.ts';
 
 export async function projectBelongsToProfile(
 	kind: ProjectKind,

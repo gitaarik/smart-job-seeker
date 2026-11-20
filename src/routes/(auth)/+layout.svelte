@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
+	import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
 
 	let { children } = $props();
 </script>

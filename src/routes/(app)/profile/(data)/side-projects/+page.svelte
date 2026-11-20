@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -10,8 +10,8 @@
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import ReorderableList from '../../components/ReorderableList.svelte';
-	import { getSideProjectImageUrl, getSideProjectLogoUrl } from '$lib/utils/entity-media-url';
-	import { formatProjectUrl } from '$lib/tools/url-utils';
+	import { getSideProjectImageUrl, getSideProjectLogoUrl } from '#lib/utils/entity-media-url.ts';
+	import { formatProjectUrl } from '#lib/tools/url-utils.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

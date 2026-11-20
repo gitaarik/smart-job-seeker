@@ -19,9 +19,9 @@
 	import EmptyState from '../../profile/components/EmptyState.svelte';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import FilterTabs from '../../components/FilterTabs.svelte';
-	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
-	import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { renderSafeMarkdown } from '#lib/utils/safe-markdown.ts';
+	import { htmlToMarkdown } from '#lib/utils/html-to-markdown.ts';
+	import { goto, refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
@@ -144,7 +144,7 @@
 				errorMessage = err.message || err.error || 'Failed to delete cheat sheet';
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 			deleteKey = null;
 		} catch {
 			errorMessage = 'Failed to delete cheat sheet';
@@ -195,7 +195,7 @@
 				errorMessage = err.message || err.error || 'Failed to delete story';
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 			deleteKey = null;
 		} catch {
 			errorMessage = 'Failed to delete story';
@@ -271,7 +271,7 @@
 	/**
 	 * Save the dragged order.
 	 *
-	 * A failure has to leave reorder mode OPEN. `invalidateAll` reloads the list
+	 * A failure has to leave reorder mode OPEN. `refreshAll` reloads the list
 	 * from the server, so closing on a failed save replaces the arrangement the
 	 * applicant just made with the stored one and says nothing — the order
 	 * silently reverts and the drag has to be done again from memory. Staying
@@ -299,7 +299,7 @@
 				errorMessage = err.message || err.error || `Couldn't save the new order of your ${label}`;
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 			reorderMode = false;
 		} catch {
 			errorMessage = `Couldn't save the new order of your ${label}`;

@@ -9,11 +9,11 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { fieldsForEntity, isTranslatable, TRANSLATABLE_FIELDS } from '$lib/resume-translations';
+import { fieldsForEntity, isTranslatable, TRANSLATABLE_FIELDS } from '#lib/resume-translations.ts';
 
 // The module imports the db for its ownership queries; none of the tree walking
 // below touches it.
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
 const { applyTranslations, collectTranslatable } = await import('../translations');
 

@@ -10,9 +10,9 @@
 
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { search_task_runs } from '$lib/server/db/schema';
+import { search_task_runs } from '#lib/server/db/schema.ts';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 

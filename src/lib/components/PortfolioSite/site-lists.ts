@@ -8,14 +8,14 @@
  * base type beside `resume` and `cv`.
  */
 
-import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
+import { createProfileFilter } from '#lib/components/ProfileDisplay/profile-filter.ts';
 import {
 	careerDetail,
 	themeSections,
 	type CareerDetail,
 	type PortfolioPage,
 	type PortfolioThemeConfig
-} from '$lib/portfolio-themes';
+} from '#lib/portfolio-themes.ts';
 
 // One loose row type for the whole tree, for the reason PortfolioSite gives:
 // the include's inferred type is enormous, and spreading a `Record<string,

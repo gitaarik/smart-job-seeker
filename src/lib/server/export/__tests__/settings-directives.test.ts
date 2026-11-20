@@ -14,8 +14,8 @@ const writes: {
 	opts: unknown;
 }[] = [];
 
-vi.mock('$lib/server/ai-chat/directives', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('$lib/server/ai-chat/directives')>();
+vi.mock('#lib/server/ai-chat/directives.ts', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/ai-chat/directives.ts')>();
 	return {
 		...actual,
 		loadDirectives: vi.fn(async () => [
@@ -38,7 +38,7 @@ vi.mock('$lib/server/ai-chat/directives', async (importOriginal) => {
 });
 
 const TX = { marker: 'the import transaction' };
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {},
 	dbDirect: { transaction: async (fn: (tx: unknown) => Promise<void>) => fn(TX) }
 }));

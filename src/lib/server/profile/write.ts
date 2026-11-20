@@ -27,15 +27,15 @@
  * missing row should say and none of them should be teaching the others.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
-import { profiles } from '$lib/server/db/schema';
-import { coerceFields } from '$lib/server/utils/field-kinds';
-import { formatZodError } from '$lib/server/validation/api-schemas';
-import { isHiddenFromDocuments, setProfileOnly } from '$lib/profile-visibility';
+import { profiles } from '#lib/server/db/schema.ts';
+import { coerceFields } from '#lib/server/utils/field-kinds.ts';
+import { formatZodError } from '#lib/server/validation/api-schemas.ts';
+import { isHiddenFromDocuments, setProfileOnly } from '#lib/profile-visibility.ts';
 import { touchProfile } from './touch-profile';
-import { reapFileRefs } from '$lib/server/uploads/reap';
+import { reapFileRefs } from '#lib/server/uploads/reap.ts';
 import { recordChangeQuietly, type EditSource } from './change-log';
 import {
 	fieldKinds,

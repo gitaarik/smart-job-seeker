@@ -22,19 +22,23 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import {
 	files,
 	media_items,
 	media_renditions,
 	presentation_templates
-} from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
-import { ensureRendered } from '$lib/server/media/renditions';
-import { OUTPUT_EXTENSIONS } from '$lib/media-library';
-import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
-import { documentSections, withSections, type ResumeTemplateConfig } from '$lib/resume-templates';
+} from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
+import { ensureRendered } from '#lib/server/media/renditions.ts';
+import { OUTPUT_EXTENSIONS } from '#lib/media-library.ts';
+import { foldAssetsIntoConfig } from '#lib/server/profile/presentation-templates.ts';
+import {
+	documentSections,
+	withSections,
+	type ResumeTemplateConfig
+} from '#lib/resume-templates.ts';
 import type { ExportedResumeTemplate, ExportedTemplateAsset, TemplateAssetPayload } from './types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-	import { portalToBody } from '$lib/actions/portal';
+	import { portalToBody } from '#lib/actions/portal.ts';
 	import type { Snippet } from 'svelte';
 
 	interface Props {

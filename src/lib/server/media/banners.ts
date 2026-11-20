@@ -17,7 +17,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	media_items,
 	media_presets,
@@ -25,14 +25,14 @@ import {
 	presentation_template_assets,
 	presentation_templates,
 	profiles
-} from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
-import { launchBrowser } from '$lib/server/browser/utils';
-import { loadFieldVariants } from '$lib/server/profile/field-variants';
-import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
-import { bannerAlignment, bannerLine, type BannerTemplateConfig } from '$lib/banner-templates';
-import { resolvePalette, type PortfolioThemeConfig } from '$lib/portfolio-themes';
-import { presetName, type SafeZone } from '$lib/media-library';
+} from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
+import { launchBrowser } from '#lib/server/browser/utils.ts';
+import { loadFieldVariants } from '#lib/server/profile/field-variants.ts';
+import { foldAssetsIntoConfig } from '#lib/server/profile/presentation-templates.ts';
+import { bannerAlignment, bannerLine, type BannerTemplateConfig } from '#lib/banner-templates.ts';
+import { resolvePalette, type PortfolioThemeConfig } from '#lib/portfolio-themes.ts';
+import { presetName, type SafeZone } from '#lib/media-library.ts';
 import { createMediaItem } from './items';
 import { chooseFormat, ensureRendered, findOrCreateRendition } from './renditions';
 

@@ -10,7 +10,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const getEnv = vi.hoisted(() => vi.fn());
-vi.mock('$lib/tools/get-env', () => ({ getEnv }));
+vi.mock('#lib/tools/get-env.ts', () => ({ getEnv }));
 
 const { autoApproveSignups, registrationOpen } = await import('../registration');
 

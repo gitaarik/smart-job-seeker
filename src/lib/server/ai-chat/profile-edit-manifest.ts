@@ -31,9 +31,9 @@ import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
-import { countOwnedRows } from '$lib/server/profile/write';
-import { BASIC_INFO_PAGE } from '$lib/server/profile/basic-info';
+} from '#lib/server/profile/resources.ts';
+import { countOwnedRows } from '#lib/server/profile/write.ts';
+import { BASIC_INFO_PAGE } from '#lib/server/profile/basic-info.ts';
 
 export interface ManifestSection {
 	name: ProfileResourceName;

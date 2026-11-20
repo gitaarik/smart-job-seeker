@@ -21,16 +21,16 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq, sql } from 'drizzle-orm';
-import { jobs } from '$lib/server/db/schema';
-import { parseIntParam, requireStaff } from '$lib/server/utils/api-helpers';
+import { jobs } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireStaff } from '#lib/server/utils/api-helpers.ts';
 import {
 	addRescrapeJob,
 	isJobRescraping,
 	removeWaitingRescrapeJob,
 	removeActiveRescrapeJob
-} from '$lib/server/queue/rescrape-queue';
+} from '#lib/server/queue/rescrape-queue.ts';
 
 /**
  * POST - Trigger rescrape for a job

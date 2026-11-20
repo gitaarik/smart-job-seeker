@@ -30,14 +30,14 @@ import {
 	normalizeTemplateType,
 	REFERENCE_TAGS,
 	tagSlug
-} from '$lib/profile-visibility';
+} from '#lib/profile-visibility.ts';
 import {
 	indexOverrides,
 	OVERRIDE_ENTITIES,
 	orderByOverrides,
 	overrideKey,
 	type VersionOverride
-} from '$lib/version-overrides';
+} from '#lib/version-overrides.ts';
 
 export interface VersionObj {
 	id: number;

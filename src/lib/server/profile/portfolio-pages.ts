@@ -10,8 +10,8 @@
  * that page renders, and the career reaches only the page behind the key.
  */
 
-import { siteLists, type Row, type SiteLists } from '$lib/components/PortfolioSite/site-lists';
-import { lineSkills } from '$lib/components/PortfolioSite/key-skills';
+import { siteLists, type Row, type SiteLists } from '#lib/components/PortfolioSite/site-lists.ts';
+import { lineSkills } from '#lib/components/PortfolioSite/key-skills.ts';
 
 /**
  * Highlights the public page prints: the Services box beside the About me.

@@ -11,24 +11,24 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, isHttpError, redirect } from '@sveltejs/kit';
 import { and, desc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { applications, media_items } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { applications, media_items } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../utils';
 import {
 	createMediaItem,
 	deleteMediaItem,
 	toItemView,
 	updateMediaItem
-} from '$lib/server/media/items';
-import { MediaUploadError } from '$lib/server/media/originals';
-import { mediaUsage } from '$lib/server/media/usage';
+} from '#lib/server/media/items.ts';
+import { MediaUploadError } from '#lib/server/media/originals.ts';
+import { mediaUsage } from '#lib/server/media/usage.ts';
 import {
 	createOwnPreset,
 	currentCrops,
 	deleteOwnPreset,
 	listPresets,
 	parsePresetForm
-} from '$lib/server/media/presets';
+} from '#lib/server/media/presets.ts';
 import {
 	chooseFormat,
 	ensureRendered,
@@ -36,10 +36,16 @@ import {
 	itemForProfile,
 	presetForProfile,
 	pruneSupersededCrops
-} from '$lib/server/media/renditions';
-import { replaceInSlots } from '$lib/server/media/slots';
-import { recordUpload } from '$lib/server/media/live';
-import { centredCrop, clampCrop, cropWarnings, isMediaKind, type Crop } from '$lib/media-library';
+} from '#lib/server/media/renditions.ts';
+import { replaceInSlots } from '#lib/server/media/slots.ts';
+import { recordUpload } from '#lib/server/media/live.ts';
+import {
+	centredCrop,
+	clampCrop,
+	cropWarnings,
+	isMediaKind,
+	type Crop
+} from '#lib/media-library.ts';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();

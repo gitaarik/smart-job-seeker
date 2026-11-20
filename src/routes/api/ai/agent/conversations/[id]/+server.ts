@@ -1,8 +1,8 @@
 import { readsForPanel } from '../../agent-turn';
-import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
+import type { RetrievalRecord } from '#lib/server/documents/retrieval-record.ts';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import {
 	agent_conversations,
@@ -10,15 +10,15 @@ import {
 	agent_messages,
 	ai_chats,
 	capability_edits
-} from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
+} from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	CAPABILITIES,
 	type Capability,
 	describeProposalChanges
-} from '$lib/server/ai-chat/capabilities';
+} from '#lib/server/ai-chat/capabilities.ts';
 import { requireConversationProfile } from '../../scope';
-import { summarizeProposal } from '$lib/server/ai-chat/proposal-summary';
+import { summarizeProposal } from '#lib/server/ai-chat/proposal-summary.ts';
 
 /**
  * GET /api/ai/agent/conversations/:id — full transcript for resuming a thread.

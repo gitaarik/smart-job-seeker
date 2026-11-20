@@ -13,15 +13,15 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
 import {
 	validateEntityOwnership,
 	entitySlot,
 	saveEntityMedia,
 	pickEntityMedia,
 	deleteEntityMedia
-} from '$lib/server/uploads/entity-media';
-import type { Crop } from '$lib/media-library';
+} from '#lib/server/uploads/entity-media.ts';
+import type { Crop } from '#lib/media-library.ts';
 
 async function guard(params: Record<string, string>, userId: string) {
 	const { entityType, entityId, field } = params;

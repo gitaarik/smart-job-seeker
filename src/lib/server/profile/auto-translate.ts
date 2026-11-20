@@ -7,9 +7,9 @@
  */
 
 import { z } from 'zod';
-import { generateChatCompletionCharged } from '$lib/server/llm/charged';
-import { config } from '$lib/server/config';
-import { LOCALES } from '$lib/resume-translations';
+import { generateChatCompletionCharged } from '#lib/server/llm/charged.ts';
+import { config } from '#lib/server/config.ts';
+import { LOCALES } from '#lib/resume-translations.ts';
 
 export interface FieldToTranslate {
 	entity: string;

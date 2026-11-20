@@ -4,7 +4,7 @@
 	 * This component only renders what it is handed, so the rule has nothing
 	 * to check.
 	 */
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBell,
@@ -58,7 +58,7 @@
 		});
 		notifications = notifications.map((n) => ({ ...n, read_at: new Date().toISOString() }));
 		localUnread = 0;
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	async function markRead(id: number) {
@@ -71,7 +71,7 @@
 			n.id === id ? { ...n, read_at: new Date().toISOString() } : n
 		);
 		localUnread = Math.max(0, localUnread - 1);
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function formatTime(date: string): string {

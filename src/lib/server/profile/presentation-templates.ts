@@ -17,10 +17,10 @@
  * portfolio theme into the CV template switcher.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, asc } from 'drizzle-orm';
-import { presentation_templates } from '$lib/server/db/schema';
-import type { TemplateKind } from '$lib/presentation-templates';
+import { presentation_templates } from '#lib/server/db/schema.ts';
+import type { TemplateKind } from '#lib/presentation-templates.ts';
 
 /** A row as the loaders see it, before its config is narrowed to a kind. */
 export interface LoadedTemplate<TConfig> {

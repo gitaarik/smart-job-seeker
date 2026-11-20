@@ -11,7 +11,7 @@
  */
 
 import sharp, { type Sharp, type SharpOptions } from 'sharp';
-import type { Crop, OutputFormat } from '$lib/media-library';
+import type { Crop, OutputFormat } from '#lib/media-library.ts';
 import { MAX_ORIGINAL_PIXELS, type StoredFormat } from './originals';
 
 export interface RenderInput {

@@ -10,7 +10,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { findMany } = vi.hoisted(() => ({ findMany: vi.fn() }));
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: { query: { profile_version_skill_words: { findMany } } }
 }));
 
@@ -23,7 +23,7 @@ import {
 	wordsToPrint,
 	type SkillWord
 } from '../skill-words';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
 
 const word = (
 	id: number,

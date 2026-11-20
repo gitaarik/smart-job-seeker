@@ -10,11 +10,11 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: { query: {}, insert: vi.fn(), delete: vi.fn() }
 }));
 
-vi.mock('$lib/server/files', () => ({
+vi.mock('#lib/server/files.ts', () => ({
 	getFile: vi.fn(),
 	uploadFile: vi.fn()
 }));
@@ -24,7 +24,7 @@ import { exportFieldVariants } from '../export-profile';
 import { emptyCreatedTranslationIds, resolveTranslationEntity } from '../import-translations';
 import { collectFileIdCandidates } from '../export-templates';
 import { rewriteConfigFileIds, splitConfigAssets } from '../import-templates';
-import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
+import { foldAssetsIntoConfig } from '#lib/server/profile/presentation-templates.ts';
 
 describe('translation targets', () => {
 	function exportMaps() {

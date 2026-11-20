@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { DEFAULT_PALETTE, type PortfolioThemeConfig } from '$lib/portfolio-themes';
+import { DEFAULT_PALETTE, type PortfolioThemeConfig } from '#lib/portfolio-themes.ts';
 import { applyShowcaseFields } from './portfolio-theme-form';
 
 function form(fields: Record<string, string>): FormData {

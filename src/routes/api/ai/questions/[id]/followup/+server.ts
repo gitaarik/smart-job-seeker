@@ -1,15 +1,15 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { application_questions } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { followupRequestSchema, parseBody } from '$lib/server/validation/api-schemas';
-import { createApplicationQuestionFollowup } from '$lib/server/ai-chat/application-question-followup';
-import { generateApplicationQuestionAnswer } from '$lib/server/ai-chat/application-question';
-import { trackGeneration } from '$lib/server/ai-chat/ai-generation-status';
-import { QUESTION_VERSIONS, trimVersionsFrom } from '$lib/server/ai-chat/entity-versions';
-import { requireCredits } from '$lib/server/billing/require-credits';
+import { application_questions } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { followupRequestSchema, parseBody } from '#lib/server/validation/api-schemas.ts';
+import { createApplicationQuestionFollowup } from '#lib/server/ai-chat/application-question-followup.ts';
+import { generateApplicationQuestionAnswer } from '#lib/server/ai-chat/application-question.ts';
+import { trackGeneration } from '#lib/server/ai-chat/ai-generation-status.ts';
+import { QUESTION_VERSIONS, trimVersionsFrom } from '#lib/server/ai-chat/entity-versions.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

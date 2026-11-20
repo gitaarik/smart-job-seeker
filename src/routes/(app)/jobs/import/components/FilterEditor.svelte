@@ -8,8 +8,8 @@
 	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import type { SearchFilterValue } from '#lib/job-platforms/search-filters.ts';
 	import FilterPicker from './FilterPicker.svelte';
 
 	interface Props {

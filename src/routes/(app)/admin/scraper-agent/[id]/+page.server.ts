@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { scraper_agent_sessions } from '$lib/server/db/schema';
+import { scraper_agent_sessions } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const sessionId = parseInt(params.id);

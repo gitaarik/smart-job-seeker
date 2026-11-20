@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // The provider reuses the shipped project↔job retriever; mock it so these tests
 // exercise the provider's own logic (registry, budgeting, variable wiring)
 // without a DB or an embedding call.
-vi.mock('$lib/server/documents/retrieval', () => ({
+vi.mock('#lib/server/documents/retrieval.ts', () => ({
 	relevantProjectsBlock: vi.fn()
 }));
-vi.mock('$lib/server/documents/content-retrieval', () => ({
+vi.mock('#lib/server/documents/content-retrieval.ts', () => ({
 	relevantStoriesBlock: vi.fn(),
 	relevantApplicationTextsBlock: vi.fn()
 }));
@@ -21,11 +21,11 @@ vi.mock('../profile-data', async (importOriginal) => ({
 	loadProfileData: vi.fn()
 }));
 
-import { relevantProjectsBlock } from '$lib/server/documents/retrieval';
+import { relevantProjectsBlock } from '#lib/server/documents/retrieval.ts';
 import {
 	relevantApplicationTextsBlock,
 	relevantStoriesBlock
-} from '$lib/server/documents/content-retrieval';
+} from '#lib/server/documents/content-retrieval.ts';
 import { applicationActivityText } from '../application-activity';
 import { jobDetailsText } from '../job-context';
 import { loadProfileData } from '../profile-data';
@@ -34,7 +34,7 @@ import {
 	QUERY_CLIP_CHARS,
 	type RankerKind,
 	type RetrievalItem
-} from '$lib/server/documents/retrieval-record';
+} from '#lib/server/documents/retrieval-record.ts';
 
 const mockRelevantProjects = vi.mocked(relevantProjectsBlock);
 const mockRelevantStories = vi.mocked(relevantStoriesBlock);

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
 	import { resolve } from '$app/paths';
 	import Card from './Card.svelte';
-	import { type Place, preferredLocationTexts } from '$lib/data/places';
+	import { type Place, preferredLocationTexts } from '#lib/data/places.ts';
 
 	interface MatchConfig {
 		id: number;
@@ -36,7 +36,7 @@
 	<div class="mb-3 flex items-center justify-between">
 		<h3 class="text-base font-semibold text-[var(--dash-text)]">Match Config</h3>
 		<a
-			href={resolve('/jobs/import/config')}
+			href={resolve('jobs/import/config')}
 			class="text-sm text-[var(--dash-primary)] hover:underline"
 		>
 			{isConfigured ? 'Edit' : 'Configure'}

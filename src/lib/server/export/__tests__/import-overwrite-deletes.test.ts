@@ -60,7 +60,7 @@ function tableMarker(name: string) {
 	);
 }
 
-vi.mock('$lib/server/db/schema', () => {
+vi.mock('#lib/server/db/schema.ts', () => {
 	const schema: Record<string, unknown> = {};
 	for (const t of TABLES) schema[t] = tableMarker(t);
 	return schema;
@@ -73,7 +73,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: Object.assign(() => ({ op: 'sql' }), { raw: () => ({ op: 'sql' }) })
 }));
 
-vi.mock('$lib/server/profile/generate-version-pdfs', () => ({
+vi.mock('#lib/server/profile/generate-version-pdfs.ts', () => ({
 	generateVersionPdfs: () => Promise.resolve()
 }));
 vi.mock('../import-documents', () => ({
@@ -103,7 +103,7 @@ vi.mock('../import-translations', () => ({
 }));
 // The payload carries no certificate files, so an overwrite reads them off the
 // rows it is about to delete and hands them back once the payload's rows exist.
-vi.mock('$lib/server/profile/certificate-file', () => ({
+vi.mock('#lib/server/profile/certificate-file.ts', () => ({
 	certificateFilesByName: (profileId: number) => {
 		const when = deleted.includes('certificates') ? 'after' : 'before';
 		certificateFileCalls.push(`read ${profileId} ${when} the delete`);
@@ -133,7 +133,7 @@ function chain(result: unknown) {
 	return obj;
 }
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const query: Record<string, unknown> = {};
 	for (const t of TABLES) {
 		query[t] = {

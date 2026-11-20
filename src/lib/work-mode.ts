@@ -15,7 +15,7 @@
  * means the applicant has not said, and prints exactly as a role did before
  * the column existed.
  */
-import { WORK_MODE_LABELS, templateLabel } from '$lib/resume-template-labels';
+import { WORK_MODE_LABELS, templateLabel } from '#lib/resume-template-labels.ts';
 
 export const WORK_MODES = ['onsite', 'hybrid', 'remote'] as const;
 export type WorkMode = (typeof WORK_MODES)[number];

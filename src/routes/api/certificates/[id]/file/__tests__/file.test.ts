@@ -16,22 +16,22 @@ const findFirst = vi.fn();
 const getFile = vi.fn();
 const requireRowActor = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: { query: { certificates: { findFirst: (...a: unknown[]) => findFirst(...a) } } }
 }));
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	certificates: { id: 'certificates.id', profile_id: 'certificates.profile_id' }
 }));
 vi.mock('drizzle-orm', () => ({
 	and: (...conditions: unknown[]) => ({ and: conditions }),
 	eq: (column: unknown, value: unknown) => ({ eq: [column, value] })
 }));
-vi.mock('$lib/server/files', () => ({
+vi.mock('#lib/server/files.ts', () => ({
 	getFile: (...a: unknown[]) => getFile(...a),
 	contentDisposition: (name: string, inline: boolean) =>
 		`${inline ? 'inline' : 'attachment'}; filename="${name}"`
 }));
-vi.mock('$lib/server/utils/api-helpers', async () => {
+vi.mock('#lib/server/utils/api-helpers.ts', async () => {
 	const { error } = await import('@sveltejs/kit');
 	return {
 		requireAuth: (locals: { user: { id: string } | null }) => {
@@ -41,11 +41,11 @@ vi.mock('$lib/server/utils/api-helpers', async () => {
 		parseIntParam: (value: string) => Number(value)
 	};
 });
-vi.mock('$lib/server/profile/write-http', () => ({
+vi.mock('#lib/server/profile/write-http.ts', () => ({
 	requireRowActor: (...a: unknown[]) => requireRowActor(...a)
 }));
 // The upload half, not under test here; the real module pulls in sharp.
-vi.mock('$lib/server/profile/certificate-file', () => ({
+vi.mock('#lib/server/profile/certificate-file.ts', () => ({
 	attachCertificateFile: vi.fn(),
 	detachCertificateFile: vi.fn(),
 	prepareCertificateFile: vi.fn(),

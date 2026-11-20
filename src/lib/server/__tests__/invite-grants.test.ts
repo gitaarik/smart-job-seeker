@@ -22,7 +22,7 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({ rowCount: 1 });
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			api_keys: { findMany: (...a: unknown[]) => mockApiKeysFindMany(...a) },
@@ -41,7 +41,7 @@ vi.mock('drizzle-orm', () => ({
 	inArray: vi.fn((col: unknown, vals: unknown[]) => ({ kind: 'in', col, vals }))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	api_keys: {
 		id: 'api_keys.id',
 		user_id: 'api_keys.user_id',
@@ -54,22 +54,22 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-vi.mock('$lib/server/billing/plans', () => ({
+vi.mock('#lib/server/billing/plans.ts', () => ({
 	PLAN_LIMITS: { explorer: {}, seeker: {}, hunter: {}, contractor: {} }
 }));
 
 const mockEnsureAcceptedContact = vi.fn().mockResolvedValue(undefined);
-vi.mock('$lib/server/contacts', () => ({
+vi.mock('#lib/server/contacts.ts', () => ({
 	ensureAcceptedContact: (...a: unknown[]) => mockEnsureAcceptedContact(...a)
 }));
 
 const mockInsertDeviceShare = vi.fn().mockResolvedValue({ success: true });
-vi.mock('$lib/server/device-shares', () => ({
+vi.mock('#lib/server/device-shares.ts', () => ({
 	insertDeviceShare: (...a: unknown[]) => mockInsertDeviceShare(...a)
 }));
 
 const mockCreateNotification = vi.fn().mockResolvedValue(undefined);
-vi.mock('$lib/server/notifications', () => ({
+vi.mock('#lib/server/notifications.ts', () => ({
 	createNotification: (...a: unknown[]) => mockCreateNotification(...a)
 }));
 
@@ -79,7 +79,7 @@ import {
 	grantsFromInvitePayload,
 	hasGrants,
 	parseInviteGrants
-} from '$lib/server/auth/invite-grants';
+} from '#lib/server/auth/invite-grants.ts';
 
 /** Minimal FormData stand-in over a list of [key, value] pairs. */
 function form(pairs: [string, string][]): FormData {

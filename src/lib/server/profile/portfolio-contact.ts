@@ -14,9 +14,9 @@
  * theme that wants the gate picks the showcase.
  */
 
-import type { PortfolioTheme } from '$lib/portfolio-themes';
-import { themeLayout } from '$lib/portfolio-themes';
-import { turnstileConfigured, turnstileSiteKey } from '$lib/server/auth/turnstile';
+import type { PortfolioTheme } from '#lib/portfolio-themes.ts';
+import { themeLayout } from '#lib/portfolio-themes.ts';
+import { turnstileConfigured, turnstileSiteKey } from '#lib/server/auth/turnstile.ts';
 
 /** Profile columns the showcase reveals only through the contact endpoint. */
 export const CONTACT_FIELDS = ['email_address', 'phone_number'] as const;

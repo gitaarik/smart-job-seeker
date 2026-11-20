@@ -16,7 +16,7 @@ const { mockFindFirst, mockFindMany, mockProfileFindFirst, writes, mockRetag } =
 
 const tableName = (t: unknown) => (t as { __table: string }).__table;
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profile_versions: { findFirst: mockFindFirst, findMany: mockFindMany },
@@ -41,7 +41,7 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profile_versions: {
 		__table: 'profile_versions',
 		id: 'id',

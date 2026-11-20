@@ -27,10 +27,10 @@
 
 import { createHash } from 'node:crypto';
 import { toJsonSchema } from '@langchain/core/utils/json_schema';
-import { getSchemaForPrompt } from '$lib/server/schemas/ai-prompt-schemas';
-import { getEnvironmentName } from '$lib/server/monitoring/sentry';
-import { langfuseClient } from '$lib/server/monitoring/langfuse-client';
-import { runningVersion, sendsToLangfuse } from '$lib/server/monitoring/telemetry';
+import { getSchemaForPrompt } from '#lib/server/schemas/ai-prompt-schemas.ts';
+import { getEnvironmentName } from '#lib/server/monitoring/sentry.ts';
+import { langfuseClient } from '#lib/server/monitoring/langfuse-client.ts';
+import { runningVersion, sendsToLangfuse } from '#lib/server/monitoring/telemetry.ts';
 import { DEFAULT_TEMPERATURE, promptTemplates, type PromptTemplate } from './prompt-templates';
 import { promptFingerprint } from './prompt-fingerprint';
 

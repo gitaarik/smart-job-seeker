@@ -5,9 +5,9 @@
  * coercion and platform lookup live here rather than being written twice.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { ilike, or } from 'drizzle-orm';
-import { job_platforms } from '$lib/server/db/schema';
+import { job_platforms } from '#lib/server/db/schema.ts';
 
 /**
  * Best-effort lookup of a job_platforms row whose URL matches the host of the

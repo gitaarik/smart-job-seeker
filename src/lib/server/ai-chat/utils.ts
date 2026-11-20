@@ -2,11 +2,11 @@
  * Shared utilities for AI chat prompt handling
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq, sql } from 'drizzle-orm';
-import { ai_chats, collected_data, profiles } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
+import { ai_chats, collected_data, profiles } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
+import { errorTracker } from '#lib/server/monitoring/error-tracker.ts';
 import {
 	type ChatMessage,
 	type CompletionResult,
@@ -18,13 +18,13 @@ import {
 	type TokenUsage,
 	writingFallback,
 	z
-} from '$lib/server/llm';
-import { getSchemaForPrompt } from '$lib/server/schemas/ai-prompt-schemas';
+} from '#lib/server/llm/index.ts';
+import { getSchemaForPrompt } from '#lib/server/schemas/ai-prompt-schemas.ts';
 import { promptTemplates } from './prompt-templates.js';
 import { promptFingerprint } from './prompt-fingerprint';
-import { tokensToCost } from '$lib/server/billing/credits';
-import { describeSpendBlock, getSpendEligibility } from '$lib/server/account/spend-eligibility';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
+import { tokensToCost } from '#lib/server/billing/credits.ts';
+import { describeSpendBlock, getSpendEligibility } from '#lib/server/account/spend-eligibility.ts';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
 import {
 	assembleGenerationContext,
 	type ContextEntity,
@@ -37,16 +37,16 @@ import {
 	recordedTraceId,
 	startTrace,
 	traceStep
-} from '$lib/server/monitoring/telemetry';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
-import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
+} from '#lib/server/monitoring/telemetry.ts';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
+import type { RetrievalRecord } from '#lib/server/documents/retrieval-record.ts';
 import type { CapabilityRecord } from './capability-record';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
 import {
 	ANONYMOUS_WRITING_NOTE,
 	anonymiseProfileData,
 	writingAnonymity
-} from '$lib/server/profile/anonymity';
+} from '#lib/server/profile/anonymity.ts';
 import { promptValues, renderPrompt, unfilledVariables } from './render-prompt';
 
 /**
@@ -656,7 +656,7 @@ export async function spendBlock(
 		return `AI operations are disabled for this account: ${describeSpendBlock(eligibility.reason)}.`;
 	}
 	if (opts.charge === false) return null;
-	const { getBalance } = await import('$lib/server/billing/credits');
+	const { getBalance } = await import('#lib/server/billing/credits.ts');
 	const balance = await getBalance(profile.user_id);
 	if (balance.available <= 0) {
 		return "You've used up your plan for this month. Add extra usage or upgrade on the Plan & Usage page.";
@@ -841,7 +841,7 @@ export async function recordCall(opts: RecordCallOptions): Promise<RecordedCall>
 			columns: { user_id: true }
 		});
 		if (profileForCredits?.user_id) {
-			const { chargeCredits } = await import('$lib/server/billing/credits');
+			const { chargeCredits } = await import('#lib/server/billing/credits.ts');
 			const providerCostUsd = estimateProviderCostUsd(
 				ranOn.provider,
 				ranOn.model,

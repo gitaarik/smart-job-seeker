@@ -2,12 +2,12 @@
  * Create follow-up ai_chats instances for iterative refinement
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { ai_chats, application_letters, application_questions } from '$lib/server/db/schema';
-import type { ChatMessage } from '$lib/server/llm';
+import { ai_chats, application_letters, application_questions } from '#lib/server/db/schema.ts';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
 import type { GenerationContextOption } from './generation-context';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 import { createAndGenerateAiChat } from './utils';
 import { promptValues, renderPrompt } from './render-prompt';
 

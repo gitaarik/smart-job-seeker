@@ -20,9 +20,9 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
-import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { resolveChatContext } from '#lib/server/ai-chat/chat-context.ts';
+import { CAPABILITIES } from '#lib/server/ai-chat/capabilities.ts';
 import { isStaffUser, requireConversationProfile } from '../scope';
 
 /**

@@ -1,4 +1,4 @@
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq, and, ne } from 'drizzle-orm';
 import {
 	profiles,
@@ -22,15 +22,15 @@ import {
 	side_project_technologies,
 	profile_versions,
 	profile_version_extensions
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import type { ExportedProfile } from './export-profile-json';
 import { generateVersionPdfs } from './generate-version-pdfs';
-import { toDateString } from '$lib/tools/date-utils';
-import { asWorkMode } from '$lib/work-mode';
+import { toDateString } from '#lib/tools/date-utils.ts';
+import { asWorkMode } from '#lib/work-mode.ts';
 import {
 	certificateFilesByName,
 	restoreCertificateFiles
-} from '$lib/server/profile/certificate-file';
+} from '#lib/server/profile/certificate-file.ts';
 
 interface ImportOptions {
 	overwriteProfileId?: number;

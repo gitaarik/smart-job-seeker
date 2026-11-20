@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -27,13 +27,13 @@
 
 	import Card from '../../../components/Card.svelte';
 	import CopyButton from '../../../components/CopyButton.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import DesktopDownloads from './DesktopDownloads.svelte';
-	import { portalToBody } from '$lib/actions/portal';
+	import { portalToBody } from '#lib/actions/portal.ts';
 
 	let { data }: { data: PageData } = $props();
 
-	// Follows `data`: every change below ends in invalidateAll().
+	// Follows `data`: every change below ends in refreshAll().
 	let apiKeys = $derived(data.apiKeys);
 	let sharedDevices = $derived(data.sharedDevices);
 	let sortedApiKeys = $derived(
@@ -135,7 +135,7 @@
 			});
 			if (res.ok) {
 				editingKeyId = null;
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to rename device key';
@@ -299,7 +299,7 @@
 			showAddForm = false;
 			// Surface the new device immediately so the wizard can watch it connect.
 			await pollOwnedSjsBrowserStatus();
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			errorMessage = 'Failed to create device key';
 		} finally {
@@ -315,7 +315,7 @@
 		try {
 			const res = await fetch(`/api/api-keys/${keyId}`, { method: 'DELETE' });
 			if (res.ok) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to revoke device key';
@@ -330,7 +330,7 @@
 				body: JSON.stringify({ action: 'activate' })
 			});
 			if (res.ok) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to activate device key';
@@ -343,7 +343,7 @@
 		try {
 			const res = await fetch(`/api/api-keys/${keyId}?permanent=true`, { method: 'DELETE' });
 			if (res.ok) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to delete device key';
@@ -1348,7 +1348,7 @@ volumes:
 					{#if sharingContacts.length === 0 && sharingExisting.length === 0}
 						<p class="mb-4 text-sm text-[var(--dash-text-secondary)]">
 							No contacts yet — invite someone with a link below, or <a
-								href={resolve('/contacts')}
+								href={resolve('contacts')}
 								class="text-[var(--dash-primary)] hover:underline">add a contact</a
 							> to share directly.
 						</p>

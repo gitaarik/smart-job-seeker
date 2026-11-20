@@ -26,7 +26,7 @@ import { REORDER_CAPABILITY_NAMES, isReorderCapability } from '../reorder-capabi
 import { isDeleteCapability } from '../delete-capabilities';
 import { TAG_CAPABILITY_NAMES, isTagCapability } from '../tag-capabilities';
 import { isVersionCapability } from '../version-capabilities';
-import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
+import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '#lib/server/profile/resources.ts';
 
 const TEXT = formatAbilityManifest();
 

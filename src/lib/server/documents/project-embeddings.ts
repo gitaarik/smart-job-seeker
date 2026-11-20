@@ -25,16 +25,16 @@
 
 import { createHash } from 'node:crypto';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { project_embeddings } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { project_embeddings } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import {
 	cosineSimilarity,
 	embed,
 	embedBatch,
 	isEmbeddingConfigured,
 	truncateVector
-} from '$lib/server/llm/embeddings';
+} from '#lib/server/llm/embeddings.ts';
 import type { JobLike } from './retrieval';
 
 export type ProjectKind = 'side_project' | 'work_experience_project';

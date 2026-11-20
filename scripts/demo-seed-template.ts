@@ -17,11 +17,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles, users } from '$lib/server/db/schema';
-import { importExportData, importSettings } from '$lib/server/export';
-import type { ExportData, SettingsExportData } from '$lib/server/export';
-import { getOrCreateTemplateUser, seedDemoTemplateFromProfile } from '$lib/server/demo/template';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles, users } from '#lib/server/db/schema.ts';
+import { importExportData, importSettings } from '#lib/server/export/index.ts';
+import type { ExportData, SettingsExportData } from '#lib/server/export/index.ts';
+import { getOrCreateTemplateUser, seedDemoTemplateFromProfile } from '#lib/server/demo/template.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_PATH = join(__dirname, 'fixtures', 'demo-template.json');

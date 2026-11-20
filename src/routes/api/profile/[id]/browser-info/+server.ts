@@ -1,10 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { browserInfoSchema, parseBody } from '$lib/server/validation/api-schemas';
+import { profiles } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { browserInfoSchema, parseBody } from '#lib/server/validation/api-schemas.ts';
 
 /**
  * PUT /api/profile/[id]/browser-info

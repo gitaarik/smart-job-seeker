@@ -10,9 +10,9 @@
  * writes the same row pointing at a stored blob, with no text rows under it.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profile_document_files, profile_document_projects } from '$lib/server/db/schema';
+import { profile_document_files, profile_document_projects } from '#lib/server/db/schema.ts';
 import type { ExtractedProject } from './extract';
 
 export interface SaveDocumentProjectInput {

@@ -1,24 +1,24 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
-	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { armOn } from '$lib/actions/arm-on';
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { remountOnAppliedChange } from '#lib/components/applied-change.svelte.ts';
+	import { armOn } from '#lib/actions/arm-on.ts';
+	import { invalidate, refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
-	import MediaUpload from '$lib/components/MediaUpload.svelte';
-	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
-	import { projectDetailDep } from '$lib/project-detail';
-	import { sectionRows } from '$lib/components/section-rows.svelte';
-	import { SITE_TEMPLATE_TAGS, shownOnTemplate } from '$lib/profile-visibility';
-	import FeaturedSwitch from '$lib/components/FeaturedSwitch.svelte';
-	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
-	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
-	import VersionTags from '$lib/components/VersionTags.svelte';
+	import MediaUpload from '#lib/components/MediaUpload.svelte';
+	import { autoSaveField, patchBody, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
+	import AchievementsList, { type AchievementItem } from '#lib/components/AchievementsList.svelte';
+	import { projectDetailDep } from '#lib/project-detail.ts';
+	import { sectionRows } from '#lib/components/section-rows.svelte.ts';
+	import { SITE_TEMPLATE_TAGS, shownOnTemplate } from '#lib/profile-visibility.ts';
+	import FeaturedSwitch from '#lib/components/FeaturedSwitch.svelte';
+	import ProjectRepoFetch from '#lib/components/ProjectRepoFetch.svelte';
+	import ProjectSuggestions from '#lib/components/ProjectSuggestions.svelte';
+	import VersionTags from '#lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import ProjectSourcesPointer from '../../../components/ProjectSourcesPointer.svelte';
 	import TechnologyChips from '../../../components/TechnologyChips.svelte';
@@ -544,11 +544,11 @@
 					onUpload={(url) => {
 						logoUrl = url;
 						// The header shows this too, from layout data.
-						void invalidateAll();
+						void refreshAll();
 					}}
 					onDelete={() => {
 						logoUrl = null;
-						void invalidateAll();
+						void refreshAll();
 					}}
 				/>
 			</div>
@@ -563,11 +563,11 @@
 					onUpload={(url) => {
 						imageUrl = url;
 						// The header shows this too, from layout data.
-						void invalidateAll();
+						void refreshAll();
 					}}
 					onDelete={() => {
 						imageUrl = null;
-						void invalidateAll();
+						void refreshAll();
 					}}
 				/>
 			</div>

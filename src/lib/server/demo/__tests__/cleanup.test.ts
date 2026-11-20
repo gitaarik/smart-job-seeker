@@ -20,7 +20,7 @@ const { mockFindMany } = vi.hoisted(() => ({ mockFindMany: vi.fn() }));
 const updates: { table: string; values: Record<string, unknown>; where: string }[] = [];
 let updateRowCount = 0;
 
-vi.mock('$lib/server/db', async () => {
+vi.mock('#lib/server/db/index.ts', async () => {
 	const { getTableName } = await import('drizzle-orm');
 	const qb = new QueryBuilder();
 	return {

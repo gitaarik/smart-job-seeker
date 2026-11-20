@@ -37,15 +37,15 @@
  */
 
 import { and, asc, eq, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profile_versions } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profile_versions } from '#lib/server/db/schema.ts';
 import {
 	HIDEABLE_RESOURCES,
 	PROFILE_RESOURCES,
 	type HideableResourceName
-} from '$lib/server/profile/resources';
-import { readOwnedRow, setRowTags } from '$lib/server/profile/write';
-import { BASE_TEMPLATES, BASE_TEMPLATE_TAGS, isNegated, tagSlug } from '$lib/profile-visibility';
+} from '#lib/server/profile/resources.ts';
+import { readOwnedRow, setRowTags } from '#lib/server/profile/write.ts';
+import { BASE_TEMPLATES, BASE_TEMPLATE_TAGS, isNegated, tagSlug } from '#lib/profile-visibility.ts';
 import { PROFILE_CAPABILITIES } from './profile-capabilities';
 import type { CapabilityDef, ProposedChange } from './capabilities';
 

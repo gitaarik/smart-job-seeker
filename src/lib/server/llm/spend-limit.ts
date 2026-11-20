@@ -32,9 +32,9 @@
  * and when it trips.
  */
 
-import { config } from '$lib/server/config';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
+import { config } from '#lib/server/config.ts';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
+import { errorTracker } from '#lib/server/monitoring/error-tracker.ts';
 import { failOpen } from '../queue/redis-fail-open.js';
 
 const KEY_PREFIX = 'llm:spend:';

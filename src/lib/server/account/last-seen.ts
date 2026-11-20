@@ -18,8 +18,8 @@
  */
 
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { users } from '#lib/server/db/schema.ts';
 
 /** How stale `last_seen_at` may get. The idle rule counts in days, so an hour is plenty. */
 export const SEEN_STAMP_INTERVAL_MS = 60 * 60 * 1000;

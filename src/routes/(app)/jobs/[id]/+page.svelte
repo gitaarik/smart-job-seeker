@@ -1,6 +1,6 @@
 <script lang="ts">
-	import AiLabel from '$lib/components/AiLabel.svelte';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import AiLabel from '#lib/components/AiLabel.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -30,29 +30,33 @@
 		faWandMagicSparkles
 	} from '@fortawesome/free-solid-svg-icons';
 	import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
-	import { track } from '$lib/tools/analytics';
-	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
-	import { normalizePostingMarkdown } from '$lib/utils/posting-markdown';
+	import { track } from '#lib/tools/analytics.ts';
+	import { renderSafeMarkdown } from '#lib/utils/safe-markdown.ts';
+	import { normalizePostingMarkdown } from '#lib/utils/posting-markdown.ts';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import ScoreBadge from '../components/ScoreBadge.svelte';
 	import AddSkillToProfile from '../components/AddSkillToProfile.svelte';
 	import RescrapeMonitor from '../../components/RescrapeMonitor.svelte';
 	import Card from '../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import JobFieldsForm, {
 		emptyJobFields,
 		type JobFields
 	} from '../../components/JobFieldsForm.svelte';
-	import { formatJobStatus, formatSalaryRange, jobRecruiter, timeAgo } from '$lib/format';
-	import { getStatusLabel } from '$lib/application-status';
-	import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from '$lib/salary/conversion';
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
-	import { page } from '$app/stores';
-	import { formatDateLong, formatDateTime as fmtDateTime } from '$lib/format-date';
-	import type { TimeFormat } from '$lib/format-date';
-	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
-	import { recommendationOf } from '$lib/match-recommendation';
+	import { formatJobStatus, formatSalaryRange, jobRecruiter, timeAgo } from '#lib/format.ts';
+	import { getStatusLabel } from '#lib/application-status.ts';
+	import {
+		normalizeSalaryPeriod,
+		projectToHourly,
+		formatCurrency
+	} from '#lib/salary/conversion.ts';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
+	import { page } from '$app/state';
+	import { formatDateLong, formatDateTime as fmtDateTime } from '#lib/format-date.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
+	import { adjacentFor, provenanceFor } from '#lib/match-provenance.ts';
+	import { recommendationOf } from '#lib/match-recommendation.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -304,7 +308,7 @@
 		return profileSkillIndex[skill.trim().toLowerCase()] ?? null;
 	}
 
-	const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
+	const tf = $derived((page.data as { timeFormat: TimeFormat }).timeFormat);
 
 	function formatDate(date: Date | string | null): string {
 		return formatDateLong(date);
@@ -326,7 +330,7 @@
 	<!-- Header with Back Button -->
 	<div>
 		<a
-			href={resolve('/jobs')}
+			href={resolve('jobs')}
 			onclick={(e) => {
 				if (document.referrer && new URL(document.referrer).origin === location.origin) {
 					e.preventDefault();

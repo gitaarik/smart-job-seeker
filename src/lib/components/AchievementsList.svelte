@@ -12,12 +12,12 @@
 		faGripVertical,
 		faBan
 	} from '@fortawesome/free-solid-svg-icons';
-	import { portalToBody } from '$lib/actions/portal';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import type { SaveStatus } from '$lib/components/auto-save.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import { translations } from '$lib/stores/translations.svelte';
-	import { BASE_LOCALE } from '$lib/resume-translations';
+	import { portalToBody } from '#lib/actions/portal.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import type { SaveStatus } from '#lib/components/auto-save.svelte.ts';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
+	import { translations } from '#lib/stores/translations.svelte.ts';
+	import { BASE_LOCALE } from '#lib/resume-translations.ts';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 

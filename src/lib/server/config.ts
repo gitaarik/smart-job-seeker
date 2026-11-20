@@ -4,7 +4,7 @@
  * with validation
  */
 
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 export interface AppConfig {
 	// Environment

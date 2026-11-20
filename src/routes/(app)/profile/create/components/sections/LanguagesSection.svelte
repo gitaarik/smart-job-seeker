@@ -7,7 +7,7 @@
 		faPlus,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { Language } from '$lib/server/resume/types';
+	import type { Language } from '#lib/server/resume/types.ts';
 	import Card from '../../../../components/Card.svelte';
 
 	interface Props {

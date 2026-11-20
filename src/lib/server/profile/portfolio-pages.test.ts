@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { featuredKey, siteLists, type Row } from '$lib/components/PortfolioSite/site-lists';
-import { keySkillLines } from '$lib/components/PortfolioSite/key-skills';
+import { featuredKey, siteLists, type Row } from '#lib/components/PortfolioSite/site-lists.ts';
+import { keySkillLines } from '#lib/components/PortfolioSite/key-skills.ts';
 import { homePageProfile, portfolioHrefs } from './portfolio-pages';
 
 /**

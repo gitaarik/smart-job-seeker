@@ -31,10 +31,10 @@
  *   docker compose exec app node dist-scripts/backfill-collected-data.mjs --apply
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc } from 'drizzle-orm';
-import { collected_data } from '$lib/server/db/schema';
-import { EXPORTED_PROFILE_KEYS, exportProfile } from '$lib/server/profile/export';
+import { collected_data } from '#lib/server/db/schema.ts';
+import { EXPORTED_PROFILE_KEYS, exportProfile } from '#lib/server/profile/export.ts';
 
 const APPLY = process.argv.includes('--apply');
 

@@ -21,16 +21,16 @@
 
 import { sql } from 'drizzle-orm';
 import type { Queue } from 'bullmq';
-import { db } from '$lib/server/db';
-import { getEnv } from '$lib/tools/get-env';
-import { config } from '$lib/server/config';
-import { spentTodayUsd } from '$lib/server/llm/spend-limit';
-import { getDesktopQueue, getFeedQueue } from '$lib/server/queue/scraper-queue';
-import { getAtsBoardQueue } from '$lib/server/queue/ats-board-queue';
-import { getCorpusMatchQueue } from '$lib/server/queue/corpus-match-queue';
-import { getRescrapeQueue } from '$lib/server/queue/rescrape-queue';
-import { getSearchFormProbeQueue } from '$lib/server/queue/search-form-probe-queue';
-import { AUTH_SETUP_FAILURE_KINDS } from '$lib/import-tasks/failure-kinds';
+import { db } from '#lib/server/db/index.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { config } from '#lib/server/config.ts';
+import { spentTodayUsd } from '#lib/server/llm/spend-limit.ts';
+import { getDesktopQueue, getFeedQueue } from '#lib/server/queue/scraper-queue.ts';
+import { getAtsBoardQueue } from '#lib/server/queue/ats-board-queue.ts';
+import { getCorpusMatchQueue } from '#lib/server/queue/corpus-match-queue.ts';
+import { getRescrapeQueue } from '#lib/server/queue/rescrape-queue.ts';
+import { getSearchFormProbeQueue } from '#lib/server/queue/search-form-probe-queue.ts';
+import { AUTH_SETUP_FAILURE_KINDS } from '#lib/import-tasks/failure-kinds.ts';
 import { sendOpsNotice, type OpsNotice } from './notify';
 
 /** How often the worker runs a check. */

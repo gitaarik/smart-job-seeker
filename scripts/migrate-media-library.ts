@@ -40,28 +40,32 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	files,
 	media_items,
 	media_renditions,
 	presentation_template_assets,
 	presentation_templates
-} from '$lib/server/db/schema';
-import { getFile, uploadFile } from '$lib/server/files';
-import { deleteUpload } from '$lib/server/uploads';
-import { reapFileRefs } from '$lib/server/uploads/reap';
-import { stripImageMetadata } from '$lib/server/uploads/public-image';
-import { prepareOriginal, FORMAT_EXTENSIONS, FORMAT_MIME_TYPES } from '$lib/server/media/originals';
-import { OUTPUT_MIME_TYPES } from '$lib/server/media/renditions';
-import { renderImage } from '$lib/server/media/render';
+} from '#lib/server/db/schema.ts';
+import { getFile, uploadFile } from '#lib/server/files.ts';
+import { deleteUpload } from '#lib/server/uploads/index.ts';
+import { reapFileRefs } from '#lib/server/uploads/reap.ts';
+import { stripImageMetadata } from '#lib/server/uploads/public-image.ts';
+import {
+	prepareOriginal,
+	FORMAT_EXTENSIONS,
+	FORMAT_MIME_TYPES
+} from '#lib/server/media/originals.ts';
+import { OUTPUT_MIME_TYPES } from '#lib/server/media/renditions.ts';
+import { renderImage } from '#lib/server/media/render.ts';
 import {
 	ENTITY_MEDIA_SLOTS,
 	isOutputFormat,
 	THEME_MEDIA_SLOTS,
 	type MediaKind,
 	type OutputFormat
-} from '$lib/media-library';
+} from '#lib/media-library.ts';
 
 const APPLY = process.argv.includes('--apply');
 const UPLOADS_DIR = join(process.cwd(), 'uploads');

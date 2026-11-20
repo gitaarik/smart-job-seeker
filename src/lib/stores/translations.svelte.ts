@@ -7,8 +7,8 @@
  * save button. Browser-only: never mutated during SSR.
  */
 
-import { browser } from '$app/environment';
-import { BASE_LOCALE, translationKey } from '$lib/resume-translations';
+import { browser } from '$app/env';
+import { BASE_LOCALE, translationKey } from '#lib/resume-translations.ts';
 
 export type TranslationSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 

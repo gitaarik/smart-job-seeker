@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import VersionWordings from './VersionWordings.svelte';
-import type { WordingState } from '$lib/field-variants';
+import type { WordingState } from '#lib/field-variants.ts';
 
 /**
  * The picker on a version page.

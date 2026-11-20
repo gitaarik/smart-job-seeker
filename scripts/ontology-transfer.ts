@@ -40,7 +40,7 @@
  *
  * Because a fresh environment has an empty graph BEFORE anyone can log in to
  * click anything, and because a deploy script cannot press a button. The
- * mechanism is shared — see `$lib/server/job/ontology-transfer` — so the two
+ * mechanism is shared — see `#lib/server/job/ontology-transfer.ts` — so the two
  * cannot disagree about what an import would change.
  */
 import { readFileSync } from 'node:fs';

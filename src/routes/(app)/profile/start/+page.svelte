@@ -6,10 +6,10 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCompass, faTimes } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import SectionHeader from '../components/SectionHeader.svelte';
-	import PlacePicker from '$lib/components/PlacePicker.svelte';
-	import type { Place, PreferredPlace } from '$lib/data/places';
+	import PlacePicker from '#lib/components/PlacePicker.svelte';
+	import type { Place, PreferredPlace } from '#lib/data/places.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -289,7 +289,7 @@
 
 	<div class="flex items-center justify-between gap-4">
 		<a
-			href="{resolve('/home')}?profile={data.profileId}{data.created ? '&created=true' : ''}"
+			href="{resolve('home')}?profile={data.profileId}{data.created ? '&created=true' : ''}"
 			class="text-sm text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
 			>Skip for now</a
 		>

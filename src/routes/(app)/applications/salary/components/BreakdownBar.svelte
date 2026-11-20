@@ -20,7 +20,7 @@
 	 * The colour classes are global so the legend beside the bars can use them;
 	 * they only resolve inside `.salary-breakdown`, which carries the colours.
 	 */
-	import { formatCurrency } from '$lib/salary/conversion';
+	import { formatCurrency } from '#lib/salary/conversion.ts';
 
 	interface Props {
 		label: string;

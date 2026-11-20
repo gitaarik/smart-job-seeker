@@ -8,9 +8,9 @@
  * normalized through parse→serialize so stored versions stay canonical.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { project_stories } from '$lib/server/db/schema';
+import { project_stories } from '#lib/server/db/schema.ts';
 import {
 	applicantMessage,
 	createEntityFollowup,
@@ -22,8 +22,8 @@ import type { GenerationContextOption } from './generation-context';
 import { buildConversationMessages } from './conversation-messages';
 import { ensureBaselineVersion, recordVersion, STORY_VERSIONS } from './entity-versions';
 import { buildStoryContext, STORY_PROFILE_FIELDS } from './profile-story';
-import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '$lib/interview/star';
-import { pinnedProjectForStory } from '$lib/server/profile/project-stories';
+import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '#lib/interview/star.ts';
+import { pinnedProjectForStory } from '#lib/server/profile/project-stories.ts';
 
 /** Parse a structured `{ text, feedback }` revision response. */
 function parseStoryResponse(response: string | null): {

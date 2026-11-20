@@ -1,15 +1,15 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, inArray, desc, asc, count } from 'drizzle-orm';
 import {
 	user_feedback,
 	user_feedback_subscribers,
 	feedback_replies,
 	users as usersTable
-} from '$lib/server/db/schema';
-import { deleteFile } from '$lib/server/files';
-import { createNotifications } from '$lib/server/notifications';
+} from '#lib/server/db/schema.ts';
+import { deleteFile } from '#lib/server/files.ts';
+import { createNotifications } from '#lib/server/notifications.ts';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const statusFilter = url.searchParams.get('status') || '';

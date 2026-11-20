@@ -2,8 +2,8 @@ import { error } from '@sveltejs/kit';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
-import { publicRendition } from '$lib/server/media/serve';
+import { queryRawDirect } from '#lib/server/db/index.ts';
+import { publicRendition } from '#lib/server/media/serve.ts';
 import type { RequestHandler } from './$types';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');

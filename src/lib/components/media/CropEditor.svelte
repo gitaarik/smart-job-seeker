@@ -11,8 +11,8 @@
 	scaled onto the frame, since the frame is what becomes the preset.
 -->
 <script lang="ts">
-	import type { Crop, MediaMask, SafeZone } from '$lib/media-library';
-	import { clampCrop } from '$lib/media-library';
+	import type { Crop, MediaMask, SafeZone } from '#lib/media-library.ts';
+	import { clampCrop } from '#lib/media-library.ts';
 
 	interface Props {
 		src: string;

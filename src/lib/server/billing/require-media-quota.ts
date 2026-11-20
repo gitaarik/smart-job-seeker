@@ -9,7 +9,7 @@
  * lock, and passes that transaction as `executor`, so the usage the overlay
  * reads and the item about to be inserted cannot race another upload.
  */
-import type { dbDirect } from '$lib/server/db';
+import type { dbDirect } from '#lib/server/db/index.ts';
 
 /** What the check reads through: the database, or the caller's transaction. */
 export type MediaQuotaExecutor = Pick<typeof dbDirect, 'select'>;

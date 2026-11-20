@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -24,7 +24,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import Card from '../../components/Card.svelte';
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
 	import {
 		canEndUnsent,
 		describeNextStep,
@@ -37,17 +37,22 @@
 		getStepperPhase,
 		nextStep,
 		stageLabel
-	} from '$lib/application-status';
+	} from '#lib/application-status.ts';
 	import StatusStepper from './StatusStepper.svelte';
 	import StatusTrack from './StatusTrack.svelte';
 	import ActivitySummaryCard from './ActivitySummaryCard.svelte';
 	import OfferCard from './OfferCard.svelte';
 	import KeyFactsCard from './KeyFactsCard.svelte';
-	import { hasOfferContent } from '$lib/application-offer';
-	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
-	import { formatSalaryRange, jobRecruiter, timeAgo } from '$lib/format';
-	import { formatDate as fmtDate } from '$lib/format-date';
-	import { portalToBody } from '$lib/actions/portal';
+	import { hasOfferContent } from '#lib/application-offer.ts';
+	import {
+		describeSnooze,
+		isSnoozed,
+		snoozePresets,
+		snoozeUntil
+	} from '#lib/application-snooze.ts';
+	import { formatSalaryRange, jobRecruiter, timeAgo } from '#lib/format.ts';
+	import { formatDate as fmtDate } from '#lib/format-date.ts';
+	import { portalToBody } from '#lib/actions/portal.ts';
 	// The first use of Kit's typed route resolution in this codebase. Every other
 	// internal link here is a template string and sits in the lint baseline; new
 	// ones may as well be checked at build time, which is what the rule wants.

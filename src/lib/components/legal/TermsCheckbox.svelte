@@ -22,8 +22,8 @@
 	/>
 	<span>
 		I agree to the
-		<a href={resolve('/terms')} target="_blank" class={linkClass}>terms of service</a>
+		<a href={resolve('terms')} target="_blank" class={linkClass}>terms of service</a>
 		and have read the
-		<a href={resolve('/privacy')} target="_blank" class={linkClass}>privacy policy</a>.
+		<a href={resolve('privacy')} target="_blank" class={linkClass}>privacy policy</a>.
 	</span>
 </label>

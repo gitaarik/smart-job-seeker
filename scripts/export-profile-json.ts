@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { getDefaultProfileId } from '$lib/server/profile/default';
-import { createProfileExport } from '$lib/server/profile/exports';
-import { buildProfileJsonExport } from '$lib/server/profile/export-profile-json';
-import { buildExportUrl } from '$lib/server/utils/export-url-builder';
+import { getDefaultProfileId } from '#lib/server/profile/default.ts';
+import { createProfileExport } from '#lib/server/profile/exports.ts';
+import { buildProfileJsonExport } from '#lib/server/profile/export-profile-json.ts';
+import { buildExportUrl } from '#lib/server/utils/export-url-builder.ts';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 
 async function exportProfile(profileId: string, exportToFile: boolean = true): Promise<void> {

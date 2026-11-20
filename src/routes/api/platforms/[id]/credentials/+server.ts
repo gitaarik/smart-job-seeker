@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import {
 	job_platforms,
@@ -8,9 +8,9 @@ import {
 	platform_profiles,
 	profiles,
 	search_tasks
-} from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { parseBody, platformCredentialsSchema } from '$lib/server/validation/api-schemas';
+} from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { parseBody, platformCredentialsSchema } from '#lib/server/validation/api-schemas.ts';
 
 /**
  * The accounts a user has on a job platform: a username (usually the email

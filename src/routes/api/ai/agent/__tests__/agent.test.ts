@@ -25,8 +25,8 @@ vi.mock('../scope', () => ({ isStaffUser: () => mockIsStaff() }));
 // The agent flag, flipped per test: off is today's call to the byte.
 const flags = vi.hoisted(() => ({ assistantAgent: false }));
 
-vi.mock('$lib/server/config', async (importOriginal) => {
-	const original = await importOriginal<typeof import('$lib/server/config')>();
+vi.mock('#lib/server/config.ts', async (importOriginal) => {
+	const original = await importOriginal<typeof import('#lib/server/config.ts')>();
 	return {
 		...original,
 		config: new Proxy(original.config, {
@@ -36,12 +36,12 @@ vi.mock('$lib/server/config', async (importOriginal) => {
 	};
 });
 
-vi.mock('$lib/server/ai-chat/agent/turn', () => ({
+vi.mock('#lib/server/ai-chat/agent/turn.ts', () => ({
 	runTurn: (...a: unknown[]) => mockRunTurn(...a),
 	streamTurn: (...a: unknown[]) => mockStreamTurn(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/agent/events', () => ({
+vi.mock('#lib/server/ai-chat/agent/events.ts', () => ({
 	describeRead: (call: { name: string; args: Record<string, unknown> }) =>
 		`${call.name} ${Object.values(call.args).join('/')}`.trim()
 }));
@@ -49,7 +49,7 @@ const mockInsertValues = vi.fn();
 const mockProposalInsert = vi.fn();
 const mockRequireCredits = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const selectChain = {
 		from: () => selectChain,
 		where: () => selectChain,
@@ -91,7 +91,7 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn((c: unknown) => c)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	agent_conversations: {
 		id: 'ac.id',
 		user_id: 'ac.user_id',
@@ -101,32 +101,32 @@ vi.mock('$lib/server/db/schema', () => ({
 	agent_message_proposals: { _name: 'agent_message_proposals', id: 'amp.id' }
 }));
 
-vi.mock('$lib/server/utils/api-helpers', () => ({
+vi.mock('#lib/server/utils/api-helpers.ts', () => ({
 	requireAuth: () => ({ id: 'user-1' }),
 	requireProfileAccess: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock('$lib/server/validation/api-schemas', () => ({
+vi.mock('#lib/server/validation/api-schemas.ts', () => ({
 	agentChatSchema: {},
 	parseBody: (_s: unknown, body: unknown) => body
 }));
 
-vi.mock('$lib/server/billing/require-credits', () => ({
+vi.mock('#lib/server/billing/require-credits.ts', () => ({
 	requireCredits: (...a: unknown[]) => mockRequireCredits(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/utils', () => ({
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({
 	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a),
 	reserveAiChatId: async () => 4242,
 	reserveConversationId: async () => 4343,
 	spendBlock: (...a: unknown[]) => mockSpendBlock(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/chat-context', () => ({
+vi.mock('#lib/server/ai-chat/chat-context.ts', () => ({
 	resolveChatContext: (...a: unknown[]) => mockResolveChatContext(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/capabilities', () => ({
+vi.mock('#lib/server/ai-chat/capabilities.ts', () => ({
 	CAPABILITIES: {
 		edit_language: {
 			title: 'Correct this language',
@@ -163,18 +163,18 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 // can be read: what it hands the gate, and what it answers and scores with.
 // The gate's own behaviour is ai-chat/__tests__/direct-log.test.ts.
 const mockLogReported = vi.fn();
-vi.mock('$lib/server/ai-chat/direct-log', () => ({
+vi.mock('#lib/server/ai-chat/direct-log.ts', () => ({
 	logReportedEvents: (...a: unknown[]) => mockLogReported(...a)
 }));
 const mockScore = vi.fn();
-vi.mock('$lib/server/monitoring/product-scores', () => ({
+vi.mock('#lib/server/monitoring/product-scores.ts', () => ({
 	scoreGeneration: (...a: unknown[]) => mockScore(...a)
 }));
 
 import { POST } from '../+server';
 import { CHAT_CONTEXT_PLACEHOLDERS } from '../placeholders';
-import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
-import { promptVariables } from '$lib/server/ai-chat/render-prompt';
+import { promptTemplates } from '#lib/server/ai-chat/prompt-templates.ts';
+import { promptVariables } from '#lib/server/ai-chat/render-prompt.ts';
 
 /** The evidence placeholders the chat templates reference. */
 const EVIDENCE_KEYS = [

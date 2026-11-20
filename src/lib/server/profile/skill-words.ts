@@ -24,12 +24,12 @@
  * they had kept off, stays out, and the profile's own row speaks for it.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, inArray } from 'drizzle-orm';
-import { profile_version_skill_words } from '$lib/server/db/schema';
-import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import { skillWords } from '$lib/version-coverage';
+import { profile_version_skill_words } from '#lib/server/db/schema.ts';
+import { createProfileFilter } from '#lib/components/ProfileDisplay/profile-filter.ts';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+import { skillWords } from '#lib/version-coverage.ts';
 
 export interface SkillWord {
 	id: number;

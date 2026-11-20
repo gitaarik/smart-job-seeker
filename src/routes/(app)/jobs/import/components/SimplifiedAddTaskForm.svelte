@@ -45,14 +45,14 @@
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faLaptop } from '@fortawesome/free-solid-svg-icons';
-	import { track } from '$lib/tools/analytics';
-	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
+	import { track } from '#lib/tools/analytics.ts';
+	import type { SearchFilterValue } from '#lib/job-platforms/search-filters.ts';
 	import FilterPicker from './FilterPicker.svelte';
 	import PlatformCombobox from './PlatformCombobox.svelte';
-	import { CUSTOM_PLATFORM_ID } from '$lib/import-tasks/custom-site';
-	import { defaultLoginMode, signInNoticeForNewTask } from '$lib/import-tasks/sign-in';
-	import PlacePicker from '$lib/components/PlacePicker.svelte';
-	import type { Place, PreferredPlace } from '$lib/data/places';
+	import { CUSTOM_PLATFORM_ID } from '#lib/import-tasks/custom-site.ts';
+	import { defaultLoginMode, signInNoticeForNewTask } from '#lib/import-tasks/sign-in.ts';
+	import PlacePicker from '#lib/components/PlacePicker.svelte';
+	import type { Place, PreferredPlace } from '#lib/data/places.ts';
 
 	export type ImportablePlatform = {
 		id: number;

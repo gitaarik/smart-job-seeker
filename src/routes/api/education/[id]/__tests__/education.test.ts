@@ -24,7 +24,7 @@ const state = {
 	updates: [] as { table: unknown; values: Record<string, unknown> }[]
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const resolvable = (rows: unknown[]) =>
 		Object.assign(Promise.resolve(rows), { limit: () => Promise.resolve(rows) });
 
@@ -46,7 +46,7 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-const { education, profiles } = await import('$lib/server/db/schema');
+const { education, profiles } = await import('#lib/server/db/schema.ts');
 const { PATCH } = await import('../+server');
 
 /** The education row, owned by profile 7, unless a test says otherwise. */

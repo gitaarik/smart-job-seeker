@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import PlatformCombobox, { type ComboboxPlatform } from '../PlatformCombobox.svelte';
-import { CUSTOM_PLATFORM_ID } from '$lib/import-tasks/custom-site';
+import { CUSTOM_PLATFORM_ID } from '#lib/import-tasks/custom-site.ts';
 
 const platforms: ComboboxPlatform[] = [
 	{

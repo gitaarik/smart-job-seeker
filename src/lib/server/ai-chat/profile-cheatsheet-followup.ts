@@ -9,9 +9,9 @@
  * read, so the version trail stays Markdown-consistent.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { cheat_sheets } from '$lib/server/db/schema';
+import { cheat_sheets } from '#lib/server/db/schema.ts';
 import {
 	applicantMessage,
 	createEntityFollowup,
@@ -23,7 +23,7 @@ import type { GenerationContextOption } from './generation-context';
 import { buildConversationMessages } from './conversation-messages';
 import { CHEATSHEET_VERSIONS, ensureBaselineVersion, recordVersion } from './entity-versions';
 import { buildSheetContext, CHEATSHEET_PROFILE_FIELDS } from './profile-cheatsheet';
-import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
+import { htmlToMarkdown } from '#lib/utils/html-to-markdown.ts';
 
 /** Parse a structured `{ text, feedback }` revision response. */
 function parseSheetResponse(response: string | null): {

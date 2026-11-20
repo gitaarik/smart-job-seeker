@@ -10,10 +10,10 @@
  */
 
 import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { job_matches, job_platforms, jobs } from '$lib/server/db/schema';
-import { payFilterSql, readPayFilter } from '$lib/server/salary/pay-fit-store';
-import { payVerdict } from '$lib/salary/pay-fit';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { job_matches, job_platforms, jobs } from '#lib/server/db/schema.ts';
+import { payFilterSql, readPayFilter } from '#lib/server/salary/pay-fit-store.ts';
+import { payVerdict } from '#lib/salary/pay-fit.ts';
 import type { DigestJob } from './digest';
 
 export async function loadDigestMatches(

@@ -27,7 +27,7 @@
  */
 
 import { sql, type SQL } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
+import { queryRawDirect } from '#lib/server/db/index.ts';
 import { deleteUpload } from './index';
 
 /** Files reachable from something being deleted, in both storage shapes. */

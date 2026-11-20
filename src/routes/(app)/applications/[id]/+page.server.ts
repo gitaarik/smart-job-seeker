@@ -1,25 +1,25 @@
 import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
+import { application_records, applications } from '#lib/server/db/schema.ts';
 import {
 	applicationStatusError,
 	entryStage,
 	STAGE_COLUMNS,
 	writeApplicationStatus
-} from '$lib/server/applications/status';
+} from '#lib/server/applications/status.ts';
 import {
 	parseRounds,
 	sameRounds,
 	type InterviewRound,
 	type StatusFacts
-} from '$lib/application-status';
-import { writeApplicationSnooze } from '$lib/server/applications/snooze';
-import { snoozeError } from '$lib/application-snooze';
-import { clampRecordTitle, deriveRecordTitle, today } from '$lib/application-records';
-import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
-import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
+} from '#lib/application-status.ts';
+import { writeApplicationSnooze } from '#lib/server/applications/snooze.ts';
+import { snoozeError } from '#lib/application-snooze.ts';
+import { clampRecordTitle, deriveRecordTitle, today } from '#lib/application-records.ts';
+import { deriveRecordMetadata } from '#lib/server/ai-chat/record-derivation.ts';
+import { summarizeApplication } from '#lib/server/ai-chat/application-summary.ts';
 import { getSelectedProfileId } from '../../profile/utils';
 
 /**

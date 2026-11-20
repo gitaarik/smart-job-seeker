@@ -5,8 +5,8 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getBalance } from '$lib/server/billing/credits';
-import { getActiveSubscription } from '$lib/server/billing/subscription';
+import { getBalance } from '#lib/server/billing/credits.ts';
+import { getActiveSubscription } from '#lib/server/billing/subscription.ts';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = locals.user;

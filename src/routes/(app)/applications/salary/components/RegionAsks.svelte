@@ -6,14 +6,14 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
-	import { REGIONS } from '$lib/data/job-taxonomy';
+	import { REGIONS } from '#lib/data/job-taxonomy.ts';
 	import {
 		convertCurrency,
 		formatCurrency,
 		REGION_CURRENCIES,
 		type FxRates
-	} from '$lib/salary/conversion';
-	import type { RegionAsks } from '$lib/salary/settings';
+	} from '#lib/salary/conversion.ts';
+	import type { RegionAsks } from '#lib/salary/settings.ts';
 	import { currencyOptions, INPUT_CLASS, numberOrNull } from './salary-ui';
 
 	interface Props {

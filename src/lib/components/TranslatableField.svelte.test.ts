@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import TranslatableField from './TranslatableField.svelte';
-import { translations } from '$lib/stores/translations.svelte';
+import { translations } from '#lib/stores/translations.svelte.ts';
 
 // The store debounce-saves and lazily loads overlays; neither is under test.
 beforeEach(() => {

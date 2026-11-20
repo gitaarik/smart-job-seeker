@@ -68,8 +68,8 @@ import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
-import { readOwnedRows } from '$lib/server/profile/write';
+} from '#lib/server/profile/resources.ts';
+import { readOwnedRows } from '#lib/server/profile/write.ts';
 
 /** A section the message pointed at, and the row it pointed at within it. */
 export interface SectionMatch {

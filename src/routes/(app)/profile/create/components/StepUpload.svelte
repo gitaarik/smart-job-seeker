@@ -8,9 +8,9 @@
 		faFile,
 		faTimes
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
-	import type { ResumeData } from '$lib/server/resume/types';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import type { ExportedProfile } from '#lib/server/profile/export-profile-json.ts';
+	import type { ResumeData } from '#lib/server/resume/types.ts';
 	import { convertExportToResumeData } from '../lib/convert-export';
 	import Card from '../../../components/Card.svelte';
 

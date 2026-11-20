@@ -14,10 +14,10 @@
  * reused anywhere that matters.
  */
 
-import { auth } from '$lib/server/auth/better-auth';
-import { recordTermsAcceptance } from '$lib/server/legal/record';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles, users } from '$lib/server/db/schema';
+import { auth } from '#lib/server/auth/better-auth.ts';
+import { recordTermsAcceptance } from '#lib/server/legal/record.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles, users } from '#lib/server/db/schema.ts';
 import { eq } from 'drizzle-orm';
 
 const DEV_USERS = [

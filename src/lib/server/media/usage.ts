@@ -10,7 +10,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
+import { queryRawDirect } from '#lib/server/db/index.ts';
 
 export interface MediaUse {
 	itemId: number;

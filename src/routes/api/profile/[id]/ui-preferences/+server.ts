@@ -1,9 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { requireAuth, parseIntParam, requireProfileAccess } from '$lib/server/utils/api-helpers';
+import { profiles } from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
 
 /**
  * PATCH /api/profile/[id]/ui-preferences

@@ -3,11 +3,11 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faLaptop } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import type { SaveStatus } from '$lib/components/auto-save.svelte';
-	import { formatCurrency, type FxRates } from '$lib/salary/conversion';
-	import type { FreelanceSettings, FreelanceUnit } from '$lib/salary/settings';
-	import { freelanceYear, unitsPerYear } from '$lib/salary/take-home';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import type { SaveStatus } from '#lib/components/auto-save.svelte.ts';
+	import { formatCurrency, type FxRates } from '#lib/salary/conversion.ts';
+	import type { FreelanceSettings, FreelanceUnit } from '#lib/salary/settings.ts';
+	import { freelanceYear, unitsPerYear } from '#lib/salary/take-home.ts';
 	import AskInput from './AskInput.svelte';
 	import NumberField from './NumberField.svelte';
 	import RegionAsks from './RegionAsks.svelte';

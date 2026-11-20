@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import SkillsPage from './+page.svelte';
-import { SKILL_LEVELS } from '$lib/data/field-labels';
+import { SKILL_LEVELS } from '#lib/data/field-labels.ts';
 
 /**
  * The Show-on switches, driven from the page rather than the editor.
@@ -19,8 +19,8 @@ import { SKILL_LEVELS } from '$lib/data/field-labels';
  * mapping the page actually performs on `data`.
  */
 
-const invalidateAll = vi.fn(async () => {});
-vi.mock('$app/navigation', () => ({ invalidateAll: () => invalidateAll() }));
+const refreshAll = vi.fn(async () => {});
+vi.mock('$app/navigation', () => ({ refreshAll: () => refreshAll() }));
 
 /** Every action POST the page makes, in order. */
 let posted: { action: string; body: Record<string, string> }[] = [];
@@ -33,7 +33,7 @@ beforeEach(() => {
 	posted = [];
 	patched = [];
 	patchResponse = { status: 200, body: '{"success":true}' };
-	invalidateAll.mockClear();
+	refreshAll.mockClear();
 	vi.stubGlobal(
 		'ResizeObserver',
 		class {
@@ -154,7 +154,7 @@ describe('skills page — the switches save themselves', () => {
 		// Nothing went through the form actions, so nothing reloaded the page
 		// data underneath the open popup.
 		expect(posted).toEqual([]);
-		expect(invalidateAll).not.toHaveBeenCalled();
+		expect(refreshAll).not.toHaveBeenCalled();
 	});
 
 	test('each flip states the whole set, not the switch that moved', async () => {

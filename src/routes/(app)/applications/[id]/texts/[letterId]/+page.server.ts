@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { application_letters, applications } from '$lib/server/db/schema';
+import { application_letters, applications } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../../../profile/utils';
 import {
 	buildConversation,
@@ -16,14 +16,14 @@ import {
 	scoreVersionUse,
 	trimVersionsAfter,
 	type VersionSource
-} from '$lib/server/ai-chat/entity-versions';
-import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
-import { isStaffViewer } from '$lib/server/auth/guards';
-import { TEXT_KINDS, TITLE_MAX } from '$lib/server/texts/profile-texts';
+} from '#lib/server/ai-chat/entity-versions.ts';
+import { isGenerating } from '#lib/server/ai-chat/ai-generation-status.ts';
+import { isStaffViewer } from '#lib/server/auth/guards.ts';
+import { TEXT_KINDS, TITLE_MAX } from '#lib/server/texts/profile-texts.ts';
 
 // Version `source` values and the ConversationEntry shape live in the shared
 // engine; re-export the type so +page.svelte keeps importing it from here.
-export type { ConversationEntry } from '$lib/server/ai-chat/entity-versions';
+export type { ConversationEntry } from '#lib/server/ai-chat/entity-versions.ts';
 
 export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
 	const layoutData = await parent();

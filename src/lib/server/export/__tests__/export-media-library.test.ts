@@ -34,7 +34,7 @@ function chain(result: unknown) {
 	return obj;
 }
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const dbDirect: Record<string, unknown> = {
 		query: new Proxy(
 			{},
@@ -70,7 +70,7 @@ vi.mock('$lib/server/db', () => {
 });
 
 let png: Buffer;
-vi.mock('$lib/server/files', () => ({
+vi.mock('#lib/server/files.ts', () => ({
 	getFile: () => Promise.resolve(png),
 	uploadFile: () =>
 		Promise.resolve({
@@ -269,7 +269,7 @@ describe('a restored banner drawing', () => {
 		maps.itemTemplates.set(11, { kind: 'banner', slug: 'linkedin' });
 		updated.length = 0;
 		const writes: unknown[] = [];
-		const db = (await import('$lib/server/db')).dbDirect as unknown as {
+		const db = (await import('#lib/server/db/index.ts')).dbDirect as unknown as {
 			update: (t: unknown) => unknown;
 		};
 		const original = db.update;

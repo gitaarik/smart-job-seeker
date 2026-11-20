@@ -13,7 +13,7 @@
  * MCP-only, like the tag verbs: a person does all of this on the Resumes & CVs
  * page, so the chat is never offered them (ability-manifest.ts).
  */
-import { versionDeleteImpact, type VersionDeleteImpact } from '$lib/server/profile/version-tags';
+import { versionDeleteImpact, type VersionDeleteImpact } from '#lib/server/profile/version-tags.ts';
 import {
 	createVersion,
 	deleteVersion,
@@ -24,8 +24,8 @@ import {
 	slugFromName,
 	VersionError,
 	type LibraryVersion
-} from '$lib/server/profile/versions';
-import { isReservedVersionSlug } from '$lib/version-overrides';
+} from '#lib/server/profile/versions.ts';
+import { isReservedVersionSlug } from '#lib/version-overrides.ts';
 import type { CapabilityDef, CapabilityTarget, ProposedChange } from './capabilities';
 
 export type VersionCapability =

@@ -6,7 +6,7 @@
  * and lets us correlate template edits with later scraper failures.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { count, eq } from 'drizzle-orm';
 import {
 	job_platform_changes,
@@ -16,7 +16,7 @@ import {
 	platform_profiles,
 	search_form_probe_runs,
 	search_tasks
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 /** Subset of job_platforms columns that the admin UI is allowed to edit.
  *  search_url_template is deprecated in favor of job_platform_search_presets,
@@ -196,7 +196,7 @@ export function blockingTotal(refs: PlatformReferences): number {
 
 /**
  * The counts as prose, for the page and for the refusal message. Built here
- * rather than in the component because `$lib/server` cannot be imported from
+ * rather than in the component because `#lib/server` cannot be imported from
  * one, and two copies of this wording would drift.
  */
 export function describePlatformReferences(refs: PlatformReferences): {

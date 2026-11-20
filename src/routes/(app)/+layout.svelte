@@ -3,8 +3,8 @@
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { beforeNavigate } from '$app/navigation';
-	import { flushPendingSaves, hasPendingSaves } from '$lib/components/auto-save.svelte';
-	import { appliedChangeEpoch } from '$lib/components/applied-change.svelte';
+	import { flushPendingSaves, hasPendingSaves } from '#lib/components/auto-save.svelte.ts';
+	import { appliedChangeEpoch } from '#lib/components/applied-change.svelte.ts';
 	import DashboardHeader from './components/DashboardHeader.svelte';
 	import Sidebar from './components/Sidebar.svelte';
 	import FeedbackWidget from './components/FeedbackWidget.svelte';

@@ -20,7 +20,7 @@ const mockSetSummary = vi.fn();
 const mockSummarize = vi.fn();
 const mockExtractRecordFile = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			application_records: { findFirst: (...a: unknown[]) => mockRecordFindFirst(...a) },
@@ -34,7 +34,7 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn((c: unknown) => c)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	application_records: { id: 'ar.id' },
 	profile_document_projects: {
 		side_project_id: 'pdp.side_project_id',
@@ -43,26 +43,26 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-vi.mock('$lib/server/profile/write-http', () => ({
+vi.mock('#lib/server/profile/write-http.ts', () => ({
 	requireRowActor: (...a: unknown[]) => mockRequireRowActor(...a)
 }));
-vi.mock('$lib/server/billing/require-credits', () => ({
+vi.mock('#lib/server/billing/require-credits.ts', () => ({
 	requireCredits: (...a: unknown[]) => mockRequireCredits(...a)
 }));
-vi.mock('$lib/server/billing/require-document-quota', () => ({
+vi.mock('#lib/server/billing/require-document-quota.ts', () => ({
 	requireDocumentQuota: (...a: unknown[]) => mockRequireQuota(...a)
 }));
-vi.mock('$lib/server/documents/store', () => ({
+vi.mock('#lib/server/documents/store.ts', () => ({
 	saveExtractedProject: (...a: unknown[]) => mockSave(...a),
 	setProjectSummary: (...a: unknown[]) => mockSetSummary(...a)
 }));
-vi.mock('$lib/server/documents/summarize', () => ({
+vi.mock('#lib/server/documents/summarize.ts', () => ({
 	summarizeProject: (...a: unknown[]) => mockSummarize(...a)
 }));
-vi.mock('$lib/server/ai-chat/application-activity', () => ({
+vi.mock('#lib/server/ai-chat/application-activity.ts', () => ({
 	extractRecordFile: (...a: unknown[]) => mockExtractRecordFile(...a)
 }));
-vi.mock('$lib/server/documents/project-corpus', () => ({
+vi.mock('#lib/server/documents/project-corpus.ts', () => ({
 	parseProjectKind: (v: string) =>
 		v === 'side_project' || v === 'work_experience_project' ? v : null
 }));

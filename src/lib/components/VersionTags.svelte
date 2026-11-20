@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTags, faTimes, faPlus } from '@fortawesome/free-solid-svg-icons';
-	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
+	import SectionSaveButton from '#lib/components/SectionSaveButton.svelte';
 
 	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 

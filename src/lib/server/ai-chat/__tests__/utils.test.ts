@@ -3,7 +3,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 import {
 	EXTRACTION_FALLBACK_PROMPT_KEYS,
 	instructionsBlock,

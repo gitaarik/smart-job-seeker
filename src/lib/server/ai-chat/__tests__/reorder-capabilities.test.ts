@@ -16,7 +16,7 @@ const state = {
 	result: { ok: true } as { ok: boolean; error?: string }
 };
 
-vi.mock('$lib/server/profile/write', () => ({
+vi.mock('#lib/server/profile/write.ts', () => ({
 	readOwnedRows: (resource: string) => Promise.resolve(state.rows[resource] ?? []),
 	reorderRows: (resource: string, actor: unknown, order: number[]) => {
 		state.reordered.push({ resource, actor, order });
@@ -26,7 +26,7 @@ vi.mock('$lib/server/profile/write', () => ({
 
 const { REORDER_CAPABILITIES, REORDER_CAPABILITY_NAMES, isReorderCapability } =
 	await import('../reorder-capabilities');
-const { PROFILE_RESOURCE_NAMES } = await import('$lib/server/profile/resources');
+const { PROFILE_RESOURCE_NAMES } = await import('#lib/server/profile/resources.ts');
 const { verbsFor } = await import('../profile-capabilities');
 
 const ACTOR = { profileId: 12, isStaff: false };

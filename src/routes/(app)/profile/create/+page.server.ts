@@ -1,9 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profile_versions, profiles } from '$lib/server/db/schema';
-import { deleteFile, uploadFile } from '$lib/server/files';
+import { profile_versions, profiles } from '#lib/server/db/schema.ts';
+import { deleteFile, uploadFile } from '#lib/server/files.ts';
 import {
 	createProfileFromResume,
 	extractTextFromFile,
@@ -13,11 +13,11 @@ import {
 	parseResumeWithLLM,
 	type ResumeData,
 	validateJsonResume
-} from '$lib/server/resume';
-import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
-import { exportProfile } from '$lib/server/profile/export';
-import { profileQuotaFailure } from '$lib/server/profile/quota';
-import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
+} from '#lib/server/resume/index.ts';
+import { importProfileFromJson } from '#lib/server/profile/import-profile-json.ts';
+import { exportProfile } from '#lib/server/profile/export.ts';
+import { profileQuotaFailure } from '#lib/server/profile/quota.ts';
+import type { ExportedProfile } from '#lib/server/profile/export-profile-json.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	await parent();

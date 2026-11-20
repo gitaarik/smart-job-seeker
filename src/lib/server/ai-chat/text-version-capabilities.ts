@@ -54,9 +54,9 @@ import {
 	readOwnedText,
 	summarizeTextVersions,
 	type TextKind
-} from '$lib/server/texts/profile-texts';
-import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
-import { sameText } from '$lib/utils/same-text';
+} from '#lib/server/texts/profile-texts.ts';
+import { parseStarMarkdown, serializeStarMarkdown } from '#lib/interview/star.ts';
+import { sameText } from '#lib/utils/same-text.ts';
 import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
 
 /** The provenance every version written from this server carries. */

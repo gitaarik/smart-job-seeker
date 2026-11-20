@@ -1,12 +1,12 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { users } from '$lib/server/db/schema';
-import { acceptDeviceInvite, getDeviceInvite } from '$lib/server/device-shares';
-import { createOrLinkAccount } from '$lib/server/auth/invite-account';
-import { acceptedTermsField, recordTermsAcceptance } from '$lib/server/legal/record';
-import { termsVersion } from '$lib/server/legal/texts';
+import { users } from '#lib/server/db/schema.ts';
+import { acceptDeviceInvite, getDeviceInvite } from '#lib/server/device-shares.ts';
+import { createOrLinkAccount } from '#lib/server/auth/invite-account.ts';
+import { acceptedTermsField, recordTermsAcceptance } from '#lib/server/legal/record.ts';
+import { termsVersion } from '#lib/server/legal/texts.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const token = event.params.token;

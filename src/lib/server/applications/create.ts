@@ -23,21 +23,26 @@
  * knows nothing gets the blank application the form has always made.
  */
 
-import { db } from '$lib/server/db';
-import { applications, application_status_log, job_importers, jobs } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import {
+	applications,
+	application_status_log,
+	job_importers,
+	jobs
+} from '#lib/server/db/schema.ts';
 import {
 	parseJobDescription,
 	type ParsedJobDescription
-} from '$lib/server/jobs/parse-job-description';
-import { datePostedOrNull, detectPlatformId } from '$lib/server/jobs/job-fields';
-import { triggerMatchForImport } from '$lib/server/job/match-trigger';
-import { classifyRegion } from '$lib/data/job-taxonomy';
+} from '#lib/server/jobs/parse-job-description.ts';
+import { datePostedOrNull, detectPlatformId } from '#lib/server/jobs/job-fields.ts';
+import { triggerMatchForImport } from '#lib/server/job/match-trigger.ts';
+import { classifyRegion } from '#lib/data/job-taxonomy.ts';
 import {
 	normalizeExperienceLevels,
 	normalizeJobType,
 	normalizeWorkLocation
-} from '$lib/data/job-normalize';
-import { normalizeSalaryPeriod } from '$lib/salary/conversion';
+} from '#lib/data/job-normalize.ts';
+import { normalizeSalaryPeriod } from '#lib/salary/conversion.ts';
 
 /**
  * What a caller can say about the role, in the shape the form's fields already

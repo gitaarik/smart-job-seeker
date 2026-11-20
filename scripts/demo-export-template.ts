@@ -13,7 +13,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { buildProfileExport, buildSettingsExport } from '$lib/server/export';
+import { buildProfileExport, buildSettingsExport } from '#lib/server/export/index.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_PATH = join(__dirname, 'fixtures', 'demo-template.json');

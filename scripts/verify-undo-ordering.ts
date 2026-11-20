@@ -25,10 +25,10 @@
  *   npx dotenvx run -f /app/.env -- npx tsx scripts/verify-undo-ordering.ts <profileId>
  */
 import { and, eq, inArray } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { capability_edits, languages, profiles } from '$lib/server/db/schema';
-import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
-import { executeCapability, type CapabilityTarget } from '$lib/server/ai-chat/capabilities';
+import { db } from '#lib/server/db/index.ts';
+import { capability_edits, languages, profiles } from '#lib/server/db/schema.ts';
+import { readEditLog, revertEdit } from '#lib/server/ai-chat/edit-log.ts';
+import { executeCapability, type CapabilityTarget } from '#lib/server/ai-chat/capabilities.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {

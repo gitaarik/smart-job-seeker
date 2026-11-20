@@ -14,7 +14,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../../profile/components/SectionHeader.svelte';
 	import Card from '../../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import {
 		type SessionDetail,
 		type Iteration,
@@ -156,7 +156,7 @@
 		// expression typed ResolvedPathname, and appending a query makes it a
 		// plain string. resolve() takes no query of its own.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${resolve('/admin/scraper-agent')}?retry=${data.sessionId}`);
+		goto(`${resolve('admin/scraper-agent')}?retry=${data.sessionId}`);
 	}
 
 	// Derived: latest stage for header display

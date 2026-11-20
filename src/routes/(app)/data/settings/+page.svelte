@@ -9,7 +9,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCog, faExclamationTriangle, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -89,7 +89,7 @@
 					isLoading = false;
 					if (result.type === 'redirect') {
 						// eslint-disable-next-line svelte/no-navigation-without-resolve
-						await goto(result.location, { replaceState: true });
+						await goto(result.location, { replace: true });
 					}
 				};
 			}}

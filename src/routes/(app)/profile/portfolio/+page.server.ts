@@ -23,24 +23,24 @@
 
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { fail, isHttpError, redirect, type ActionFailure } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
-import { presentation_templates, profiles, profile_versions } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { presentation_templates, profiles, profile_versions } from '#lib/server/db/schema.ts';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { Buffer } from 'buffer';
-import { createMediaItem } from '$lib/server/media/items';
-import { MediaUploadError } from '$lib/server/media/originals';
-import { assignThemeSlot, clearThemeSlot, SlotError } from '$lib/server/media/slots';
-import { THEME_MEDIA_SLOTS, type Crop } from '$lib/media-library';
+import { createMediaItem } from '#lib/server/media/items.ts';
+import { MediaUploadError } from '#lib/server/media/originals.ts';
+import { assignThemeSlot, clearThemeSlot, SlotError } from '#lib/server/media/slots.ts';
+import { THEME_MEDIA_SLOTS, type Crop } from '#lib/media-library.ts';
 import { getSelectedProfileId } from '../utils';
-import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
-import { applyShowcaseFields, applySiteUrl } from '$lib/server/profile/portfolio-theme-form';
-import { applyCareerFields } from '$lib/server/profile/portfolio-career-form';
+import { getPortfolioThemesForProfile } from '#lib/server/profile/portfolio-themes.ts';
+import { applyShowcaseFields, applySiteUrl } from '#lib/server/profile/portfolio-theme-form.ts';
+import { applyCareerFields } from '#lib/server/profile/portfolio-career-form.ts';
 import {
 	loadFeaturedOrder,
 	planFeaturedOrder,
 	resetFeaturedOrder,
 	saveFeaturedOrder
-} from '$lib/server/profile/featured-order';
+} from '#lib/server/profile/featured-order.ts';
 import {
 	defaultSections,
 	isPortfolioLayout,
@@ -50,7 +50,7 @@ import {
 	themeLayout,
 	type PortfolioSection,
 	type PortfolioThemeConfig
-} from '$lib/portfolio-themes';
+} from '#lib/portfolio-themes.ts';
 
 /** The kind every write here pins. Nothing on this page may touch a CV template. */
 const KIND = 'portfolio';

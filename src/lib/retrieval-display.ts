@@ -1,11 +1,11 @@
 /**
  * Presentation helpers for the retrieval record's staff view.
  *
- * Here rather than beside the record in `$lib/server/documents/retrieval-record`
+ * Here rather than beside the record in `#lib/server/documents/retrieval-record.ts`
  * because RetrievalSources.svelte renders in the browser, and a value import
- * from `$lib/server` is refused there. Types only come from the server side.
+ * from `#lib/server` is refused there. Types only come from the server side.
  */
-import type { RetrievalItem } from '$lib/server/documents/retrieval-record';
+import type { RetrievalItem } from '#lib/server/documents/retrieval-record.ts';
 
 /** Whether an item's score is a fused score rather than its ranker's own. */
 export function isFusedItem(item: RetrievalItem): boolean {

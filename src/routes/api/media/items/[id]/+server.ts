@@ -2,9 +2,9 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { ownedItem } from '$lib/server/media/serve';
-import { deleteMediaItem, updateMediaItem } from '$lib/server/media/items';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { ownedItem } from '#lib/server/media/serve.ts';
+import { deleteMediaItem, updateMediaItem } from '#lib/server/media/items.ts';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

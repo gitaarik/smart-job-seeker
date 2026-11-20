@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { user_feedback, feedback_replies } from '$lib/server/db/schema';
+import { user_feedback, feedback_replies } from '#lib/server/db/schema.ts';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = locals.user;

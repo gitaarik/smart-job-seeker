@@ -10,7 +10,7 @@
 
 import { createHmac } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect, sql } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect, sql } from '#lib/server/db/index.ts';
 import {
 	credential_shares,
 	demo_link_devices,
@@ -22,16 +22,16 @@ import {
 	search_tasks,
 	subscriptions,
 	users
-} from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth/better-auth';
-import { getEnv } from '$lib/tools/get-env';
-import { insertDeviceShare } from '$lib/server/device-shares';
+} from '#lib/server/db/schema.ts';
+import { auth } from '#lib/server/auth/better-auth.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { insertDeviceShare } from '#lib/server/device-shares.ts';
 import {
 	buildProfileExport,
 	buildSettingsExport,
 	importExportData,
 	importSettings
-} from '$lib/server/export';
+} from '#lib/server/export/index.ts';
 
 /**
  * Demo accounts use a non-routable domain so the address is obviously synthetic

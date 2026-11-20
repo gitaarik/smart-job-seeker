@@ -7,7 +7,7 @@
 	import { resolve } from '$app/paths';
 	import { deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { onMount, untrack } from 'svelte';
 	import {
@@ -21,17 +21,20 @@
 		faSortAmountDown,
 		faTimes
 	} from '@fortawesome/free-solid-svg-icons';
-	import { getSearchTaskStatusIcon } from '$lib/search-task-status';
-	import { formatDateTime as fmtDateTime } from '$lib/format-date';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import PlatformLogo from '$lib/components/PlatformLogo.svelte';
+	import { getSearchTaskStatusIcon } from '#lib/search-task-status.ts';
+	import { formatDateTime as fmtDateTime } from '#lib/format-date.ts';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import PlatformLogo from '#lib/components/PlatformLogo.svelte';
 	import SimplifiedAddTaskForm from '../components/SimplifiedAddTaskForm.svelte';
 	import SuggestionsList, { type Suggestion } from '../components/SuggestionsList.svelte';
 	import ImportTaskBlockerBadge from '../components/ImportTaskBlockerBadge.svelte';
 	import AuthBlockNotice from '../components/AuthBlockNotice.svelte';
-	import { computeImportTaskBlockers, providerRequiresDevice } from '$lib/import-tasks/readiness';
-	import { defaultLoginMode } from '$lib/import-tasks/sign-in';
-	import { track } from '$lib/tools/analytics';
+	import {
+		computeImportTaskBlockers,
+		providerRequiresDevice
+	} from '#lib/import-tasks/readiness.ts';
+	import { defaultLoginMode } from '#lib/import-tasks/sign-in.ts';
+	import { track } from '#lib/tools/analytics.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -166,9 +169,9 @@
 		return () => clearInterval(interval);
 	});
 
-	const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
+	const tz = $derived((page.data as { userTimezone: string | null }).userTimezone || undefined);
 	const tf = $derived(
-		($page.data as { timeFormat: import('$lib/format-date').TimeFormat }).timeFormat
+		(page.data as { timeFormat: import('#lib/format-date.ts').TimeFormat }).timeFormat
 	);
 
 	function formatDate(date: Date | string | null): string {
@@ -439,7 +442,7 @@
 						{/if}
 					{:else}
 						No device connected — <a
-							href={resolve('/jobs/import/devices')}
+							href={resolve('jobs/import/devices')}
 							class="underline hover:text-[var(--dash-primary)]">Setup guide</a
 						>
 					{/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { track } from '$lib/tools/analytics';
+	import { track } from '#lib/tools/analytics.ts';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -60,19 +60,19 @@
 	<div class="mt-12 flex flex-wrap items-center justify-center gap-4">
 		{#if data.registrationOpen}
 			<a
-				href={resolve('/signup')}
+				href={resolve('signup')}
 				onclick={() => track('signup_cta_clicked', { from: 'frontpage' })}
 				class="inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--dash-primary-hover)]"
 				>Join the waitlist</a
 			>
 			<a
-				href={resolve('/login')}
+				href={resolve('login')}
 				class="inline-flex items-center justify-center rounded-lg border px-8 py-3 text-sm font-semibold transition-colors"
 				style="border-color: var(--dash-border); color: var(--dash-text);">Sign in</a
 			>
 		{:else}
 			<a
-				href={resolve('/login')}
+				href={resolve('login')}
 				class="inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--dash-primary-hover)]"
 				>Sign in</a
 			>
@@ -80,9 +80,9 @@
 	</div>
 
 	<p class="mt-6 text-sm text-[var(--dash-text-secondary)]">
-		<a class="underline" href={resolve('/pricing')}>Pricing</a>
+		<a class="underline" href={resolve('pricing')}>Pricing</a>
 		&middot;
-		<a class="underline" href={resolve('/guide')}>How it works</a>
+		<a class="underline" href={resolve('guide')}>How it works</a>
 	</p>
 
 	<!-- Footer. The legal links live on every public page, because our own
@@ -90,8 +90,8 @@
 	     people where to read about it. -->
 	<p class="absolute bottom-8 text-xs text-[var(--dash-text-muted)]">
 		&copy; {new Date().getFullYear()} Smart Job Seeker &middot;
-		<a class="underline" href={resolve('/privacy')}>Privacy</a>
+		<a class="underline" href={resolve('privacy')}>Privacy</a>
 		&middot;
-		<a class="underline" href={resolve('/terms')}>Terms</a>
+		<a class="underline" href={resolve('terms')}>Terms</a>
 	</p>
 </main>

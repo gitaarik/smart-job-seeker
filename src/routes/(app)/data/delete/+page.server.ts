@@ -1,16 +1,16 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { count, eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { profiles } from '#lib/server/db/schema.ts';
 import {
 	DELETION_GRACE_DAYS,
 	requestAccountDeletion,
 	SubscriptionCancelError
-} from '$lib/server/account/delete';
-import { getBalance } from '$lib/server/billing/credits';
-import { getExtraUsage } from '$lib/server/billing/plans';
-import { getActiveSubscription } from '$lib/server/billing/subscription';
+} from '#lib/server/account/delete.ts';
+import { getBalance } from '#lib/server/billing/credits.ts';
+import { getExtraUsage } from '#lib/server/billing/plans.ts';
+import { getActiveSubscription } from '#lib/server/billing/subscription.ts';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;

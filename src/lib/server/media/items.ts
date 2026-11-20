@@ -3,21 +3,21 @@
  */
 
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	media_items,
 	media_renditions,
 	presentation_templates,
 	profiles
-} from '$lib/server/db/schema';
-import { deleteFile, uploadFile } from '$lib/server/files';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
+} from '#lib/server/db/schema.ts';
+import { deleteFile, uploadFile } from '#lib/server/files.ts';
+import { requireMediaQuota } from '#lib/server/billing/require-media-quota.ts';
 import {
 	isMediaKind,
 	itemPreviewUrl,
 	type MediaItemView,
 	type MediaKind
-} from '$lib/media-library';
+} from '#lib/media-library.ts';
 import {
 	FORMAT_EXTENSIONS,
 	FORMAT_MIME_TYPES,

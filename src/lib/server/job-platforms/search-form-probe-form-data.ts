@@ -10,12 +10,12 @@
  * means a freshly-created account).
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq, isNotNull } from 'drizzle-orm';
-import { platform_credentials } from '$lib/server/db/schema';
-import { listApiKeys } from '$lib/server/auth/api-key';
-import { listSharedWithMe } from '$lib/server/device-shares';
-import { listSharedCredentialsWithMe } from '$lib/server/credential-shares';
+import { platform_credentials } from '#lib/server/db/schema.ts';
+import { listApiKeys } from '#lib/server/auth/api-key.ts';
+import { listSharedWithMe } from '#lib/server/device-shares.ts';
+import { listSharedCredentialsWithMe } from '#lib/server/credential-shares.ts';
 
 export interface DiscoveryCredentialOption {
 	/** platform_credentials.id */

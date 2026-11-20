@@ -3,8 +3,8 @@
  * Uses the existing export pipeline: DB → ExportedProfile → ResumeData
  */
 
-import { buildProfileJsonExport } from '$lib/server/profile/export-profile-json';
-import { convertExportToResumeData } from '$lib/resume/convert-export';
+import { buildProfileJsonExport } from '#lib/server/profile/export-profile-json.ts';
+import { convertExportToResumeData } from '#lib/resume/convert-export.ts';
 import type { ResumeData } from './types';
 
 /**

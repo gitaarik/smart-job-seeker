@@ -1,16 +1,16 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc } from 'drizzle-orm';
-import { profiles, cheat_sheets } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { touchProfile } from '$lib/server/profile/touch-profile';
+import { profiles, cheat_sheets } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
 import {
 	cheatSheetCreateSchema,
 	cheatSheetUpdateSchema,
 	cheatSheetDeleteSchema,
 	cheatSheetReorderSchema,
 	parseBody
-} from '$lib/server/validation/api-schemas';
+} from '#lib/server/validation/api-schemas.ts';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);

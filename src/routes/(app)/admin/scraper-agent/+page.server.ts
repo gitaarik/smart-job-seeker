@@ -1,11 +1,11 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { isNotNull, asc, inArray } from 'drizzle-orm';
 import {
 	profiles as profilesTable,
 	search_tasks,
 	users as usersTable
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async () => {
 	// Pre-load search tasks with platform and user info. A task is runnable by

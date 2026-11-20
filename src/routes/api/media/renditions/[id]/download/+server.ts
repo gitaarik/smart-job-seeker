@@ -6,12 +6,12 @@
 import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { ownedRendition, renditionBytes } from '$lib/server/media/serve';
-import { renditionFilename } from '$lib/server/media/renditions';
-import { contentDisposition } from '$lib/server/files';
-import { dbDirect as db } from '$lib/server/db';
-import { media_presets } from '$lib/server/db/schema';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { ownedRendition, renditionBytes } from '#lib/server/media/serve.ts';
+import { renditionFilename } from '#lib/server/media/renditions.ts';
+import { contentDisposition } from '#lib/server/files.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { media_presets } from '#lib/server/db/schema.ts';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = requireAuth(locals);

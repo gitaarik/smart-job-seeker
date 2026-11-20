@@ -8,7 +8,7 @@
  */
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 import { GRANT_MAX_AGE_MS, signUploadGrant, verifyUploadGrant } from '../upload-grants';
 
 // The key id differs from every other number, so a field read from the wrong

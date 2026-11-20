@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import EducationSection from './EducationSection.svelte';
-import type { Education } from '$lib/server/resume/types';
+import type { Education } from '#lib/server/resume/types.ts';
 
 /**
  * Open state belongs to the row, not to its position.

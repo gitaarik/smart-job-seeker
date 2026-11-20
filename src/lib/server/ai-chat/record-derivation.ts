@@ -26,11 +26,15 @@
  *    system's own indexing would be a surprise.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { application_records } from '$lib/server/db/schema';
+import { application_records } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat } from './utils';
-import { contactRoleValues, type RecordContact, recordTypeValues } from '$lib/application-records';
+import {
+	contactRoleValues,
+	type RecordContact,
+	recordTypeValues
+} from '#lib/application-records.ts';
 
 /**
  * Below this, a first line is as good a title as an LLM one and there is

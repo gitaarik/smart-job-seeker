@@ -3,9 +3,9 @@
  * Shared between profile creation and profile import flows.
  */
 
-import type { ResumeData } from '$lib/server/resume/types';
-import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
-import { asWorkMode } from '$lib/work-mode';
+import type { ResumeData } from '#lib/server/resume/types.ts';
+import type { ExportedProfile } from '#lib/server/profile/export-profile-json.ts';
+import { asWorkMode } from '#lib/work-mode.ts';
 
 const validLevels = ['expert', 'proficient', 'intermediate', 'beginner'] as const;
 type Level = (typeof validLevels)[number];

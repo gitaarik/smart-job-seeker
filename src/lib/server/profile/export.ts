@@ -3,18 +3,18 @@
  * Handles exporting profile schema and data to collected_data collection
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { collected_data, profiles } from '$lib/server/db/schema';
-import { isHiddenFromDocuments, PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
+import { collected_data, profiles } from '#lib/server/db/schema.ts';
+import { isHiddenFromDocuments, PROFILE_ONLY_FLAG } from '#lib/profile-visibility.ts';
 import {
 	normalizeAdjustments,
 	storedEmployed,
 	storedFreelance,
 	type RegionAsks
-} from '$lib/salary/settings';
-import { compareAsks, employedYear, freelanceYear } from '$lib/salary/take-home';
-import { getFxRates } from '$lib/server/salary/fx';
+} from '#lib/salary/settings.ts';
+import { compareAsks, employedYear, freelanceYear } from '#lib/salary/take-home.ts';
+import { getFxRates } from '#lib/server/salary/fx.ts';
 
 interface SchemaNode {
 	note?: string;

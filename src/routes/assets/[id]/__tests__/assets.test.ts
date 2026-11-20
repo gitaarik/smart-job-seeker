@@ -26,14 +26,14 @@ const mockQuery = vi.fn();
 const mockReadFile = vi.fn();
 const mockPublicRendition = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	queryRawDirect: (...a: unknown[]) => mockQuery(...a)
 }));
 vi.mock('drizzle-orm', () => ({
 	sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values })
 }));
 vi.mock('fs/promises', () => ({ readFile: (...a: unknown[]) => mockReadFile(...a) }));
-vi.mock('$lib/server/media/serve', () => ({
+vi.mock('#lib/server/media/serve.ts', () => ({
 	publicRendition: (...a: unknown[]) => mockPublicRendition(...a)
 }));
 

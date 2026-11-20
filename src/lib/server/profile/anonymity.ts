@@ -16,12 +16,12 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { applications, profile_versions, profiles } from '$lib/server/db/schema';
-import { isAnonymous } from '$lib/resume-anonymity';
-import { templateLabel } from '$lib/resume-template-labels';
-import type { ResumeTemplate } from '$lib/resume-templates';
-import { versionChain } from '$lib/server/profile/skill-words';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { applications, profile_versions, profiles } from '#lib/server/db/schema.ts';
+import { isAnonymous } from '#lib/resume-anonymity.ts';
+import { templateLabel } from '#lib/resume-template-labels.ts';
+import type { ResumeTemplate } from '#lib/resume-templates.ts';
+import { versionChain } from '#lib/server/profile/skill-words.ts';
 
 interface ChainVersion {
 	id: number;

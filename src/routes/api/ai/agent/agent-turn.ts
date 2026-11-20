@@ -11,18 +11,18 @@
  * the body until the end, which would turn the steps into one burst.
  */
 import { json } from '@sveltejs/kit';
-import { isLLMOutputValidationMessage } from '$lib/server/llm';
-import { reserveAiChatId, reserveConversationId, spendBlock } from '$lib/server/ai-chat/utils';
-import { describeRead, type TurnEvent } from '$lib/server/ai-chat/agent/events';
+import { isLLMOutputValidationMessage } from '#lib/server/llm/index.ts';
+import { reserveAiChatId, reserveConversationId, spendBlock } from '#lib/server/ai-chat/utils.ts';
+import { describeRead, type TurnEvent } from '#lib/server/ai-chat/agent/events.ts';
 import {
 	runTurn,
 	streamTurn,
 	type TurnInput,
 	type TurnOutcome
-} from '$lib/server/ai-chat/agent/turn';
-import type { ReadRecord } from '$lib/server/documents/retrieval-record';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
-import { aiChatTraceSeed, startTrace } from '$lib/server/monitoring/telemetry';
+} from '#lib/server/ai-chat/agent/turn.ts';
+import type { ReadRecord } from '#lib/server/documents/retrieval-record.ts';
+import { errorTracker } from '#lib/server/monitoring/error-tracker.ts';
+import { aiChatTraceSeed, startTrace } from '#lib/server/monitoring/telemetry.ts';
 
 export interface AgentRequest {
 	request: Request;

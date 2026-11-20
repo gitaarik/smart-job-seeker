@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { listContacts, sendContactRequest } from '$lib/server/contacts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { listContacts, sendContactRequest } from '#lib/server/contacts.ts';
 
 /**
  * GET /api/contacts — List all contacts for the current user

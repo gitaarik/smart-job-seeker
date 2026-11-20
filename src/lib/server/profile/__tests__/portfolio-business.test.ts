@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { portfolioBusiness } from '../portfolio-business';
-import type { PortfolioTheme } from '$lib/portfolio-themes';
+import type { PortfolioTheme } from '#lib/portfolio-themes.ts';
 
 const theme = (config: PortfolioTheme['config']): PortfolioTheme => ({
 	id: 1,

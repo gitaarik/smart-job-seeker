@@ -16,7 +16,7 @@ const mockVerify = vi.fn();
 const mockVersions = vi.fn();
 const mockKey = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			profiles: { findFirst: () => mockProfile() },
@@ -24,29 +24,29 @@ vi.mock('$lib/server/db', () => ({
 		}
 	}
 }));
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: { slug: 'slug', id: 'id' },
 	profile_versions: { profile_id: 'profile_id' }
 }));
-vi.mock('$lib/server/profile/anonymity', async () => {
-	const { isAnonymous } = await import('$lib/resume-anonymity');
+vi.mock('#lib/server/profile/anonymity.ts', async () => {
+	const { isAnonymous } = await import('#lib/resume-anonymity.ts');
 	return {
 		isAnonymousChain: (versions: { id: number; toggles: unknown }[], id: number) =>
 			versions.some((v) => v.id === id && isAnonymous(v.toggles))
 	};
 });
 vi.mock('drizzle-orm', () => ({ eq: () => ({}) }));
-vi.mock('$lib/server/profile/access-control', () => ({
+vi.mock('#lib/server/profile/access-control.ts', () => ({
 	checkProfileAccess: (o: unknown) => mockAccess(o)
 }));
-vi.mock('$lib/server/profile/portfolio-themes', () => ({
+vi.mock('#lib/server/profile/portfolio-themes.ts', () => ({
 	getPortfolioThemeById: () => mockThemeById(),
 	getPortfolioThemesForProfile: () => mockThemes()
 }));
-vi.mock('$lib/server/profile/portfolio-key', () => ({
+vi.mock('#lib/server/profile/portfolio-key.ts', () => ({
 	readPortfolioKey: () => mockKey()
 }));
-vi.mock('$lib/server/auth/turnstile', () => ({
+vi.mock('#lib/server/auth/turnstile.ts', () => ({
 	verifyTurnstileToken: (t: unknown) => mockVerify(t),
 	turnstileConfigured: () => true,
 	turnstileSiteKey: () => 'k'
@@ -158,7 +158,7 @@ describe('portfolio contact endpoint', () => {
 	});
 
 	it('refuses a share link to an anonymous version, whose page shows no details', async () => {
-		const { withAnonymous } = await import('$lib/resume-anonymity');
+		const { withAnonymous } = await import('#lib/resume-anonymity.ts');
 		mockAccess.mockResolvedValue({ allowed: true, accessType: 'token', versionId: 7 });
 		mockVersions.mockResolvedValue([
 			{ id: 7, toggles: withAnonymous([], true), extension_links: [] }

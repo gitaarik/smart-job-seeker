@@ -11,9 +11,9 @@
  * is logged rather than swallowed.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { profile_translations } from '$lib/server/db/schema';
+import { profile_translations } from '#lib/server/db/schema.ts';
 import type { ExportedTranslation, TranslationTarget } from './types';
 
 /** Position of each translatable entity, keyed by database id. */

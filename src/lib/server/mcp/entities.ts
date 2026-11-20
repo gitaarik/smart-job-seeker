@@ -45,28 +45,28 @@ import {
 	type Capability,
 	type CapabilityActor,
 	type CapabilityTarget
-} from '$lib/server/ai-chat/capabilities';
-import { readProfileApplication } from '$lib/server/applications/profile-applications';
-import { readProfileJob } from '$lib/server/jobs/profile-jobs';
-import { TEXT_KINDS, readOwnedText, type TextKind } from '$lib/server/texts/profile-texts';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { readProfileApplication } from '#lib/server/applications/profile-applications.ts';
+import { readProfileJob } from '#lib/server/jobs/profile-jobs.ts';
+import { TEXT_KINDS, readOwnedText, type TextKind } from '#lib/server/texts/profile-texts.ts';
 import {
 	TEXT_CAPABILITY_NAMES,
 	kindForTextCapability,
 	type TextCapability
-} from '$lib/server/ai-chat/text-version-capabilities';
+} from '#lib/server/ai-chat/text-version-capabilities.ts';
 import {
 	TEXT_COMMIT_CAPABILITY_NAMES,
 	kindForTextCommitCapability,
 	type TextCommitCapability
-} from '$lib/server/ai-chat/text-commit-capabilities';
+} from '#lib/server/ai-chat/text-commit-capabilities.ts';
 import {
 	TEXT_CREATE_CAPABILITY_NAMES,
 	kindForTextCreateCapability,
 	textCreateOwner,
 	type TextCreateCapability
-} from '$lib/server/ai-chat/text-create-capabilities';
+} from '#lib/server/ai-chat/text-create-capabilities.ts';
 
-import { listLibraryVersions } from '$lib/server/profile/versions';
+import { listLibraryVersions } from '#lib/server/profile/versions.ts';
 
 /** A resolved row, or the sentence to hand back to the agent instead. */
 export type EntityResolution = { target: CapabilityTarget } | { error: string };

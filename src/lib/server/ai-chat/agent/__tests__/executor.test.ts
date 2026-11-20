@@ -7,14 +7,14 @@
  * what it does is call.test.ts.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ToolCall } from '$lib/server/llm';
+import type { ToolCall } from '#lib/server/llm/index.ts';
 
 const mockReadTool = vi.fn();
-vi.mock('$lib/server/mcp/call', () => ({
+vi.mock('#lib/server/mcp/call.ts', () => ({
 	readTool: (...args: unknown[]) => mockReadTool(...args)
 }));
 
-import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
+import { CAPABILITIES } from '#lib/server/ai-chat/capabilities.ts';
 import { candidateFromCall, PROPOSAL_RECEIPT, scrubIdentity, TurnExecutor } from '../executor';
 
 const actor = { profileId: 12, isStaff: false };

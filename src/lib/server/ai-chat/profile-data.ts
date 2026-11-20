@@ -9,15 +9,15 @@
  * trim the smaller retrieval blocks around it.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { collected_data } from '$lib/server/db/schema';
+import { collected_data } from '#lib/server/db/schema.ts';
 import {
 	EXPORTED_PROFILE_KEYS,
 	exportProfile,
 	type ExportedProfileKey
-} from '$lib/server/profile/export';
-import { PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
+} from '#lib/server/profile/export.ts';
+import { PROFILE_ONLY_FLAG } from '#lib/profile-visibility.ts';
 
 export interface ProfileData {
 	data: Record<string, unknown>;

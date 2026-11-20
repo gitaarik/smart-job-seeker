@@ -11,11 +11,11 @@
 	 * typed when no place fits.
 	 */
 	import { untrack } from 'svelte';
-	import PlacePicker from '$lib/components/PlacePicker.svelte';
-	import { autoSaveField } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import { armOn } from '$lib/actions/arm-on';
-	import type { Place, PreferredPlace } from '$lib/data/places';
+	import PlacePicker from '#lib/components/PlacePicker.svelte';
+	import { autoSaveField } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import { armOn } from '#lib/actions/arm-on.ts';
+	import type { Place, PreferredPlace } from '#lib/data/places.ts';
 
 	export interface TaskWhere {
 		search_places: PreferredPlace[] | null;

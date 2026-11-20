@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-vi.mock('$lib/server/auth/turnstile', () => ({
+vi.mock('#lib/server/auth/turnstile.ts', () => ({
 	turnstileConfigured: () => true,
 	turnstileSiteKey: () => 'site-key'
 }));

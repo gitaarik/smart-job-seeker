@@ -11,15 +11,15 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { media_items, media_presets, media_renditions } from '$lib/server/db/schema';
-import { deleteFile, getFile, uploadFile } from '$lib/server/files';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { media_items, media_presets, media_renditions } from '#lib/server/db/schema.ts';
+import { deleteFile, getFile, uploadFile } from '#lib/server/files.ts';
 import {
 	OUTPUT_EXTENSIONS,
 	isOutputFormat,
 	type Crop,
 	type OutputFormat
-} from '$lib/media-library';
+} from '#lib/media-library.ts';
 import { renderImage } from './render';
 import { renditionInUseCondition } from './references';
 import type { StoredFormat } from './originals';

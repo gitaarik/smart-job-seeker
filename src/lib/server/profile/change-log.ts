@@ -35,8 +35,8 @@
  * a great deal better than a doubly-applied edit.
  */
 
-import { dbDirect as db } from '$lib/server/db';
-import { capability_edits } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { capability_edits } from '#lib/server/db/schema.ts';
 
 /**
  * Which surface made a write.

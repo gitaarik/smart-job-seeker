@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { formatProfileEditManifest } from '../profile-edit-manifest';
-import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
+import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '#lib/server/profile/resources.ts';
 
 const ALL = PROFILE_RESOURCE_NAMES.map((name) => ({ name, rows: 2 }));
 

@@ -2,16 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The module reaches for the database, the model and the embedding provider at
 // import time; none of that is what these tests are about.
-vi.mock('$lib/server/db', () => ({ dbDirect: { query: {} } }));
-vi.mock('$lib/server/ai-chat/utils', () => ({ createAndGenerateAiChat: vi.fn() }));
-vi.mock('$lib/server/documents/content-embeddings', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({ dbDirect: { query: {} } }));
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({ createAndGenerateAiChat: vi.fn() }));
+vi.mock('#lib/server/documents/content-embeddings.ts', () => ({
 	semanticScoreUnits: vi.fn(),
 	poolKey: (t: string, id: number) => `${t}:${id}`
 }));
-vi.mock('$lib/server/documents/content-retrieval', () => ({
+vi.mock('#lib/server/documents/content-retrieval.ts', () => ({
 	scoreUnitAgainstQuery: vi.fn(() => 0)
 }));
-vi.mock('$lib/server/job/skill-ontology', () => ({
+vi.mock('#lib/server/job/skill-ontology.ts', () => ({
 	assumedLevels: vi.fn(async () => new Map()),
 	expandUpwardBySeed: vi.fn(async () => new Map()),
 	resolveConcepts: vi.fn(async () => new Map())
@@ -32,13 +32,21 @@ import {
 	shortlistFor,
 	type PreparedSelection
 } from '../tailor-version';
-import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
-import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
-import { renderPrompt } from '$lib/server/ai-chat/render-prompt';
-import { assumedLevels, expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import { BUILT_IN_SECTIONS, documentSections, type DocumentSections } from '$lib/resume-templates';
-import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
+import { semanticScoreUnits } from '#lib/server/documents/content-embeddings.ts';
+import { promptTemplates } from '#lib/server/ai-chat/prompt-templates.ts';
+import { renderPrompt } from '#lib/server/ai-chat/render-prompt.ts';
+import {
+	assumedLevels,
+	expandUpwardBySeed,
+	resolveConcepts
+} from '#lib/server/job/skill-ontology.ts';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+import {
+	BUILT_IN_SECTIONS,
+	documentSections,
+	type DocumentSections
+} from '#lib/resume-templates.ts';
+import { selectForJob, type Candidate, type Decision } from '#lib/tailoring.ts';
 
 /** A DB-backed template whose config says nothing: every part the generic renderer has. */
 const TEMPLATE = documentSections({ config: {} });

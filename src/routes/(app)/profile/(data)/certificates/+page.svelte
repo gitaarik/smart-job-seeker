@@ -1,16 +1,15 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
+	import TechnologyTagsEditor from '#lib/components/TechnologyTagsEditor.svelte';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import {
 		CERTIFICATE_FILE_ACCEPT,
 		MAX_CERTIFICATE_FILE_BYTES,
 		formatFileSize
-	} from '$lib/certificate-files';
+	} from '#lib/certificate-files.ts';
 	import type { ActionData, PageData } from './$types';
-	import type { SubmitFunction } from '@sveltejs/kit';
-	import { enhance } from '$app/forms';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowsUpDown,
@@ -26,7 +25,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
@@ -50,6 +49,7 @@
 	$effect(() => {
 		if (versionSlugsLoaded) return;
 		versionSlugsLoaded = true;
+
 		fetch('/api/profile-versions')
 			.then((res) => (res.ok ? res.json() : []))
 			.then((slugs: string[]) => {
@@ -286,7 +286,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ profile_id: data.profileId, order: ids })
 			});
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			// silently fail
 		}

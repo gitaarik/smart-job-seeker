@@ -34,8 +34,8 @@
  * server and let autovacuum reuse the space instead.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { pruneAiChatPayloads } from '$lib/server/ai-chats/retention';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { pruneAiChatPayloads } from '#lib/server/ai-chats/retention.ts';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');

@@ -10,10 +10,10 @@
 		faTriangleExclamation,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { ItemGroup, ItemRow, ItemSection, SkillWordRow } from '$lib/tailoring';
-	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-	import { wordingText, type WordingState } from '$lib/field-variants';
-	import type { DocType } from '$lib/utils/profile-doc-url';
+	import type { ItemGroup, ItemRow, ItemSection, SkillWordRow } from '#lib/tailoring.ts';
+	import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+	import { wordingText, type WordingState } from '#lib/field-variants.ts';
+	import type { DocType } from '#lib/utils/profile-doc-url.ts';
 	import JobWording from './JobWording.svelte';
 
 	/**

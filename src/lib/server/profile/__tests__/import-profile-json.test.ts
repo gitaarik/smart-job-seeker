@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the database with Drizzle-style API
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profiles: {
@@ -21,7 +21,7 @@ vi.mock('drizzle-orm', () => ({
 	ne: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: {
 		user_id: 'profiles.user_id',
 		id: 'profiles.id',
@@ -31,13 +31,13 @@ vi.mock('$lib/server/db/schema', () => ({
 
 // Only the naming helper is under test here; the certificate files an overwrite
 // keeps have tests of their own, and their module reaches the file reaper.
-vi.mock('$lib/server/profile/certificate-file', () => ({
+vi.mock('#lib/server/profile/certificate-file.ts', () => ({
 	certificateFilesByName: () => Promise.resolve(new Map()),
 	restoreCertificateFiles: () => Promise.resolve()
 }));
 
 import { getUniqueProfileName } from '../import-profile-json';
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { findMany } from '../../__tests__/db-mocks';
 
 describe('getUniqueProfileName', () => {

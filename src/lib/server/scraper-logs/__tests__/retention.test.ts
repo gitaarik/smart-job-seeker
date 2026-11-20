@@ -21,7 +21,7 @@ const mockReaddir = vi.fn();
 const mockStat = vi.fn();
 const mockRm = vi.fn();
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: (...a: unknown[]) => mockSelect(...a),
 		delete: (...a: unknown[]) => mockDelete(...a)
@@ -35,7 +35,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: vi.fn(() => 'NOT EXISTS(...)')
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	scraper_logs: {
 		id: 'scraper_logs.id',
 		timestamp: 'scraper_logs.timestamp',

@@ -202,7 +202,7 @@ export async function approve(
  * Draw an edge, refusing anything that would make the graph contradict itself.
  *
  * `refuseNewRelation` is imported by the caller and passed in rather than
- * imported here, because it lives under `$lib/server/job` and pulling it into
+ * imported here, because it lives under `#lib/server/job/index.ts` and pulling it into
  * this module would make every script that wants a plain reject drag the
  * traversal in with it.
  */

@@ -15,9 +15,9 @@ const { store, redisDown, mockConfig, mockError, mockWarn } = vi.hoisted(() => (
 	mockWarn: vi.fn()
 }));
 
-vi.mock('$lib/server/config', () => ({ config: mockConfig }));
+vi.mock('#lib/server/config.ts', () => ({ config: mockConfig }));
 
-vi.mock('$lib/server/monitoring/error-tracker', () => ({
+vi.mock('#lib/server/monitoring/error-tracker.ts', () => ({
 	errorTracker: { logError: mockError, logWarning: mockWarn }
 }));
 

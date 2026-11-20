@@ -30,8 +30,8 @@
  * server and let autovacuum reuse the space instead.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { pruneInboundEmails, pruneSentEmails } from '$lib/server/email/retention';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { pruneInboundEmails, pruneSentEmails } from '#lib/server/email/retention.ts';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');

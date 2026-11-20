@@ -6,7 +6,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/ai-chat/capabilities', () => ({
+vi.mock('#lib/server/ai-chat/capabilities.ts', () => ({
 	CAPABILITIES: {
 		edit_language: {
 			title: 'Correct this language',

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
-import type { WordingState } from '$lib/field-variants';
+import type { WordingState } from '#lib/field-variants.ts';
 
 // The forms post to the page's own action. What reaches the action is the
 // form's fields, which is what is asserted here; the round trip itself is the

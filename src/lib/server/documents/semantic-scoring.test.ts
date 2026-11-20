@@ -31,9 +31,9 @@ const h = vi.hoisted(() => {
 	};
 });
 
-vi.mock('$lib/server/llm/embeddings', async () => {
-	const actual = await vi.importActual<typeof import('$lib/server/llm/embeddings')>(
-		'$lib/server/llm/embeddings'
+vi.mock('#lib/server/llm/embeddings.ts', async () => {
+	const actual = await vi.importActual<typeof import('#lib/server/llm/embeddings.ts')>(
+		'#lib/server/llm/embeddings.ts'
 	);
 	return {
 		isEmbeddingConfigured: () => h.configured.value,
@@ -44,7 +44,7 @@ vi.mock('$lib/server/llm/embeddings', async () => {
 	};
 });
 
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: { embeddingModel: 'test-model', embeddingWorkingDimensions: 768 }
 }));
 
@@ -58,14 +58,14 @@ const mockValues = vi.fn().mockReturnValue({
 });
 const mockInsert = vi.fn().mockReturnValue({ values: mockValues });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: (...a: unknown[]) => mockSelect(...a),
 		insert: (...a: unknown[]) => mockInsert(...a)
 	}
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	project_embeddings: {
 		profile_id: 'profile_id',
 		model: 'model',

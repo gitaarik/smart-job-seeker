@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { marked } from 'marked';
-import { getGuideSection } from '$lib/guide';
+import { getGuideSection } from '#lib/guide/index.ts';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = ({ params }) => {

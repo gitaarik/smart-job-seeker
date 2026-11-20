@@ -31,11 +31,11 @@
  * fan out fastest.
  */
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
-import { normalizeSkill } from '$lib/skills';
+import { queryRawDirect } from '#lib/server/db/index.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 import { fail } from '@sveltejs/kit';
-import { GRAPH_RELATIONS, MATCHING_RELATIONS, MAX_DEPTH } from '$lib/server/job/skill-ontology';
-import { createRelation, retireRelation } from '$lib/server/job/skill-relation-edit';
+import { GRAPH_RELATIONS, MATCHING_RELATIONS, MAX_DEPTH } from '#lib/server/job/skill-ontology.ts';
+import { createRelation, retireRelation } from '#lib/server/job/skill-relation-edit.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export interface GraphNode {

@@ -52,9 +52,9 @@
  */
 
 import { createHash } from 'node:crypto';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
+import { application_records, applications } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat } from './utils';
 import { truncateKeepingEnds } from './application-activity';
 import {
@@ -70,9 +70,9 @@ import {
 	LONG_ENTRY_CHARS,
 	summaryIsWorthWriting,
 	today
-} from '$lib/application-records';
-import type { OfferTerms } from '$lib/application-offer';
-import { coerceDetails, type ApplicationDetail } from '$lib/application-details';
+} from '#lib/application-records.ts';
+import type { OfferTerms } from '#lib/application-offer.ts';
+import { coerceDetails, type ApplicationDetail } from '#lib/application-details.ts';
 
 /**
  * Cap on what the summariser reads. It is now a backstop rather than the thing

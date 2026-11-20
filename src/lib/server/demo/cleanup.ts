@@ -28,7 +28,7 @@
  */
 
 import { and, eq, inArray, lte, ne, or } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	credential_shares,
 	demo_links,
@@ -37,7 +37,7 @@ import {
 	profiles,
 	sessions,
 	users
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 export interface DemoCleanupResult {
 	linksExpired: number;

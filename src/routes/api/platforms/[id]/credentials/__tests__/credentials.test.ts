@@ -28,7 +28,7 @@ const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 const mockDeleteWhere = vi.fn().mockResolvedValue({});
 const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profiles: { findFirst: (...a: unknown[]) => mockProfilesFindFirst(...a) },
@@ -55,7 +55,7 @@ vi.mock('drizzle-orm', () => ({
 	inArray: vi.fn((_col: unknown, vals: unknown[]) => vals)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
 	job_platforms: { id: 'job_platforms.id', status: 'job_platforms.status' },
 	platform_credentials: {

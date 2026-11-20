@@ -16,7 +16,7 @@
  * the internet on an environment nobody meant to launch.
  */
 
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 export function registrationOpen(): boolean {
 	const raw = String(getEnv('SJS_REGISTRATION_OPEN', 'false')).trim().toLowerCase();

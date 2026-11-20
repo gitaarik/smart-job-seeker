@@ -1,4 +1,4 @@
 import type { RequestHandler } from './$types';
-import { profileReorderHandler } from '$lib/server/profile/reorder-endpoint';
+import { profileReorderHandler } from '#lib/server/profile/reorder-endpoint.ts';
 
 export const PATCH: RequestHandler = profileReorderHandler('reference');

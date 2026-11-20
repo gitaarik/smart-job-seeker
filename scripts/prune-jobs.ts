@@ -23,12 +23,12 @@
  * FULL of `jobs` and `job_matches`, which locks both while it runs.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	DEFAULT_RETENTION_DAYS,
 	expirableJobsSql,
 	pruneExpiredJobs
-} from '$lib/server/jobs/retention';
+} from '#lib/server/jobs/retention.ts';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');

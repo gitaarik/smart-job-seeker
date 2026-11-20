@@ -36,8 +36,8 @@
  */
 
 import { inArray, lt } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { inbound_emails, sent_emails } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { inbound_emails, sent_emails } from '#lib/server/db/schema.ts';
 
 export interface EmailRetentionResult {
 	rowsDeleted: number;

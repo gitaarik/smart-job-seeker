@@ -33,7 +33,7 @@
 		faWandMagicSparkles
 	} from '@fortawesome/free-solid-svg-icons';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-	import { normalizeSkill } from '$lib/skills';
+	import { normalizeSkill } from '#lib/skills.ts';
 
 	interface Question {
 		question: string;

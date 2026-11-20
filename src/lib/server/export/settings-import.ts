@@ -1,7 +1,7 @@
-import { MAX_CORPUS_PICKS_PER_DAY } from '$lib/server/job/match-preferences';
-import { preferredPlaceSchema } from '$lib/server/validation/api-schemas';
+import { MAX_CORPUS_PICKS_PER_DAY } from '#lib/server/job/match-preferences.ts';
+import { preferredPlaceSchema } from '#lib/server/validation/api-schemas.ts';
 import { z } from 'zod';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, inArray, asc } from 'drizzle-orm';
 import {
 	search_tasks,
@@ -10,15 +10,15 @@ import {
 	job_platforms,
 	platform_profiles,
 	platform_credentials
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import type { SettingsExportData } from './settings-types';
-import { salaryFromExport, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import { salaryFromExport, storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 import {
 	isDirectiveTopic,
 	MAX_STATEMENT_CHARS,
 	writeDirectives
-} from '$lib/server/ai-chat/directives';
-import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
+} from '#lib/server/ai-chat/directives.ts';
+import { refreshPayFitQuietly } from '#lib/server/salary/pay-fit-store.ts';
 
 /** A file's `match_config.places`, held to what the settings page could have saved. */
 const PLACES = z.array(preferredPlaceSchema).max(20);

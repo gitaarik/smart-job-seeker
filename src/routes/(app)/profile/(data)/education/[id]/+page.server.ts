@@ -1,9 +1,9 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { education } from '$lib/server/db/schema';
-import { getEducationBannerUrl, getEducationLogoUrl } from '$lib/utils/entity-media-url';
+import { education } from '#lib/server/db/schema.ts';
+import { getEducationBannerUrl, getEducationLogoUrl } from '#lib/utils/entity-media-url.ts';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();

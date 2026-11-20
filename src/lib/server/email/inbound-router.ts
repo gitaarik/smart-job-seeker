@@ -6,8 +6,8 @@
  * All emails are stored in the inbound_emails table for debugging/admin review.
  */
 
-import { db } from '$lib/server/db';
-import { inbound_emails } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { inbound_emails } from '#lib/server/db/schema.ts';
 import { extractTokenFromRecipient, processInboundEmail } from './verification-relay';
 
 export interface InboundEmail {

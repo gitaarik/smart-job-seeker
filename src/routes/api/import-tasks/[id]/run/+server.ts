@@ -1,22 +1,22 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, inArray } from 'drizzle-orm';
-import { search_task_run_items, search_task_runs, search_tasks } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { search_task_run_items, search_task_runs, search_tasks } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
 import {
 	addScrapeJob,
 	getActiveJobForSearch,
 	getWaitingJobForSearch,
 	removeActiveJob,
 	removeWaitingJob
-} from '$lib/server/queue';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { computeImportTaskBlockers, providerRequiresDevice } from '$lib/import-tasks/readiness';
-import { config } from '$lib/server/config';
-import { getDeviceById, getPreferredDevice } from '$lib/server/sjs-browser-status';
-import { checkDeviceRateBudget } from '$lib/server/device-rate-budget';
-import { checkDemoRunCap } from '$lib/server/demo/run-cap';
+} from '#lib/server/queue/index.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { computeImportTaskBlockers, providerRequiresDevice } from '#lib/import-tasks/readiness.ts';
+import { config } from '#lib/server/config.ts';
+import { getDeviceById, getPreferredDevice } from '#lib/server/sjs-browser-status.ts';
+import { checkDeviceRateBudget } from '#lib/server/device-rate-budget.ts';
+import { checkDemoRunCap } from '#lib/server/demo/run-cap.ts';
 
 /**
  * POST /api/import-tasks/[id]/run

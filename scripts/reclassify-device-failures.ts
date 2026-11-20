@@ -34,7 +34,7 @@
  *   npm run db:reclassify-device-failures -- --apply --with-messages
  */
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
+import { queryRawDirect } from '#lib/server/db/index.ts';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');

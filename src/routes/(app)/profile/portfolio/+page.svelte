@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { deserialize, enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowDown,
@@ -24,9 +24,9 @@
 	import ReorderableList from '../components/ReorderableList.svelte';
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { assetUrl } from '$lib/presentation-templates';
-	import MediaPicker from '$lib/components/media/MediaPicker.svelte';
-	import { THEME_MEDIA_SLOTS, type Crop, type ThemeMediaSlot } from '$lib/media-library';
+	import { assetUrl } from '#lib/presentation-templates.ts';
+	import MediaPicker from '#lib/components/media/MediaPicker.svelte';
+	import { THEME_MEDIA_SLOTS, type Crop, type ThemeMediaSlot } from '#lib/media-library.ts';
 	import {
 		ACHIEVEMENTS_PER_ROLE_OPTIONS,
 		BRIEF_ROLES_AFTER_YEARS_OPTIONS,
@@ -39,7 +39,7 @@
 		themeSections,
 		type PortfolioLayout,
 		type PortfolioSection
-	} from '$lib/portfolio-themes';
+	} from '#lib/portfolio-themes.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -163,7 +163,7 @@
 			);
 		}
 		if (result.type === 'error') throw new Error('Could not use that picture');
-		await invalidateAll();
+		await refreshAll();
 		const fresh = data.themes.find((t) => t.id === themeId);
 		if (fresh && editingId === themeId) seed(fresh);
 	}
@@ -411,7 +411,7 @@
 	<!-- Private link: the other way out, and it belongs where links live. -->
 	<p class="mb-6 text-sm text-[var(--dash-text-secondary)]">
 		Want to show it to one person instead of the world? Mint a
-		<a href={resolve('/profile/share')} class="text-[var(--dash-primary)] underline">share link</a>
+		<a href={resolve('profile/share')} class="text-[var(--dash-primary)] underline">share link</a>
 		with the format set to Portfolio — it renders the same theme behind a token. With a private CV page,
 		that link is also what opens the CV page.
 	</p>

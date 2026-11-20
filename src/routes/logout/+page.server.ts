@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { auth } from '$lib/server/auth/better-auth';
+import { auth } from '#lib/server/auth/better-auth.ts';
 
 export const load: PageServerLoad = async (event) => {
 	// Sign out the user

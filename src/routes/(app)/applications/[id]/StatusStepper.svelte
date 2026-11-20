@@ -3,8 +3,8 @@
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPencil, faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
-	import { OpenRows } from '$lib/components/open-rows';
-	import type { TimeFormat } from '$lib/format-date';
+	import { OpenRows } from '#lib/components/open-rows.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 	import {
 		formatRoundWhen,
 		roundState,
@@ -18,7 +18,7 @@
 		isFinishedStatus,
 		MAX_ROUNDS,
 		type InterviewRound
-	} from '$lib/application-status';
+	} from '#lib/application-status.ts';
 
 	let {
 		status,

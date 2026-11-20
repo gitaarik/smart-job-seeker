@@ -27,7 +27,7 @@
 
 import { createHash } from 'node:crypto';
 import { and, eq, isNotNull, lte, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	account_deletions,
 	api_keys,
@@ -46,10 +46,10 @@ import {
 	subscriptions,
 	user_feedback,
 	users
-} from '$lib/server/db/schema';
-import { cancelSubscriptionsForAccount } from '$lib/server/billing/subscription';
-import { deleteProfile } from '$lib/server/profile/delete';
-import { collectUserFileRefs, reapFileRefs } from '$lib/server/uploads/reap';
+} from '#lib/server/db/schema.ts';
+import { cancelSubscriptionsForAccount } from '#lib/server/billing/subscription.ts';
+import { deleteProfile } from '#lib/server/profile/delete.ts';
+import { collectUserFileRefs, reapFileRefs } from '#lib/server/uploads/reap.ts';
 
 /** Days between the request and the row actually going. See D2. */
 export const DELETION_GRACE_DAYS = 30;

@@ -56,14 +56,14 @@
  */
 
 import { createHash } from 'node:crypto';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { application_records } from '$lib/server/db/schema';
+import { application_records } from '#lib/server/db/schema.ts';
 import { createAndGenerateAiChat } from './utils';
 import { truncateKeepingEnds } from './application-activity';
-import { getRecordTypeLabel, LONG_ENTRY_CHARS } from '$lib/application-records';
-import { coerceEntryFacts, parseObject, type EntryFact } from '$lib/application-details';
-import { roundKindValues, type InterviewRound } from '$lib/application-status';
+import { getRecordTypeLabel, LONG_ENTRY_CHARS } from '#lib/application-records.ts';
+import { coerceEntryFacts, parseObject, type EntryFact } from '#lib/application-details.ts';
+import { roundKindValues, type InterviewRound } from '#lib/application-status.ts';
 
 /**
  * The digest contract's version, carried on every hash. Bump it when what a

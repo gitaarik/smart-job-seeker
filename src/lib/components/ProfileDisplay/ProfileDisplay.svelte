@@ -1,18 +1,18 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import { page } from '$app/state';
-	import { formatCertificateYears, formatDateRangeCompact } from '$lib/tools/date-utils';
+	import { formatCertificateYears, formatDateRangeCompact } from '#lib/tools/date-utils.ts';
 	import {
 		proficiencyLabel,
 		templateLabel,
 		type TemplateLabelKey
-	} from '$lib/resume-template-labels';
+	} from '#lib/resume-template-labels.ts';
 	import ContactItem from './ContactItem.svelte';
 	import { createProfileFilter } from './profile-filter';
-	import { isContactHidden } from '$lib/resume-contact-fields';
-	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
-	import { rolePlace } from '$lib/work-mode';
+	import { isContactHidden } from '#lib/resume-contact-fields.ts';
+	import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+	import { resumeDocumentDescription, resumeDocumentTitle } from '#lib/resume-head.ts';
+	import { rolePlace } from '#lib/work-mode.ts';
 
 	interface Profile {
 		name: string | null;

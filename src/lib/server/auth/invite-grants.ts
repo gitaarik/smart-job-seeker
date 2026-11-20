@@ -22,13 +22,13 @@
  * inviter rather than thrown.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, inArray } from 'drizzle-orm';
-import { api_keys, subscriptions } from '$lib/server/db/schema';
-import { PLAN_LIMITS, type PlanId } from '$lib/server/billing/plans';
-import { ensureAcceptedContact } from '$lib/server/contacts';
-import { insertDeviceShare } from '$lib/server/device-shares';
-import { createNotification } from '$lib/server/notifications';
+import { api_keys, subscriptions } from '#lib/server/db/schema.ts';
+import { PLAN_LIMITS, type PlanId } from '#lib/server/billing/plans.ts';
+import { ensureAcceptedContact } from '#lib/server/contacts.ts';
+import { insertDeviceShare } from '#lib/server/device-shares.ts';
+import { createNotification } from '#lib/server/notifications.ts';
 import crypto from 'crypto';
 
 /** Subscription statuses that count as "the user already has a plan". */

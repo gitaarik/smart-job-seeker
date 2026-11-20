@@ -124,7 +124,7 @@ async function parseWithLLM(
 ): Promise<ParsedVerification | null> {
 	try {
 		// Lazy import to avoid circular dependencies and keep the module light
-		const { generateChatCompletionCharged } = await import('$lib/server/llm/charged');
+		const { generateChatCompletionCharged } = await import('#lib/server/llm/charged.ts');
 
 		// Build a clean text representation (prefer plain text, fall back to stripped HTML)
 		let emailContent = bodyText;

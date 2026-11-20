@@ -13,7 +13,7 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			search_tasks: {
@@ -32,7 +32,7 @@ vi.mock('drizzle-orm', () => ({
 	and: vi.fn((...args: unknown[]) => args)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	search_tasks: {
 		id: 'search_tasks.id',
 		profile_id: 'search_tasks.profile_id'

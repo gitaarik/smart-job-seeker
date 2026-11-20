@@ -20,7 +20,7 @@
  *     npx tsx scripts/verify-direct-log.ts <profileId>
  */
 import { and, eq, gte, inArray } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import {
 	agent_conversations,
 	agent_message_proposals,
@@ -32,11 +32,11 @@ import {
 	jobs,
 	notifications,
 	profiles
-} from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
-import { logReportedEvents } from '$lib/server/ai-chat/direct-log';
-import { readEditLog } from '$lib/server/ai-chat/edit-log';
-import { recentDirectWrites } from '$lib/server/mcp/burst';
+} from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
+import { logReportedEvents } from '#lib/server/ai-chat/direct-log.ts';
+import { readEditLog } from '#lib/server/ai-chat/edit-log.ts';
+import { recentDirectWrites } from '#lib/server/mcp/burst.ts';
 import { POST as undoProposal } from '../src/routes/api/ai/agent/proposals/[id]/undo/+server';
 import { GET as readConversation } from '../src/routes/api/ai/agent/conversations/[id]/+server';
 

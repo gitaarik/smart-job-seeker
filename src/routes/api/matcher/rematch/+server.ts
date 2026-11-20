@@ -8,10 +8,10 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db, queryRaw } from '$lib/server/db';
+import { dbDirect as db, queryRaw } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { profiles } from '#lib/server/db/schema.ts';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;

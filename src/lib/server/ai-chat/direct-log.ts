@@ -16,11 +16,15 @@
  * with no mail shape got through `framing()` alone.
  */
 import { and, eq, isNotNull, max, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { agent_message_proposals, agent_messages, capability_edits } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
-import { recentDirectWrites } from '$lib/server/mcp/burst';
-import { DIRECT_WRITE_BURST } from '$lib/server/mcp/tiers';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import {
+	agent_message_proposals,
+	agent_messages,
+	capability_edits
+} from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
+import { recentDirectWrites } from '#lib/server/mcp/burst.ts';
+import { DIRECT_WRITE_BURST } from '#lib/server/mcp/tiers.ts';
 import { type CapabilityActor, executeCapability } from './capabilities';
 import { chatDisposition, type DirectWriteRule } from './direct-writes';
 

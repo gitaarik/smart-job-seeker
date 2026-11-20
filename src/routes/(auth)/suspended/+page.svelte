@@ -41,7 +41,7 @@
 		{/if}
 
 		<a
-			href={resolve('/logout')}
+			href={resolve('logout')}
 			class="inline-block text-sm font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 			>Sign out</a
 		>

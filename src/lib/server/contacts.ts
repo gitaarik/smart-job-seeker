@@ -2,10 +2,10 @@
  * Contacts service — manage user-to-user contact relationships
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, inArray, or } from 'drizzle-orm';
-import { contacts, users } from '$lib/server/db/schema';
-import { createNotification } from '$lib/server/notifications';
+import { contacts, users } from '#lib/server/db/schema.ts';
+import { createNotification } from '#lib/server/notifications.ts';
 
 export type ContactStatus = 'pending' | 'accepted' | 'declined';
 
@@ -243,7 +243,7 @@ export async function removeContact(contactId: number, userId: string): Promise<
 	});
 	if (!contact) return false;
 
-	const { revokeAllSharesBetweenContacts } = await import('$lib/server/credential-shares');
+	const { revokeAllSharesBetweenContacts } = await import('#lib/server/credential-shares.ts');
 	await revokeAllSharesBetweenContacts(contact.requester_id, contact.recipient_id);
 
 	const result = await db

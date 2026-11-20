@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 const h = vi.hoisted(() => ({ run: vi.fn() }));
-vi.mock('$lib/server/ai-chat/job-utils', () => ({ runProfileAiChat: h.run }));
+vi.mock('#lib/server/ai-chat/job-utils.ts', () => ({ runProfileAiChat: h.run }));
 
 import { achievementFromAnswer, proposeFromCode, toFirstPerson } from './project-proposals';
 

@@ -7,7 +7,7 @@
  * switcher and a CV template off the public site.
  */
 
-import type { PortfolioTheme, PortfolioThemeConfig } from '$lib/portfolio-themes';
+import type { PortfolioTheme, PortfolioThemeConfig } from '#lib/portfolio-themes.ts';
 import {
 	loadTemplateOfKind,
 	loadTemplateOfKindById,

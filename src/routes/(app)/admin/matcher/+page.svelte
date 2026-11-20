@@ -5,7 +5,7 @@
 	import { faChartBar, faCircle } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import Card from '../../components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	interface MatcherState {
 		active: boolean;

@@ -18,9 +18,9 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { applications, project_stories } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { applications, project_stories } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import { type ContentUnit, poolKey, semanticScoreUnits } from './content-embeddings';
 import type { RankerKind, RetrievalItem, RetrievedBlock } from './retrieval-record';
 

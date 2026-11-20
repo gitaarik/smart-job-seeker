@@ -1,5 +1,5 @@
-import { getWindowVariable } from '$lib/tools/window';
-import { browser } from '$app/environment';
+import { getWindowVariable } from '#lib/tools/window.ts';
+import { browser } from '$app/env';
 import { SvelteDate } from 'svelte/reactivity';
 
 type ThemePreference = 'light' | 'dark' | 'auto';

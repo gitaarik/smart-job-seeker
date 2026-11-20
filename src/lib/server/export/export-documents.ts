@@ -13,9 +13,9 @@
  * that same order, which makes the index a stable join key.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { profile_document_files, profile_document_projects } from '$lib/server/db/schema';
+import { profile_document_files, profile_document_projects } from '#lib/server/db/schema.ts';
 import type { DocumentFilePayload, ExportedDocument, ExportedDocumentFile } from './types';
 
 /**

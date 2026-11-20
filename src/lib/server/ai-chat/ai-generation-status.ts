@@ -15,9 +15,9 @@
  * generate/followup logic.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq, lt } from 'drizzle-orm';
-import { ai_generations } from '$lib/server/db/schema';
+import { ai_generations } from '#lib/server/db/schema.ts';
 
 /** Entities that run tracked generations. Plain strings in the DB. */
 export type GenerationEntity = 'story' | 'letter' | 'question' | 'cheatsheet';

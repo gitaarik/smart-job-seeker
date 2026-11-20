@@ -1,4 +1,4 @@
-import type { EmployedPeriod, FreelanceUnit } from '$lib/salary/settings';
+import type { EmployedPeriod, FreelanceUnit } from '#lib/salary/settings.ts';
 
 /** The currencies offered for an ask. A stored one outside the list is added back by `currencyOptions`. */
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'CAD'];

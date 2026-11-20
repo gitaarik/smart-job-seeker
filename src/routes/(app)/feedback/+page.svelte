@@ -100,8 +100,8 @@
 			}
 			replyText = '';
 			// Reload the page data to show the new reply
-			const { invalidateAll } = await import('$app/navigation');
-			await invalidateAll();
+			const { refreshAll } = await import('$app/navigation');
+			await refreshAll();
 		} catch {
 			replyError = 'Failed to send. Please try again.';
 		} finally {

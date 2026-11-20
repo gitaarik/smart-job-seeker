@@ -2,9 +2,9 @@
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { track } from '$lib/tools/analytics';
-	import { isSetupComplete } from '$lib/profile-completeness';
+	import { page } from '$app/state';
+	import { track } from '#lib/tools/analytics.ts';
+	import { isSetupComplete } from '#lib/profile-completeness.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowRight,
@@ -24,12 +24,12 @@
 		getStatusLabel,
 		nextStep,
 		stageLabel
-	} from '$lib/application-status';
-	import { daysQuiet, isFollowUpDue } from '$lib/application-ranking';
+	} from '#lib/application-status.ts';
+	import { daysQuiet, isFollowUpDue } from '#lib/application-ranking.ts';
 
 	let { data }: { data: PageData } = $props();
 
-	let showCreatedBanner = $state($page.url.searchParams.get('created') === 'true');
+	let showCreatedBanner = $state(page.url.searchParams.get('created') === 'true');
 
 	// Track profile-creation as an activation event. onMount keeps this client-
 	// side only — the banner state is the trigger.
@@ -91,7 +91,7 @@
 				<p class="mt-1 text-sm text-green-700 dark:text-green-300">
 					You can review and add more details on the
 					<a
-						href={resolve('/profile/edit')}
+						href={resolve('profile/edit')}
 						class="font-medium underline hover:text-green-900 dark:hover:text-green-100"
 						>profile data page</a
 					>.
@@ -141,7 +141,7 @@
 			<div class="mb-3 flex items-center justify-between">
 				<h3 class="text-base font-semibold text-[var(--dash-text)]">Active Applications</h3>
 				<a
-					href="{resolve('/applications/active')}?group=active"
+					href="{resolve('applications/active')}?group=active"
 					class="flex items-center gap-1 text-sm text-[var(--dash-primary)] hover:underline"
 				>
 					View all
@@ -215,7 +215,7 @@
 			<div class="mb-3 flex items-center justify-between">
 				<h3 class="text-base font-semibold text-[var(--dash-text)]">Top Matches</h3>
 				<a
-					href="{resolve('/jobs')}?sort=top"
+					href="{resolve('jobs')}?sort=top"
 					class="flex items-center gap-1 text-sm text-[var(--dash-primary)] hover:underline"
 				>
 					View all

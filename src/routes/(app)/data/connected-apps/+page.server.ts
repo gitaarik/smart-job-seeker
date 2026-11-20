@@ -19,7 +19,7 @@ import {
 	isMcpScope,
 	listMcpKeys,
 	revokeMcpKey
-} from '$lib/server/mcp/keys';
+} from '#lib/server/mcp/keys.ts';
 
 export const load: PageServerLoad = async ({ parent, locals, depends }) => {
 	// What the page re-runs while a new key waits for its app; see `awaiting`.

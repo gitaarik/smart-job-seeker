@@ -29,12 +29,12 @@
 		hasDetails,
 		type BriefEntry
 	} from './brief-entries';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import { themeSections, type PortfolioTheme } from '$lib/portfolio-themes';
-	import { assetUrl } from '$lib/presentation-templates';
-	import { formatDateRangeVerbose } from '$lib/tools/date-utils';
-	import { rolePlace } from '$lib/work-mode';
-	import type { PortfolioSeoUrls } from '$lib/portfolio-seo';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
+	import { themeSections, type PortfolioTheme } from '#lib/portfolio-themes.ts';
+	import { assetUrl } from '#lib/presentation-templates.ts';
+	import { formatDateRangeVerbose } from '#lib/tools/date-utils.ts';
+	import { rolePlace } from '#lib/work-mode.ts';
+	import type { PortfolioSeoUrls } from '#lib/portfolio-seo.ts';
 	import PortfolioSeo from './PortfolioSeo.svelte';
 
 	interface Props {

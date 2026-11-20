@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
@@ -12,7 +12,7 @@
 		faStream
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { Snippet } from 'svelte';
-	import { getStepperPhase } from '$lib/application-status';
+	import { getStepperPhase } from '#lib/application-status.ts';
 	import TabNav from '../../components/TabNav.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -71,7 +71,7 @@
 	]);
 
 	function isTabActive(href: string): boolean {
-		const currentPath = $page.url.pathname;
+		const currentPath = page.url.pathname;
 		if (href === basePath) {
 			return currentPath === basePath;
 		}
@@ -91,7 +91,7 @@
 		<!-- Back link + title -->
 		<div class="mb-4">
 			<a
-				href={resolve('/applications/active')}
+				href={resolve('applications/active')}
 				class="inline-flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 			>
 				<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

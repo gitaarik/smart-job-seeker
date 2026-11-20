@@ -37,9 +37,9 @@ import {
 	wordingText,
 	type FieldVariant,
 	type WordingPickRow
-} from '$lib/field-variants';
+} from '#lib/field-variants.ts';
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {},
 	dbDirect: {}
 }));
@@ -47,7 +47,7 @@ vi.mock('$lib/server/db', () => ({
 // The run's choice is tested with the word-overlap ranker: it is deterministic,
 // and what is under test is which wording is compared with which, not how well
 // an embedding tells two titles apart.
-vi.mock('$lib/server/documents/content-embeddings', () => ({
+vi.mock('#lib/server/documents/content-embeddings.ts', () => ({
 	semanticScoreUnits: vi.fn(async () => null),
 	poolKey: (type: string, id: number) => `${type}:${id}`
 }));

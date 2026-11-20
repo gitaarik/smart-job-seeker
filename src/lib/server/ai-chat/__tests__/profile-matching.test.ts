@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 let rowsByResource: Record<string, { id: number; [key: string]: unknown }[]> = {};
 const readRows = vi.fn();
 
-vi.mock('$lib/server/profile/write', () => ({
+vi.mock('#lib/server/profile/write.ts', () => ({
 	readOwnedRows: (name: string, actor: { profileId: number }) => {
 		readRows(name, actor);
 		return Promise.resolve(rowsByResource[name] ?? []);
@@ -70,7 +70,7 @@ describe('the declared vocabulary', () => {
 		// says it — and the second is always the wrong one. The failure is silent
 		// and it is paid per turn, so it is worth asserting rather than reviewing.
 		const { PROFILE_RESOURCE_NAMES, PROFILE_RESOURCES } =
-			await import('$lib/server/profile/resources');
+			await import('#lib/server/profile/resources.ts');
 
 		// A section naming itself twice is fine and common — "Work experience" is
 		// both the title and the label. What must not happen is two sections.

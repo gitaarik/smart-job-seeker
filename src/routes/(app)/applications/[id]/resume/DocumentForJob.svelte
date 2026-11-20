@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -29,22 +29,22 @@
 	import ItemPicker from './ItemPicker.svelte';
 	import TailoredActions from './TailoredActions.svelte';
 	import AnonymousSwitch from './AnonymousSwitch.svelte';
-	import type { LeakHit } from '$lib/resume-anonymity';
+	import type { LeakHit } from '#lib/resume-anonymity.ts';
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
-	import type { ItemGroup } from '$lib/tailoring';
-	import type { WordingState } from '$lib/field-variants';
-	import { exportKey, profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
+	import type { ItemGroup } from '#lib/tailoring.ts';
+	import type { WordingState } from '#lib/field-variants.ts';
+	import { exportKey, profileDocUrl, type DocType } from '#lib/utils/profile-doc-url.ts';
 	import {
 		hiddenSkillsKey,
 		recommendBase,
 		type BaseChoice,
 		type HiddenSkill,
 		type VersionCoverage
-	} from '$lib/version-coverage';
-	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-	import { DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
-	import { BASE_LOCALE } from '$lib/resume-translations';
+	} from '#lib/version-coverage.ts';
+	import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+	import { DEFAULT_TEMPLATE_ID } from '#lib/resume-templates.ts';
+	import { BASE_LOCALE } from '#lib/resume-translations.ts';
 
 	/**
 	 * The document going out for this job — built for it, checked, and recorded.
@@ -603,7 +603,7 @@
 			if (!res.ok) throw new Error(body?.error || "Couldn't update the skill.");
 			lifted = [...lifted, skill.id];
 			// Recompute the strip against the new tags.
-			await invalidateAll();
+			await refreshAll();
 		} catch (e) {
 			liftError = e instanceof Error ? e.message : "Couldn't update the skill.";
 		} finally {

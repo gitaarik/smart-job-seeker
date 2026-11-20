@@ -17,7 +17,7 @@ const mockFrom = vi.fn().mockReturnValue({
 });
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: (...args: unknown[]) => mockSelect(...args)
 	}
@@ -27,7 +27,7 @@ vi.mock('drizzle-orm', () => ({
 	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	tech_skills: {
 		name: 'tech_skills.name',
 		level: 'tech_skills.level',

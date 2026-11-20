@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { PLATFORM_STATUSES, PLATFORM_TYPES, withCurrent } from '$lib/job-platforms/taxonomy';
+	import { PLATFORM_STATUSES, PLATFORM_TYPES, withCurrent } from '#lib/job-platforms/taxonomy.ts';
 	import {
 		markableUnsupportedValues,
 		SEARCH_FILTER_DEFINITIONS,
 		SOURCE_APPLIED_FILTER_NAMES,
 		type SearchFilterName
-	} from '$lib/job-platforms/search-filters';
-	import { invalidateAll } from '$app/navigation';
+	} from '#lib/job-platforms/search-filters.ts';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
@@ -99,7 +99,7 @@
 <div class="space-y-6">
 	<div class="flex items-center gap-3">
 		<a
-			href={resolve('/admin/job-platforms')}
+			href={resolve('admin/job-platforms')}
 			class="text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
@@ -442,7 +442,7 @@
 							use:enhance={() => {
 								return async ({ result, update }) => {
 									await update();
-									if (result.type === 'success') await invalidateAll();
+									if (result.type === 'success') await refreshAll();
 								};
 							}}
 						>
@@ -472,7 +472,7 @@
 					}
 					return async ({ result, update }) => {
 						await update();
-						if (result.type === 'success') await invalidateAll();
+						if (result.type === 'success') await refreshAll();
 					};
 				}}
 			>
@@ -493,7 +493,7 @@
 			use:enhance={() => {
 				return async ({ result, update }) => {
 					await update();
-					if (result.type === 'success') await invalidateAll();
+					if (result.type === 'success') await refreshAll();
 				};
 			}}
 		>

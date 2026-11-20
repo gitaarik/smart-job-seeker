@@ -6,42 +6,42 @@
  * scripted model and this with the route.
  */
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	agent_conversations,
 	agent_message_proposals,
 	agent_messages,
 	ai_chats
-} from '$lib/server/db/schema';
-import { generateChatCompletionTracked } from '$lib/server/llm';
+} from '#lib/server/db/schema.ts';
+import { generateChatCompletionTracked } from '#lib/server/llm/index.ts';
 import {
 	CAPABILITIES,
 	type Capability,
 	describeProposalChanges,
 	type LiveCapability,
 	type ProposedChange
-} from '$lib/server/ai-chat/capabilities';
-import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
-import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
-import { type DirectLogOutcome, logReportedEvents } from '$lib/server/ai-chat/direct-log';
+} from '#lib/server/ai-chat/capabilities.ts';
+import type { CapabilityRecord } from '#lib/server/ai-chat/capability-record.ts';
+import { resolveChatContext } from '#lib/server/ai-chat/chat-context.ts';
+import { type DirectLogOutcome, logReportedEvents } from '#lib/server/ai-chat/direct-log.ts';
 import {
 	AGENT_MANIFEST_BUDGET_CHARS,
 	MANIFEST_BUDGET_CHARS
-} from '$lib/server/ai-chat/activity-manifest';
-import { DEFAULT_BUDGET_CHARS } from '$lib/server/ai-chat/generation-context';
-import type { ContextEntity } from '$lib/server/ai-chat/generation-context';
-import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
-import { summarizeProposal } from '$lib/server/ai-chat/proposal-summary';
-import { type PromptTemplate, promptTemplates } from '$lib/server/ai-chat/prompt-templates';
-import { promptVariables } from '$lib/server/ai-chat/render-prompt';
+} from '#lib/server/ai-chat/activity-manifest.ts';
+import { DEFAULT_BUDGET_CHARS } from '#lib/server/ai-chat/generation-context.ts';
+import type { ContextEntity } from '#lib/server/ai-chat/generation-context.ts';
+import { ASSISTANT_PROFILE_FIELDS } from '#lib/server/ai-chat/profile-fields.ts';
+import { summarizeProposal } from '#lib/server/ai-chat/proposal-summary.ts';
+import { type PromptTemplate, promptTemplates } from '#lib/server/ai-chat/prompt-templates.ts';
+import { promptVariables } from '#lib/server/ai-chat/render-prompt.ts';
 import {
 	type AssembledGeneration,
 	assembleGeneration,
 	recordCall
-} from '$lib/server/ai-chat/utils';
-import type { ReadRecord, RetrievalRecord } from '$lib/server/documents/retrieval-record';
-import { scoreGeneration } from '$lib/server/monitoring/product-scores';
-import { traceStep } from '$lib/server/monitoring/telemetry';
+} from '#lib/server/ai-chat/utils.ts';
+import type { ReadRecord, RetrievalRecord } from '#lib/server/documents/retrieval-record.ts';
+import { scoreGeneration } from '#lib/server/monitoring/product-scores.ts';
+import { traceStep } from '#lib/server/monitoring/telemetry.ts';
 import { TurnExecutor } from './executor';
 import type { TurnEvent } from './events';
 import {

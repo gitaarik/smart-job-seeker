@@ -20,10 +20,10 @@
  * every consumer here compares.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { match_config } from '$lib/server/db/schema';
-import type { PreferredPlace } from '$lib/data/places';
+import { match_config } from '#lib/server/db/schema.ts';
+import type { PreferredPlace } from '#lib/data/places.ts';
 
 export const JOB_TYPE_OPTIONS = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
 

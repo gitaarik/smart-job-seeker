@@ -7,10 +7,14 @@
  * `<select>` shows, not what a page renders.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { side_projects, work_experiences, work_experience_projects } from '$lib/server/db/schema';
-import type { ProjectKind } from '$lib/server/documents/project-corpus';
+import {
+	side_projects,
+	work_experiences,
+	work_experience_projects
+} from '#lib/server/db/schema.ts';
+import type { ProjectKind } from '#lib/server/documents/project-corpus.ts';
 
 export interface ProjectTarget {
 	kind: ProjectKind;

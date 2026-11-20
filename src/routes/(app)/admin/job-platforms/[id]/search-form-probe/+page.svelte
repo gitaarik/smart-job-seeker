@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
@@ -17,7 +17,7 @@
 		faTimes,
 		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import CredentialSelector from '../../../../jobs/components/CredentialSelector.svelte';
 	import SearchFormProbeRunCard from '../../components/SearchFormProbeRunCard.svelte';
 	import BrowserViewModal from '../../components/BrowserViewModal.svelte';
@@ -99,7 +99,7 @@
 				clearInterval(featuredPollTimer);
 				featuredPollTimer = null;
 				// Reload the runs list so the history reflects the new terminal state.
-				invalidateAll();
+				refreshAll();
 			}
 		} catch {
 			// Retry next tick.
@@ -142,7 +142,7 @@
 			featuredRun = json.run;
 			// Auto-expand the new run in the history.
 			expandedRunIds.add(json.run.id);
-			await invalidateAll();
+			await refreshAll();
 			startFeaturedPolling();
 		} finally {
 			starting = false;

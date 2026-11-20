@@ -28,21 +28,21 @@
  * See planning/SEMANTIC-MATCHING-AND-RAG.md and APPLICATION-ACTIVITY.md.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq, inArray, max } from 'drizzle-orm';
 import {
 	application_records,
 	application_status_log,
 	applications,
 	job_matches
-} from '$lib/server/db/schema';
-import { getFxRates } from '$lib/server/salary/fx';
+} from '#lib/server/db/schema.ts';
+import { getFxRates } from '#lib/server/salary/fx.ts';
 import {
 	convertCurrency,
 	hourlyToRate,
 	normalizeSalaryPeriod,
 	rateToHourly
-} from '$lib/salary/conversion';
+} from '#lib/salary/conversion.ts';
 import {
 	finishedStatuses,
 	getStatusLabel,
@@ -50,12 +50,12 @@ import {
 	nextStep,
 	stageLabel,
 	type NextStep
-} from '$lib/application-status';
-import { today } from '$lib/application-records';
-import { isSnoozed } from '$lib/application-snooze';
-import { recommendationOf, type Recommendation } from '$lib/match-recommendation';
+} from '#lib/application-status.ts';
+import { today } from '#lib/application-records.ts';
+import { isSnoozed } from '#lib/application-snooze.ts';
+import { recommendationOf, type Recommendation } from '#lib/match-recommendation.ts';
 import type { OfferTerms } from './application-summary';
-import type { StoredDetail } from '$lib/application-details';
+import type { StoredDetail } from '#lib/application-details.ts';
 
 /**
  * Cap on applications rendered. Set well above a realistic open pipeline so it

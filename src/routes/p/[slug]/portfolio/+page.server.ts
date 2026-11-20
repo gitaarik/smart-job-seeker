@@ -20,30 +20,30 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
 import {
 	checkProfileAccess,
 	getVersionIdBySlug,
 	type AccessControlResult
-} from '$lib/server/profile/access-control';
-import { incrementTokenVisit, touchTokenVisit } from '$lib/server/auth/token-validation';
+} from '#lib/server/profile/access-control.ts';
+import { incrementTokenVisit, touchTokenVisit } from '#lib/server/auth/token-validation.ts';
 import {
 	getPortfolioThemeById,
 	getPortfolioTheme,
 	getPortfolioThemesForProfile
-} from '$lib/server/profile/portfolio-themes';
-import { isKnownLocale } from '$lib/resume-translations';
-import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
-import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
-import { pageProfile } from '$lib/server/profile/page-profile';
-import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
-import { gatesContact, withoutContact } from '$lib/server/profile/portfolio-contact';
-import { portfolioBusiness } from '$lib/server/profile/portfolio-business';
-import { givePortfolioKey, readPortfolioKey } from '$lib/server/profile/portfolio-key';
-import { homePageProfile, portfolioHrefs } from '$lib/server/profile/portfolio-pages';
-import { hasPrivateCv, type PortfolioPage } from '$lib/portfolio-themes';
-import { portfolioSeoUrls } from '$lib/portfolio-seo';
-import { getBaseUrl } from '$lib/server/utils/export-url-builder';
+} from '#lib/server/profile/portfolio-themes.ts';
+import { isKnownLocale } from '#lib/resume-translations.ts';
+import { applyTranslations, loadTranslator } from '#lib/server/profile/translations.ts';
+import { applyFieldVariants, loadFieldVariants } from '#lib/server/profile/field-variants.ts';
+import { pageProfile } from '#lib/server/profile/page-profile.ts';
+import { applySkillWords, loadDocumentSkillWords } from '#lib/server/profile/skill-words.ts';
+import { gatesContact, withoutContact } from '#lib/server/profile/portfolio-contact.ts';
+import { portfolioBusiness } from '#lib/server/profile/portfolio-business.ts';
+import { givePortfolioKey, readPortfolioKey } from '#lib/server/profile/portfolio-key.ts';
+import { homePageProfile, portfolioHrefs } from '#lib/server/profile/portfolio-pages.ts';
+import { hasPrivateCv, type PortfolioPage } from '#lib/portfolio-themes.ts';
+import { portfolioSeoUrls } from '#lib/portfolio-seo.ts';
+import { getBaseUrl } from '#lib/server/utils/export-url-builder.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
@@ -52,7 +52,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 
 	const profile = await getProfileByIdentifier(slug);
 	if (!profile) {
-		throw error(404, { message: `Profile not found: ${slug}` });
+		throw error(404, `Profile not found: ${slug}`);
 	}
 
 	let accessResult: AccessControlResult = await checkProfileAccess({
@@ -72,7 +72,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 		// a site that is not published yet is open to whoever holds its key, as
 		// it is to whoever holds the link.
 		if (token || !key) {
-			throw error(accessResult.statusCode, { message: accessResult.message });
+			throw error(accessResult.statusCode, accessResult.message);
 		}
 		accessResult = {
 			allowed: true,
@@ -127,11 +127,12 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 	// foreign key), which is exactly why this is checked here rather than
 	// trusted from the access-control column alone.
 	if (!theme || !versionId) {
-		throw error(404, {
-			message: owner
+		throw error(
+			404,
+			owner
 				? 'This portfolio is not published yet. Publish a theme from Profile → Portfolio Site.'
 				: 'Not found'
-		});
+		);
 	}
 
 	// The same three overlays the documents apply, in the same order — see

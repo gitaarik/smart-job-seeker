@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
 import {
 	api_keys,
@@ -8,15 +8,15 @@ import {
 	platform_profiles,
 	search_tasks,
 	users
-} from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { parseBody, searchTaskUpdateSchema } from '$lib/server/validation/api-schemas';
-import { hasDeviceAccess } from '$lib/server/device-shares';
-import { hasCredentialAccess } from '$lib/server/credential-shares';
-import { checkPublicHttpUrl } from '$lib/server/net/public-url';
-import { config } from '$lib/server/config';
-import type { PreferredPlace } from '$lib/data/places';
-import { nextSlotAtHour } from '$lib/server/utils/zoned-hour';
+} from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { parseBody, searchTaskUpdateSchema } from '#lib/server/validation/api-schemas.ts';
+import { hasDeviceAccess } from '#lib/server/device-shares.ts';
+import { hasCredentialAccess } from '#lib/server/credential-shares.ts';
+import { checkPublicHttpUrl } from '#lib/server/net/public-url.ts';
+import { config } from '#lib/server/config.ts';
+import type { PreferredPlace } from '#lib/data/places.ts';
+import { nextSlotAtHour } from '#lib/server/utils/zoned-hour.ts';
 
 /**
  * PATCH /api/import-tasks/[id]

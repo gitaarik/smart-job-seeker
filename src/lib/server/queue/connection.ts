@@ -3,7 +3,7 @@
  */
 
 import type { ConnectionOptions } from 'bullmq';
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 
 export const redisConnection: ConnectionOptions = {
 	host: config.redisHost,

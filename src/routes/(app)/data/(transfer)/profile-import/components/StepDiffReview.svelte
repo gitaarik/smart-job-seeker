@@ -6,7 +6,7 @@
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faUser,
@@ -23,10 +23,10 @@
 		faChevronDown,
 		faChevronRight
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import type { ResumeData } from '$lib/server/resume/types';
-	import { diffResumeData, countEnabledChanges, type ResumeDataDiff } from '$lib/resume-diff';
-	import type { DiffApplyPayload } from '$lib/server/resume/apply-diff';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import type { ResumeData } from '#lib/server/resume/types.ts';
+	import { diffResumeData, countEnabledChanges, type ResumeDataDiff } from '#lib/resume-diff.ts';
+	import type { DiffApplyPayload } from '#lib/server/resume/apply-diff.ts';
 	import DiffSectionCard from './DiffSectionCard.svelte';
 	import DiffFieldRow from './DiffFieldRow.svelte';
 	import DiffItemRow from './DiffItemRow.svelte';
@@ -426,7 +426,7 @@
 
 	// Admin debug panel (also visible when impersonating another user)
 	const isAdmin = $derived(
-		($page.data.user as { is_admin?: boolean })?.is_admin || !!$page.data.adminUser
+		(page.data.user as { is_admin?: boolean })?.is_admin || !!page.data.adminUser
 	);
 	let debugOpen = $state(false);
 
@@ -1021,7 +1021,7 @@
 				onLoadingChange(false);
 				if (result.type === 'redirect') {
 					// eslint-disable-next-line svelte/no-navigation-without-resolve
-					await goto(result.location, { invalidateAll: true });
+					await goto(result.location, { refreshAll: true });
 				} else {
 					await update();
 				}

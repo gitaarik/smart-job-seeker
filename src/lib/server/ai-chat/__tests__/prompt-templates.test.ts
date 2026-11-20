@@ -19,8 +19,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { detailCategoryValues } from '$lib/application-details';
-import { roundKindValues } from '$lib/application-status';
+import { detailCategoryValues } from '#lib/application-details.ts';
+import { roundKindValues } from '#lib/application-status.ts';
 import { promptFingerprint } from '../prompt-fingerprint';
 import { promptTemplates } from '../prompt-templates';
 import { promptVariables, renderPrompt } from '../render-prompt';

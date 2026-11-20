@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
+import { dbDirect as db, queryRaw, sql } from '#lib/server/db/index.ts';
 import { eq, and, inArray, isNull, lte, or, desc } from 'drizzle-orm';
 import {
 	match_config,
@@ -8,17 +8,17 @@ import {
 	search_tasks,
 	job_matches,
 	applications
-} from '$lib/server/db/schema';
-import { activeStatuses } from '$lib/application-status';
-import { sortApplications } from '$lib/application-ranking';
-import { attachLastActivity } from '$lib/server/applications/activity';
-import { today } from '$lib/application-records';
-import { getMatchCounts } from '$lib/server/job/match-counts';
-import { getProfileSkillLevels } from '$lib/server/job/match-utils';
-import { saveJob, unsaveJob, rejectJob, unrejectJob } from '$lib/server/job/job-actions';
+} from '#lib/server/db/schema.ts';
+import { activeStatuses } from '#lib/application-status.ts';
+import { sortApplications } from '#lib/application-ranking.ts';
+import { attachLastActivity } from '#lib/server/applications/activity.ts';
+import { today } from '#lib/application-records.ts';
+import { getMatchCounts } from '#lib/server/job/match-counts.ts';
+import { getProfileSkillLevels } from '#lib/server/job/match-utils.ts';
+import { saveJob, unsaveJob, rejectJob, unrejectJob } from '#lib/server/job/job-actions.ts';
 import { getSelectedProfileId } from '../profile/utils';
-import { payFilterSql } from '$lib/server/salary/pay-fit-store';
-import { payBadge } from '$lib/salary/pay-fit';
+import { payFilterSql } from '#lib/server/salary/pay-fit-store.ts';
+import { payBadge } from '#lib/salary/pay-fit.ts';
 
 // Top Matches ranking: the stored jm.score is pure relevance and ignores how
 // old a posting is, so without a decay a 90-day-old job outranks a fresher,

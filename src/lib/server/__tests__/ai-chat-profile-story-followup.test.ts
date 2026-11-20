@@ -11,7 +11,7 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			project_stories: { findFirst: vi.fn() },
@@ -21,13 +21,13 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/ai-chat/create-followup', () => ({
+vi.mock('#lib/server/ai-chat/create-followup.ts', () => ({
 	createFollowupAiChat: vi.fn()
 }));
 
 // Shared version engine is covered by entity-versions.test.ts; stub the pieces
 // the updateEntity callback touches so they're no-ops here.
-vi.mock('$lib/server/ai-chat/entity-versions', () => ({
+vi.mock('#lib/server/ai-chat/entity-versions.ts', () => ({
 	STORY_VERSIONS: { fkName: 'story' },
 	recordVersion: vi.fn().mockResolvedValue(undefined),
 	ensureBaselineVersion: vi.fn().mockResolvedValue(undefined)
@@ -40,7 +40,7 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn()
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	project_stories: {
 		id: 'project_stories.id',
 		ai_chat_id: 'project_stories.ai_chat_id'
@@ -54,8 +54,8 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-import { db } from '$lib/server/db';
-import { createFollowupAiChat } from '$lib/server/ai-chat/create-followup';
+import { db } from '#lib/server/db/index.ts';
+import { createFollowupAiChat } from '#lib/server/ai-chat/create-followup.ts';
 import { createProfileStoryFollowup } from '../ai-chat/profile-story-followup';
 import { findFirst, findMany } from './db-mocks';
 

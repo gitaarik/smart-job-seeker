@@ -14,7 +14,7 @@ import {
 	checkDeviceRateBudget,
 	DEVICE_MAX_RUNS_PER_DAY,
 	SHAREE_MAX_RUNS_PER_DAY
-} from '$lib/server/device-rate-budget';
+} from '#lib/server/device-rate-budget.ts';
 
 // db.select(...).from(...).innerJoin(...)[.innerJoin(...)].where(...)[.orderBy(...)]
 // resolves to the next queued result array. One queued entry is consumed per
@@ -32,7 +32,7 @@ function makeChain() {
 	return chain;
 }
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		select: () => {
 			selectCallCount++;
@@ -48,7 +48,7 @@ vi.mock('drizzle-orm', () => ({
 	gt: vi.fn(() => ({}))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
 	search_task_runs: {
 		id: 'str.id',

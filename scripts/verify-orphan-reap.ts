@@ -4,7 +4,7 @@
  *
  * `files` has no owner column. Reachability is the only ownership signal it
  * has, and it is not exclusive — two records may point at one blob — so every
- * deletion in `$lib/server/uploads/reap.ts` is guarded by "and nothing else
+ * deletion in `#lib/server/uploads/reap.ts` is guarded by "and nothing else
  * points at this". The unit tests cover what that SQL says. What they cannot
  * cover is whether Postgres agrees:
  *
@@ -28,20 +28,20 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { eq, inArray, sql } from 'drizzle-orm';
-import { db, queryRawDirect } from '$lib/server/db';
+import { db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	files,
 	profile_exports,
 	profiles,
 	presentation_template_assets,
 	presentation_templates
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	collectProfileFileRefs,
 	DEFAULT_ORPHAN_MIN_AGE_DAYS,
 	findOrphanedFiles,
 	reapFileRefs
-} from '$lib/server/uploads/reap';
+} from '#lib/server/uploads/reap.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {
@@ -284,7 +284,7 @@ async function cleanup() {
 	// the later cases only ever read. A failed run must leave nothing behind
 	// either, so this is unconditional and the checks below read the state it
 	// leaves, not the state it found.
-	const { deleteUpload } = await import('$lib/server/uploads');
+	const { deleteUpload } = await import('#lib/server/uploads/index.ts');
 	for (const p of madePaths) {
 		if (await onDisk(p)) await deleteUpload(p);
 	}

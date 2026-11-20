@@ -1,6 +1,6 @@
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { profiles } from '#lib/server/db/schema.ts';
 
 /**
  * Bump the profile's `date_updated` so downstream consumers know the profile

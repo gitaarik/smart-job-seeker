@@ -1,27 +1,27 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <svelte:head>
-	<title>{$page.status} - Smart Job Seeker</title>
+	<title>{page.status} - Smart Job Seeker</title>
 </svelte:head>
 
 <main
 	class="flex min-h-screen flex-col items-center justify-center bg-[var(--dash-bg)] px-6 text-center text-[var(--dash-text)] transition-colors"
 >
 	<p class="text-6xl font-bold text-[var(--dash-text-muted)]">
-		{$page.status}
+		{page.status}
 	</p>
 
 	<p class="mt-4 text-lg text-[var(--dash-text-secondary)]">
-		{$page.error?.message || 'Something went wrong'}
+		{page.error?.message || 'Something went wrong'}
 	</p>
 
 	<a
-		href={$page.url.pathname.startsWith('/login') || $page.url.pathname.startsWith('/signup')
-			? resolve('/login')
-			: resolve('/home')}
+		href={page.url.pathname.startsWith('/login') || page.url.pathname.startsWith('/signup')
+			? resolve('login')
+			: resolve('home')}
 		class="mt-8 inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 	>
 		Go back

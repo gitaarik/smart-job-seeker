@@ -19,24 +19,24 @@
  * recognised as an asset stays in the config untouched.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq, inArray } from 'drizzle-orm';
 import {
 	files,
 	media_renditions,
 	presentation_template_assets,
 	presentation_templates
-} from '$lib/server/db/schema';
-import { uploadFile } from '$lib/server/files';
-import { stripImageMetadata } from '$lib/server/uploads/public-image';
+} from '#lib/server/db/schema.ts';
+import { uploadFile } from '#lib/server/files.ts';
+import { stripImageMetadata } from '#lib/server/uploads/public-image.ts';
 import type { ExportedResumeTemplate } from './types';
 import { templateKey } from './import-media-library';
 import {
 	LEGACY_TEMPLATE_SECTIONS,
 	withSections,
 	type ResumeTemplateConfig
-} from '$lib/resume-templates';
-import { DEFAULT_TEMPLATE_KIND, isTemplateKind } from '$lib/presentation-templates';
+} from '#lib/resume-templates.ts';
+import { DEFAULT_TEMPLATE_KIND, isTemplateKind } from '#lib/presentation-templates.ts';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

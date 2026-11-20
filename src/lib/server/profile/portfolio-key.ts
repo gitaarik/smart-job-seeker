@@ -22,7 +22,7 @@
  */
 
 import type { Cookies } from '@sveltejs/kit';
-import { validateToken } from '$lib/server/auth/token-validation';
+import { validateToken } from '#lib/server/auth/token-validation.ts';
 
 /** The longest a key lasts without the link being opened again: half a year. */
 const KEY_MAX_AGE_SECONDS = 60 * 60 * 24 * 182;

@@ -45,7 +45,7 @@ const tx = {
 	})
 };
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {},
 	dbDirect: {
 		select: () => ({

@@ -6,7 +6,7 @@
  */
 
 import * as Sentry from '@sentry/sveltekit';
-import { isFrameworkClientError } from '$lib/monitoring/sentry-filters';
+import { isFrameworkClientError } from '#lib/monitoring/sentry-filters.ts';
 
 /** Also names the environment in Langfuse, so both tools file a box alike. */
 export function getEnvironmentName(): string {

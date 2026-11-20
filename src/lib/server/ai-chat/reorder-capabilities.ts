@@ -38,9 +38,9 @@ import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
-import { readOwnedRows, reorderRows } from '$lib/server/profile/write';
-import type { OrderGroup } from '$lib/utils/change-analysis';
+} from '#lib/server/profile/resources.ts';
+import { readOwnedRows, reorderRows } from '#lib/server/profile/write.ts';
+import type { OrderGroup } from '#lib/utils/change-analysis.ts';
 import type { CapabilityDef, ProposedChange } from './capabilities';
 
 export type ReorderCapability = `reorder_${ProfileResourceName}`;

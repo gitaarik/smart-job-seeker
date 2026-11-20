@@ -12,7 +12,7 @@ let selectRows: Array<{ started_at: Date }> = [];
 const deleteWhere = vi.fn().mockResolvedValue(undefined);
 const insertOnConflict = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: () => ({
 			from: () => ({
@@ -34,7 +34,7 @@ vi.mock('drizzle-orm', () => ({
 	lt: (...a: unknown[]) => a
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	ai_generations: {
 		entity_type: 'ag.entity_type',
 		entity_id: 'ag.entity_id',

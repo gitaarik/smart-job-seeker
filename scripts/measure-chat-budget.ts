@@ -12,13 +12,13 @@
 import {
 	applicationPipelineText,
 	DEFAULT_PIPELINE_BUDGET_CHARS
-} from '$lib/server/ai-chat/application-pipeline';
-import { applicationActivityText } from '$lib/server/ai-chat/application-activity';
-import { jobDetailsText } from '$lib/server/ai-chat/job-context';
-import { CHAT_BUDGET_CHARS } from '$lib/server/ai-chat/chat-context';
-import { dbDirect as db } from '$lib/server/db';
+} from '#lib/server/ai-chat/application-pipeline.ts';
+import { applicationActivityText } from '#lib/server/ai-chat/application-activity.ts';
+import { jobDetailsText } from '#lib/server/ai-chat/job-context.ts';
+import { CHAT_BUDGET_CHARS } from '#lib/server/ai-chat/chat-context.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { applications } from '$lib/server/db/schema';
+import { applications } from '#lib/server/db/schema.ts';
 
 const appId = Number(process.argv[2]);
 

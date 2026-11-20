@@ -38,7 +38,7 @@ const mockLeftJoin = vi.fn().mockReturnValue({ where: mockSelectWhere });
 const mockFrom = vi.fn().mockReturnValue({ where: mockSelectWhere, leftJoin: mockLeftJoin });
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		insert: (...a: unknown[]) => mockInsert(...a),
 		delete: (...a: unknown[]) => mockDelete(...a),
@@ -57,7 +57,7 @@ vi.mock('drizzle-orm', () => ({
 	isNotNull: (c: unknown) => ({ isNotNull: c })
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	letter_versions: {
 		letter: 'lv.letter',
 		id: 'lv.id',
@@ -106,10 +106,10 @@ vi.mock('$lib/server/db/schema', () => ({
 
 const mockScoreGeneration = vi.fn();
 let sendsToLangfuse = true;
-vi.mock('$lib/server/monitoring/product-scores', () => ({
+vi.mock('#lib/server/monitoring/product-scores.ts', () => ({
 	scoreGeneration: (...a: unknown[]) => mockScoreGeneration(...a)
 }));
-vi.mock('$lib/server/monitoring/telemetry', () => ({ sendsToLangfuse: () => sendsToLangfuse }));
+vi.mock('#lib/server/monitoring/telemetry.ts', () => ({ sendsToLangfuse: () => sendsToLangfuse }));
 
 import {
 	buildConversation,

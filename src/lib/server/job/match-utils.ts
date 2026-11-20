@@ -2,16 +2,16 @@
  * Utility functions for job matching - profile skill extraction
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
 import {
 	languages,
 	tech_skills,
 	tech_skill_categories,
 	work_experiences
-} from '$lib/server/db/schema';
-import { normalizeSkill } from '$lib/skills';
-import type { AdjacentSkill, SkillProvenance } from '$lib/match-provenance';
+} from '#lib/server/db/schema.ts';
+import { normalizeSkill } from '#lib/skills.ts';
+import type { AdjacentSkill, SkillProvenance } from '#lib/match-provenance.ts';
 import {
 	approvedAliasesOf,
 	assumedLevels,
@@ -399,7 +399,7 @@ export function attributeSkills(
 	return out;
 }
 
-export type { MatchVia, SkillProvenance } from '$lib/match-provenance';
+export type { MatchVia, SkillProvenance } from '#lib/match-provenance.ts';
 
 /**
  * For each job skill the profile does NOT answer, a related skill it does hold.
@@ -427,4 +427,4 @@ export function adjacentSkills(
 	return out;
 }
 
-export type { AdjacentSkill } from '$lib/match-provenance';
+export type { AdjacentSkill } from '#lib/match-provenance.ts';

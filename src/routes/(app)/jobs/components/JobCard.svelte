@@ -15,13 +15,13 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 	import type { Snippet } from 'svelte';
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
 	import ScoreBadge from './ScoreBadge.svelte';
 	import SkillPill from './SkillPill.svelte';
-	import { formatSalaryRange, timeAgo } from '$lib/format';
-	import { formatMonthDay } from '$lib/format-date';
-	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
-	import { PAY_VERDICT_LABELS, type PayBadge, type PayVerdict } from '$lib/salary/pay-fit';
+	import { formatSalaryRange, timeAgo } from '#lib/format.ts';
+	import { formatMonthDay } from '#lib/format-date.ts';
+	import { adjacentFor, provenanceFor } from '#lib/match-provenance.ts';
+	import { PAY_VERDICT_LABELS, type PayBadge, type PayVerdict } from '#lib/salary/pay-fit.ts';
 
 	interface Job {
 		id: number;

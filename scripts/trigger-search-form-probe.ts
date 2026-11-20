@@ -14,14 +14,14 @@
  */
 
 import { desc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	api_keys,
 	job_platforms,
 	search_form_probe_runs,
 	platform_credentials
-} from '$lib/server/db/schema';
-import { addSearchFormProbeJob } from '$lib/server/queue/search-form-probe-queue';
+} from '#lib/server/db/schema.ts';
+import { addSearchFormProbeJob } from '#lib/server/queue/search-form-probe-queue.ts';
 
 function parseFlag(name: string): string | null {
 	const idx = process.argv.indexOf(`--${name}`);

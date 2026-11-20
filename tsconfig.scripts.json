@@ -1,33 +1,25 @@
 {
 	// Type-check the CLI scripts.
 	//
-	// The main tsconfig cannot do this: its `include` comes from SvelteKit's
-	// generated .svelte-kit/tsconfig.json, which lists src/, test/ and tests/
-	// and nothing else. TypeScript does not merge `include` from an extended
-	// config, so adding scripts/ there means copying the generated list and
-	// re-copying it every time SvelteKit changes it.
+	// The main tsconfig cannot do this without type-checking scripts/ as part
+	// of the app, which reports the app's own backlog twice.
 	//
 	// Nothing had ever type-checked scripts/, and it showed: the Prisma → Drizzle
 	// migration passed 11 of them by entirely, and generate-profile-slugs.ts
 	// imported $lib/server/slug-generator — a path that has never existed — for
 	// however long, with no error anywhere.
 	//
-	// Extending the generated config inherits the $lib path aliases, which the
-	// scripts rely on; only `include` is replaced.
-	"extends": "./.svelte-kit/tsconfig.json",
+	// Extending SvelteKit's generated base config (node_modules/$app/tsconfig.json)
+	// keeps the same resolution as the app: #lib is a package.json subpath
+	// import, and `$app/types` declares the `$app/*` modules that src/ imports.
+	// Only `include` and the script-specific options differ.
+	"extends": "$app/tsconfig",
 	"compilerOptions": {
-		"allowJs": true,
 		"checkJs": false,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
 		"strict": true,
-		"moduleResolution": "bundler",
-		"noEmit": true,
-		"types": ["node"]
+		"types": ["node", "$app/types"]
 	},
-	// scripts/ only. Whatever they import from $lib is pulled in transitively;
+	// scripts/ only. Whatever they import from #lib is pulled in transitively;
 	// listing src/ as roots as well just re-reports the app's own backlog here.
 	//
 	// app.d.ts is the exception, because nothing imports it: it is an ambient

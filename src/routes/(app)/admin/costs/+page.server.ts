@@ -14,14 +14,14 @@
  * summing first is exact rather than approximate.
  */
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { inArray, desc, sql } from 'drizzle-orm';
-import { subscriptions, users as usersTable } from '$lib/server/db/schema';
+import { subscriptions, users as usersTable } from '#lib/server/db/schema.ts';
 import {
 	estimateGroupCostUsd,
 	LONG_CONTEXT_THRESHOLD_TOKENS
-} from '$lib/server/billing/provider-costs';
-import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
+} from '#lib/server/billing/provider-costs.ts';
+import { promptTemplates } from '#lib/server/ai-chat/prompt-templates.ts';
 
 /** How much of a stored system prompt to group on. */
 const PROMPT_KEY_PREFIX = 120;

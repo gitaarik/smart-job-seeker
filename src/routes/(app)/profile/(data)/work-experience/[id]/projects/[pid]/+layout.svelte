@@ -11,7 +11,7 @@
 	 */
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -37,14 +37,14 @@
 	 * from Files & code.
 	 */
 	const basePath = $derived.by(() => {
-		void $page.url.pathname;
+		void page.url.pathname;
 		return resolve('/(app)/profile/(data)/work-experience/[id]/projects/[pid]', {
 			id: String(data.experience.id),
 			pid: String(data.project.id)
 		});
 	});
 	const rolePath = $derived.by(() => {
-		void $page.url.pathname;
+		void page.url.pathname;
 		return resolve('/(app)/profile/(data)/work-experience/[id]', {
 			id: String(data.experience.id)
 		});
@@ -65,7 +65,7 @@
 	]);
 
 	function isTabActive(href: string): boolean {
-		const current = $page.url.pathname;
+		const current = page.url.pathname;
 		return href === basePath ? current === basePath : current.startsWith(href);
 	}
 </script>

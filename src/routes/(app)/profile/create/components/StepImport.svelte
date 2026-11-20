@@ -6,8 +6,8 @@
 		faFile,
 		faTimes
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
-	import type { ResumeData } from '$lib/server/resume/types';
+	import type { ExportedProfile } from '#lib/server/profile/export-profile-json.ts';
+	import type { ResumeData } from '#lib/server/resume/types.ts';
 	import { convertExportToResumeData } from '../lib/convert-export';
 	import Card from '../../../components/Card.svelte';
 

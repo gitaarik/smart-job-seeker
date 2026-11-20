@@ -10,15 +10,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockGetSelectedProfileId = vi.fn();
 const mockCreateAndGenerate = vi.fn();
 
-vi.mock('$lib/server/profile/selected-profile', () => ({
+vi.mock('#lib/server/profile/selected-profile.ts', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 
-vi.mock('$lib/server/ai-chat/utils', () => ({
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({
 	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a)
 }));
 
-vi.mock('$lib/server/billing/require-credits', () => ({
+vi.mock('#lib/server/billing/require-credits.ts', () => ({
 	requireCredits: vi.fn().mockResolvedValue(undefined)
 }));
 

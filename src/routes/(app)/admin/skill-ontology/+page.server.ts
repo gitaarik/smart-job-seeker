@@ -38,9 +38,9 @@
  */
 import { fail } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { refuseNewRelation } from '$lib/server/job/skill-relation-guards';
-import { MATCHING_RELATIONS } from '$lib/server/job/skill-ontology';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { refuseNewRelation } from '#lib/server/job/skill-relation-guards.ts';
+import { MATCHING_RELATIONS } from '#lib/server/job/skill-ontology.ts';
 import {
 	applyPlan,
 	collisionAdvice,
@@ -49,7 +49,7 @@ import {
 	parseBundle,
 	plan,
 	type ImportPlan
-} from '$lib/server/job/ontology-transfer';
+} from '#lib/server/job/ontology-transfer.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export interface PendingRelation {

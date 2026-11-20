@@ -9,7 +9,7 @@
 		faCommentDots,
 		faSignOutAlt
 	} from '@fortawesome/free-solid-svg-icons';
-	import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
+	import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
 	import HeaderDropdown from './HeaderDropdown.svelte';
 
 	interface Props {
@@ -52,7 +52,7 @@
 		<ThemeSwitcher variant="inline" />
 
 		<a
-			href={resolve('/contacts')}
+			href={resolve('contacts')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faAddressBook} class="h-4 w-4" />
@@ -60,7 +60,7 @@
 		</a>
 
 		<a
-			href={resolve('/guide')}
+			href={resolve('guide')}
 			target="_blank"
 			rel="noopener"
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
@@ -70,7 +70,7 @@
 		</a>
 
 		<a
-			href={resolve('/feedback')}
+			href={resolve('feedback')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faCommentDots} class="h-4 w-4" />
@@ -78,7 +78,7 @@
 		</a>
 
 		<a
-			href={resolve('/settings')}
+			href={resolve('settings')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faCog} class="h-4 w-4" />
@@ -86,7 +86,7 @@
 		</a>
 
 		<a
-			href={resolve('/logout')}
+			href={resolve('logout')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-error)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faSignOutAlt} class="h-4 w-4" />

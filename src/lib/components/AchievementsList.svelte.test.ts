@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import AchievementsList, { type AchievementItem } from './AchievementsList.svelte';
-import { translations } from '$lib/stores/translations.svelte';
+import { translations } from '#lib/stores/translations.svelte.ts';
 
 /**
  * The edit popup's two modes.

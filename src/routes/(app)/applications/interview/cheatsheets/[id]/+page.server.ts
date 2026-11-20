@@ -1,10 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { cheat_sheets } from '$lib/server/db/schema';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { touchProfile } from '$lib/server/profile/touch-profile';
+import { cheat_sheets } from '#lib/server/db/schema.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
 import {
 	buildConversation,
 	CHEATSHEET_VERSIONS,
@@ -16,11 +16,11 @@ import {
 	scoreVersionUse,
 	trimVersionsAfter,
 	type VersionSource
-} from '$lib/server/ai-chat/entity-versions';
-import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
-import { isStaffViewer } from '$lib/server/auth/guards';
-import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
-import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
+} from '#lib/server/ai-chat/entity-versions.ts';
+import { isGenerating } from '#lib/server/ai-chat/ai-generation-status.ts';
+import { isStaffViewer } from '#lib/server/auth/guards.ts';
+import { TEXT_KINDS } from '#lib/server/texts/profile-texts.ts';
+import { htmlToMarkdown } from '#lib/utils/html-to-markdown.ts';
 
 export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const { selectedProfile } = await parent();

@@ -18,7 +18,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
 /** What the row currently holds, per test. Null for a text never written. */
 let committed: string | null = null;
@@ -34,8 +34,8 @@ let trail: {
 /** Every `setText` this suite provoked. */
 const written: { kind: string; id: number; profileId: number; content: string | null }[] = [];
 
-vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('$lib/server/texts/profile-texts')>();
+vi.mock('#lib/server/texts/profile-texts.ts', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/texts/profile-texts.ts')>();
 
 	const stub = (kind: (typeof actual.TEXT_KIND_NAMES)[number]) => ({
 		...actual.TEXT_KINDS[kind],
@@ -82,7 +82,7 @@ vi.mock('../entity-versions', async (importOriginal) => {
 const { TEXT_COMMIT_CAPABILITIES, TEXT_COMMIT_CAPABILITY_NAMES, isTextCommitCapability } =
 	await import('../text-commit-capabilities');
 const { CAPABILITIES, describeProposalChanges } = await import('../capabilities');
-const { dispositionFor, tierForWrite } = await import('$lib/server/mcp/tiers');
+const { dispositionFor, tierForWrite } = await import('#lib/server/mcp/tiers.ts');
 
 const ACTOR = { profileId: 12, isStaff: false };
 const SHEET = { id: 62, label: 'Freelance vs. permanent' };

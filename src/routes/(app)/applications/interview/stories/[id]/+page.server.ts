@@ -1,10 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { project_stories } from '$lib/server/db/schema';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { touchProfile } from '$lib/server/profile/touch-profile';
+import { project_stories } from '#lib/server/db/schema.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
 import {
 	buildConversation,
 	type ConversationEntry,
@@ -16,11 +16,11 @@ import {
 	STORY_VERSIONS,
 	trimVersionsAfter,
 	type VersionSource
-} from '$lib/server/ai-chat/entity-versions';
-import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
-import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
-import { isStaffViewer } from '$lib/server/auth/guards';
-import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
+} from '#lib/server/ai-chat/entity-versions.ts';
+import { parseStarMarkdown, serializeStarMarkdown } from '#lib/interview/star.ts';
+import { isGenerating } from '#lib/server/ai-chat/ai-generation-status.ts';
+import { isStaffViewer } from '#lib/server/auth/guards.ts';
+import { TEXT_KINDS } from '#lib/server/texts/profile-texts.ts';
 
 export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const { selectedProfile } = await parent();

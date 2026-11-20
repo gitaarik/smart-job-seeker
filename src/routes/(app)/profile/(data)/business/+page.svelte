@@ -1,17 +1,17 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
-	import { armOn } from '$lib/actions/arm-on';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faBuilding, faLock, faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import Card from '../../../components/Card.svelte';
 	import CopyButton from '../../../components/CopyButton.svelte';
-	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import { BASE_LOCALE } from '$lib/resume-translations';
-	import { translations } from '$lib/stores/translations.svelte';
+	import { autoSaveField, diffPayload, recordsEqual } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
+	import { BASE_LOCALE } from '#lib/resume-translations.ts';
+	import { translations } from '#lib/stores/translations.svelte.ts';
 
 	let { data }: { data: PageData } = $props();
 

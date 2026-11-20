@@ -8,8 +8,8 @@
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import type { ResumeData } from '$lib/server/resume/types';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import type { ResumeData } from '#lib/server/resume/types.ts';
 	import BasicsSection from './sections/BasicsSection.svelte';
 	import WorkSection from './sections/WorkSection.svelte';
 	import EducationSection from './sections/EducationSection.svelte';
@@ -160,7 +160,7 @@
 				onLoadingChange(false);
 				if (result.type === 'redirect') {
 					// eslint-disable-next-line svelte/no-navigation-without-resolve
-					await goto(result.location, { invalidateAll: true });
+					await goto(result.location, { refreshAll: true });
 				} else {
 					await update();
 				}

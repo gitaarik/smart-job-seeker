@@ -55,7 +55,7 @@ import {
 	type ProfileResource,
 	type ProfileResourceName,
 	type SectionRow
-} from '$lib/server/profile/resources';
+} from '#lib/server/profile/resources.ts';
 import {
 	createRow,
 	deleteRow,
@@ -67,7 +67,7 @@ import {
 	setRowVisible,
 	updateRow,
 	validatePatch
-} from '$lib/server/profile/write';
+} from '#lib/server/profile/write.ts';
 import {
 	languagesOf,
 	LANGUAGES_KEY,
@@ -81,9 +81,9 @@ import {
 	translationRefusal,
 	translationsIn,
 	writeTranslations
-} from '$lib/server/profile/section-translations';
-import { localeLabel } from '$lib/resume-translations';
-import { isHiddenFromDocuments } from '$lib/profile-visibility';
+} from '#lib/server/profile/section-translations.ts';
+import { localeLabel } from '#lib/resume-translations.ts';
+import { isHiddenFromDocuments } from '#lib/profile-visibility.ts';
 import type {
 	CapabilityActor,
 	CapabilityDef,

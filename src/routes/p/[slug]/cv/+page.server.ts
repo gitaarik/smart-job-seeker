@@ -1,19 +1,19 @@
 import { error } from '@sveltejs/kit';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { checkProfileAccess, getVersionIdBySlug } from '$lib/server/profile/access-control';
-import { incrementTokenVisit } from '$lib/server/auth/token-validation';
-import { getResumeTemplate } from '$lib/server/profile/resume-templates';
-import { DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
-import { isKnownLocale } from '$lib/resume-translations';
-import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
-import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
-import { pageIsAnonymous, pageProfile } from '$lib/server/profile/page-profile';
-import { anonymousTemplate } from '$lib/server/profile/anonymity';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
+import { checkProfileAccess, getVersionIdBySlug } from '#lib/server/profile/access-control.ts';
+import { incrementTokenVisit } from '#lib/server/auth/token-validation.ts';
+import { getResumeTemplate } from '#lib/server/profile/resume-templates.ts';
+import { DEFAULT_TEMPLATE_ID } from '#lib/resume-templates.ts';
+import { isKnownLocale } from '#lib/resume-translations.ts';
+import { applyTranslations, loadTranslator } from '#lib/server/profile/translations.ts';
+import { applyFieldVariants, loadFieldVariants } from '#lib/server/profile/field-variants.ts';
+import { pageIsAnonymous, pageProfile } from '#lib/server/profile/page-profile.ts';
+import { anonymousTemplate } from '#lib/server/profile/anonymity.ts';
 import {
 	applySkillWords,
 	loadDocumentSkillWords,
 	renderedVersionId
-} from '$lib/server/profile/skill-words';
+} from '#lib/server/profile/skill-words.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -24,9 +24,7 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	const profile = await getProfileByIdentifier(slug);
 
 	if (!profile) {
-		throw error(404, {
-			message: `Profile not found: ${slug}`
-		});
+		throw error(404, `Profile not found: ${slug}`);
 	}
 
 	// Check access control
@@ -39,9 +37,7 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	});
 
 	if (!accessResult.allowed) {
-		throw error(accessResult.statusCode, {
-			message: accessResult.message
-		});
+		throw error(accessResult.statusCode, accessResult.message);
 	}
 
 	// Increment visit counter if token was used

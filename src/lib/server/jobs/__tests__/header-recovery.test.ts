@@ -10,7 +10,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockRunProfileAiChat = vi.hoisted(() => vi.fn());
-vi.mock('$lib/server/ai-chat/job-utils', () => ({
+vi.mock('#lib/server/ai-chat/job-utils.ts', () => ({
 	runProfileAiChat: mockRunProfileAiChat
 }));
 

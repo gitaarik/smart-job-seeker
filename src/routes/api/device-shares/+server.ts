@@ -1,12 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
 import {
 	shareDevice,
 	unshareDevice,
 	listDeviceShares,
 	listSharedWithMe
-} from '$lib/server/device-shares';
+} from '#lib/server/device-shares.ts';
 
 /**
  * GET /api/device-shares?apiKeyId=123 — List shares for a device

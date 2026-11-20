@@ -1,11 +1,11 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { search_tasks } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { resolveTunnelDevice } from '$lib/server/sjs-browser-status';
-import { checkPublicHttpUrl } from '$lib/server/net/public-url';
+import { search_tasks } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { resolveTunnelDevice } from '#lib/server/sjs-browser-status.ts';
+import { checkPublicHttpUrl } from '#lib/server/net/public-url.ts';
 
 /**
  * POST /api/import-tasks/[id]/open-browser

@@ -33,9 +33,9 @@
 	import { faListCheck, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 	import { enhance } from '$app/forms';
 	import Card from '../../components/Card.svelte';
-	import { groupDetails, type StoredDetail } from '$lib/application-details';
-	import { summaryIsWorthWriting } from '$lib/application-records';
-	import { timeAgo } from '$lib/format';
+	import { groupDetails, type StoredDetail } from '#lib/application-details.ts';
+	import { summaryIsWorthWriting } from '#lib/application-records.ts';
+	import { timeAgo } from '#lib/format.ts';
 
 	let {
 		details,

@@ -9,7 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { assetUrl, DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
+	import { assetUrl, DEFAULT_TEMPLATE_ID } from '#lib/resume-templates.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheckCircle,
@@ -23,7 +23,7 @@
 	import SectionHeader from '../components/SectionHeader.svelte';
 	import EmptyState from '../components/EmptyState.svelte';
 	import ItemCard from '../components/ItemCard.svelte';
-	import { profileDocUrl } from '$lib/utils/profile-doc-url';
+	import { profileDocUrl } from '#lib/utils/profile-doc-url.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -51,15 +51,11 @@
 	// Template is a page-level lens persisted in ?template=; changing it re-runs
 	// the loader (per-template "has PDF" state) and re-lenses every doc link.
 	function selectTemplate(id: string) {
-		const u = new URL(page.url);
+		const u = new URL(page.url.href);
 		if (id === DEFAULT_TEMPLATE_ID) u.searchParams.delete('template');
 		else u.searchParams.set('template', id);
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(u.pathname + u.search, {
-			keepFocus: true,
-			noScroll: true,
-			invalidateAll: true
-		});
+		goto(u.pathname + u.search, { reset: false, refreshAll: true });
 	}
 
 	// Language is a second page-level lens (?lang=), only shown when the profile
@@ -74,15 +70,11 @@
 				}`
 	);
 	function selectLocale(code: string) {
-		const u = new URL(page.url);
+		const u = new URL(page.url.href);
 		if (code === 'en') u.searchParams.delete('lang');
 		else u.searchParams.set('lang', code);
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(u.pathname + u.search, {
-			keepFocus: true,
-			noScroll: true,
-			invalidateAll: true
-		});
+		goto(u.pathname + u.search, { reset: false, refreshAll: true });
 	}
 
 	let showAddForm = $state(false);

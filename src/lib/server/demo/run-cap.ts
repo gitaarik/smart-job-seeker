@@ -7,8 +7,8 @@
  */
 
 import { count, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { demo_links, profiles, search_task_runs, search_tasks } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { demo_links, profiles, search_task_runs, search_tasks } from '#lib/server/db/schema.ts';
 
 export interface DemoRunCapResult {
 	allowed: boolean;

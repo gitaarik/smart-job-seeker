@@ -20,7 +20,7 @@ const state = {
 	refuse: null as string | null
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const chain = {
 		select: () => chain,
 		from: () => chain,
@@ -30,7 +30,7 @@ vi.mock('$lib/server/db', () => {
 	return { db: chain, dbDirect: chain };
 });
 
-vi.mock('$lib/server/profile/write', () => ({
+vi.mock('#lib/server/profile/write.ts', () => ({
 	deleteRow: (...args: unknown[]) => {
 		state.deleted.push(args);
 		return Promise.resolve(
@@ -61,7 +61,7 @@ const {
 	deletedWithChange,
 	isDeleteCapability
 } = await import('../delete-capabilities');
-const { PROFILE_RESOURCE_NAMES } = await import('$lib/server/profile/resources');
+const { PROFILE_RESOURCE_NAMES } = await import('#lib/server/profile/resources.ts');
 const { PROFILE_CAPABILITY_NAMES } = await import('../profile-capabilities');
 
 const ACTOR = { profileId: 12, isStaff: false };

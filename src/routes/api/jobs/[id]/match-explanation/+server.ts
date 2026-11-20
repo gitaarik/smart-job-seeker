@@ -8,10 +8,10 @@
  */
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureMatchExplanation } from '$lib/server/ai-chat/match-explanation';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { ensureMatchExplanation } from '#lib/server/ai-chat/match-explanation.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
 
 export const POST: RequestHandler = async ({ params, locals, cookies }) => {
 	const user = requireAuth(locals);

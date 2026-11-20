@@ -16,7 +16,7 @@ import {
 	renderDigestAbout,
 	roundsLeftOut
 } from '../entry-digest';
-import { LONG_ENTRY_CHARS } from '$lib/application-records';
+import { LONG_ENTRY_CHARS } from '#lib/application-records.ts';
 
 const long = 'x'.repeat(LONG_ENTRY_CHARS + 1);
 

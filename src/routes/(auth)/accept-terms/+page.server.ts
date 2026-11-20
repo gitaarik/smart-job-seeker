@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { termsVersion } from '$lib/server/legal/texts';
-import { acceptedTermsField, recordTermsAcceptance } from '$lib/server/legal/record';
-import { mustAcceptTerms, safeReturnPath } from '$lib/server/legal/gate';
+import { termsVersion } from '#lib/server/legal/texts.ts';
+import { acceptedTermsField, recordTermsAcceptance } from '#lib/server/legal/record.ts';
+import { mustAcceptTerms, safeReturnPath } from '#lib/server/legal/gate.ts';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = locals.user;

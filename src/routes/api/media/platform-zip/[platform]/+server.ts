@@ -11,14 +11,14 @@ import { error } from '@sveltejs/kit';
 import JSZip from 'jszip';
 import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { dbDirect as db } from '$lib/server/db';
-import { media_items, media_presets, media_renditions } from '$lib/server/db/schema';
-import { renditionBytes } from '$lib/server/media/serve';
-import { renditionFilename } from '$lib/server/media/renditions';
-import { contentDisposition } from '$lib/server/files';
-import { presetName } from '$lib/media-library';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { media_items, media_presets, media_renditions } from '#lib/server/db/schema.ts';
+import { renditionBytes } from '#lib/server/media/serve.ts';
+import { renditionFilename } from '#lib/server/media/renditions.ts';
+import { contentDisposition } from '#lib/server/files.ts';
+import { presetName } from '#lib/media-library.ts';
 
 export const GET: RequestHandler = async ({ params, cookies, locals }) => {
 	const user = requireAuth(locals);

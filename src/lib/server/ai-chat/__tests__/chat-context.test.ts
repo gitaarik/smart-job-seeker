@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			applications: { findFirst: () => Promise.resolve(applicationRow) },
@@ -31,7 +31,7 @@ vi.mock('../capabilities', async (importOriginal) => ({
 // business; what matters here is that a row that isn't theirs yields no entity.
 let sectionRow: unknown = null;
 let sectionRows: Record<string, unknown[]> = {};
-vi.mock('$lib/server/profile/write', () => ({
+vi.mock('#lib/server/profile/write.ts', () => ({
 	readOwnedRow: () => Promise.resolve(sectionRow),
 	// The section matcher's read, keyed by resource. Empty by default: these
 	// tests are about what the ROUTE grants, so a message that also matched a

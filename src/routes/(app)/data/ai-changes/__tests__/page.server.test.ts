@@ -24,16 +24,16 @@ const state = {
 };
 
 vi.mock('../../../profile/utils', () => ({ getSelectedProfileId: vi.fn() }));
-vi.mock('$lib/server/ai-chat/capabilities', () => ({
+vi.mock('#lib/server/ai-chat/capabilities.ts', () => ({
 	CAPABILITIES: {},
 	describeProposalChanges: () => []
 }));
-vi.mock('$lib/server/ai-chat/edit-log', () => ({
+vi.mock('#lib/server/ai-chat/edit-log.ts', () => ({
 	readEditLog: () => Promise.resolve(state.entries),
 	describeLoggedChange: () => [],
 	revertEdit: vi.fn()
 }));
-vi.mock('$lib/server/mcp/requests', () => ({
+vi.mock('#lib/server/mcp/requests.ts', () => ({
 	readRequests: () => Promise.resolve(state.pending),
 	requestIdsByEdit: () => Promise.resolve(new Map()),
 	approveRequest: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock('$lib/server/mcp/requests', () => ({
 }));
 // The application targeting as `entities.ts` declares it, without the resolver
 // and everything that one imports.
-vi.mock('$lib/server/mcp/entities', () => {
+vi.mock('#lib/server/mcp/entities.ts', () => {
 	const application = {
 		page: (target: { id: number }) => ({
 			name: 'application',
@@ -54,10 +54,10 @@ vi.mock('$lib/server/mcp/entities', () => {
 			['update_application_status', 'add_activity_record'].includes(capability) ? application : null
 	};
 });
-vi.mock('$lib/server/ai-chat/directive-capability', () => ({
+vi.mock('#lib/server/ai-chat/directive-capability.ts', () => ({
 	DIRECTIVES_PAGE: { name: 'Directives', path: '/data/directives' }
 }));
-vi.mock('$lib/server/profile/row-page', () => ({
+vi.mock('#lib/server/profile/row-page.ts', () => ({
 	rowPagePath: (name: string, _actor: unknown, id: number) => {
 		state.rowReads.push(`${name} ${id}`);
 		return Promise.resolve(state.rowPages.get(`${name} ${id}`) ?? null);
@@ -220,7 +220,7 @@ describe('approving a delete', () => {
 	async function approve(form: Record<string, string>) {
 		const { actions } = await import('../+page.server');
 		const { getSelectedProfileId } = await import('../../../profile/utils');
-		const { approveRequest } = await import('$lib/server/mcp/requests');
+		const { approveRequest } = await import('#lib/server/mcp/requests.ts');
 		vi.mocked(getSelectedProfileId).mockResolvedValue(12);
 		vi.mocked(approveRequest).mockResolvedValue({ ok: true, editId: 1 });
 

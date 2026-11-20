@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { hasDeviceAccess } from '$lib/server/device-shares';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { hasDeviceAccess } from '#lib/server/device-shares.ts';
 
 const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || '127.0.0.1';
 const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || '9333';

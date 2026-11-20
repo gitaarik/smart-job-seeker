@@ -1,6 +1,6 @@
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq, sql } from 'drizzle-orm';
-import { profile_tokens, profile_versions } from '$lib/server/db/schema';
+import { profile_tokens, profile_versions } from '#lib/server/db/schema.ts';
 import { hashToken } from './token-generator';
 
 export interface TokenValidationResult {

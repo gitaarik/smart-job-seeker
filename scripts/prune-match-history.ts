@@ -29,12 +29,12 @@
  * table size. Skip it on a busy server and let autovacuum reuse the space.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	AGREED_RETENTION_DAYS,
 	prunableMatchHistorySql,
 	pruneMatchHistory
-} from '$lib/server/match-history/retention';
+} from '#lib/server/match-history/retention.ts';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');

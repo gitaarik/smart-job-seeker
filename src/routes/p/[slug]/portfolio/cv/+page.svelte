@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import ShowcaseSite from '$lib/components/PortfolioSite/showcase/ShowcaseSite.svelte';
+	import ShowcaseSite from '#lib/components/PortfolioSite/showcase/ShowcaseSite.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>

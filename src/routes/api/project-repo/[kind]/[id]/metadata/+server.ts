@@ -15,13 +15,13 @@
  */
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { requireRowActor } from '$lib/server/profile/write-http';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { requireRowActor } from '#lib/server/profile/write-http.ts';
 import {
 	loadProjectContext,
 	mapProposal,
 	parseProjectKind
-} from '$lib/server/documents/project-corpus';
+} from '#lib/server/documents/project-corpus.ts';
 import {
 	fetchRepoLanguages,
 	fetchRepoMetadata,
@@ -29,8 +29,8 @@ import {
 	parseGitHubRepoUrl,
 	proposalsFor,
 	technologyProposalsFor
-} from '$lib/server/github/repo-metadata';
-import { tokenForRepo } from '$lib/server/github/app-auth';
+} from '#lib/server/github/repo-metadata.ts';
+import { tokenForRepo } from '#lib/server/github/app-auth.ts';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

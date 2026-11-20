@@ -36,7 +36,7 @@ const h = vi.hoisted(() => {
 	};
 });
 
-vi.mock('$lib/server/llm/embeddings', () => ({
+vi.mock('#lib/server/llm/embeddings.ts', () => ({
 	isEmbeddingConfigured: () => h.configured.value,
 	cosineSimilarity: h.cosineSpy,
 	embedBatch: h.embedSpy,
@@ -44,7 +44,7 @@ vi.mock('$lib/server/llm/embeddings', () => ({
 	truncateVector: (v: number[]) => v
 }));
 
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		embeddingModel: 'test-model',
 		embeddingSkillThreshold: 0.55,
@@ -63,14 +63,14 @@ const mockValues = vi.fn().mockReturnValue({
 });
 const mockInsert = vi.fn().mockReturnValue({ values: mockValues });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: (...a: unknown[]) => mockSelect(...a),
 		insert: (...a: unknown[]) => mockInsert(...a)
 	}
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	skill_embeddings: { skill: 'skill', label: 'label', model: 'model' }
 }));
 

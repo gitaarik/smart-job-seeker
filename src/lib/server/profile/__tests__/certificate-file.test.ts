@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
 import { matchFilesByName, prepareCertificateFile } from '../certificate-file';
-import { MAX_CERTIFICATE_FILE_BYTES } from '$lib/certificate-files';
+import { MAX_CERTIFICATE_FILE_BYTES } from '#lib/certificate-files.ts';
 
 const enc = (s: string) => new TextEncoder().encode(s);
 const PDF = enc('%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n');

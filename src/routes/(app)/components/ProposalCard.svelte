@@ -20,9 +20,9 @@
 </script>
 
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { flushPendingSaves } from '$lib/components/auto-save.svelte';
-	import { afterAppliedChange } from '$lib/components/applied-change.svelte';
+	import { refreshAll } from '$app/navigation';
+	import { flushPendingSaves } from '#lib/components/auto-save.svelte.ts';
+	import { afterAppliedChange } from '#lib/components/applied-change.svelte.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowRight,
@@ -31,10 +31,10 @@
 		faRotateLeft,
 		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
-	import DiffSegments from '$lib/components/DiffSegments.svelte';
-	import { inlineDiff, shrinkage, summarizeValue } from '$lib/utils/change-analysis';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import ChangeDiff from '#lib/components/ChangeDiff.svelte';
+	import DiffSegments from '#lib/components/DiffSegments.svelte';
+	import { inlineDiff, shrinkage, summarizeValue } from '#lib/utils/change-analysis.ts';
 
 	/**
 	 * The consent step between what the assistant suggests and what happens.
@@ -83,7 +83,7 @@
 			// The page behind the panel is now stale — it is very often the very
 			// record that just changed. A page that derives from `data` follows the
 			// reload; an editor that seeded itself from it is mounted again.
-			await invalidateAll();
+			await refreshAll();
 			afterAppliedChange();
 		} catch {
 			error = 'Could not reach the server. Please try again.';
@@ -109,7 +109,7 @@
 				return;
 			}
 			undoneAt = data.undone_at ?? new Date().toISOString();
-			await invalidateAll();
+			await refreshAll();
 			afterAppliedChange();
 		} catch {
 			error = 'Could not reach the server. Please try again.';

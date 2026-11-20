@@ -1,27 +1,27 @@
 import { error, redirect } from '@sveltejs/kit';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { incrementTokenVisit } from '$lib/server/auth/token-validation';
-import { hashToken } from '$lib/server/auth/token-generator';
-import { db } from '$lib/server/db';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
+import { incrementTokenVisit } from '#lib/server/auth/token-validation.ts';
+import { hashToken } from '#lib/server/auth/token-generator.ts';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profile_tokens, profile_versions } from '$lib/server/db/schema';
-import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from '$lib/profile-tokens';
+import { profile_tokens, profile_versions } from '#lib/server/db/schema.ts';
+import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from '#lib/profile-tokens.ts';
 import {
 	getPortfolioThemeById,
 	getPortfolioThemesForProfile
-} from '$lib/server/profile/portfolio-themes';
-import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
-import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
-import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
-import { pageProfile } from '$lib/server/profile/page-profile';
-import { givePortfolioKey } from '$lib/server/profile/portfolio-key';
-import { portfolioHrefs } from '$lib/server/profile/portfolio-pages';
-import { hasPrivateCv } from '$lib/portfolio-themes';
+} from '#lib/server/profile/portfolio-themes.ts';
+import { BASE_LOCALE, isKnownLocale } from '#lib/resume-translations.ts';
+import { applyTranslations, loadTranslator } from '#lib/server/profile/translations.ts';
+import { applyFieldVariants, loadFieldVariants } from '#lib/server/profile/field-variants.ts';
+import { pageProfile } from '#lib/server/profile/page-profile.ts';
+import { givePortfolioKey } from '#lib/server/profile/portfolio-key.ts';
+import { portfolioHrefs } from '#lib/server/profile/portfolio-pages.ts';
+import { hasPrivateCv } from '#lib/portfolio-themes.ts';
 import {
 	applySkillWords,
 	loadDocumentSkillWords,
 	renderedVersionId
-} from '$lib/server/profile/skill-words';
+} from '#lib/server/profile/skill-words.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
@@ -31,9 +31,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 	const profile = await getProfileByIdentifier(slug);
 
 	if (!profile) {
-		throw error(404, {
-			message: `Profile not found`
-		});
+		throw error(404, `Profile not found`);
 	}
 
 	// Find the token
@@ -43,15 +41,11 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 	});
 
 	if (!token) {
-		throw error(404, {
-			message: 'This link is not valid'
-		});
+		throw error(404, 'This link is not valid');
 	}
 
 	if (token.status !== 'published') {
-		throw error(403, {
-			message: 'This link has been disabled'
-		});
+		throw error(403, 'This link has been disabled');
 	}
 
 	// Verify the token belongs to this profile
@@ -61,21 +55,15 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 	});
 
 	if (!profileVersion || profileVersion.profile_id !== profile.id) {
-		throw error(404, {
-			message: 'This link is not valid for this profile'
-		});
+		throw error(404, 'This link is not valid for this profile');
 	}
 
 	if (token.expires_at && token.expires_at < new Date()) {
-		throw error(403, {
-			message: 'This link has expired'
-		});
+		throw error(403, 'This link has expired');
 	}
 
 	if (token.visit_limit !== null && token.visit_count >= token.visit_limit) {
-		throw error(403, {
-			message: 'This link has reached its view limit'
-		});
+		throw error(403, 'This link has reached its view limit');
 	}
 
 	// Determine format and view mode (defaults)

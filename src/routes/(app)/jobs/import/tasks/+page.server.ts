@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, desc, eq, inArray, isNotNull, or } from 'drizzle-orm';
 import {
 	api_keys,
@@ -9,23 +9,23 @@ import {
 	platform_profiles,
 	profiles,
 	search_tasks
-} from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
-import { hasCredentialAccess } from '$lib/server/credential-shares';
-import { listApiKeys } from '$lib/server/auth/api-key';
-import { hasDeviceAccess, listSharedWithMe } from '$lib/server/device-shares';
+} from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
+import { hasCredentialAccess } from '#lib/server/credential-shares.ts';
+import { listApiKeys } from '#lib/server/auth/api-key.ts';
+import { hasDeviceAccess, listSharedWithMe } from '#lib/server/device-shares.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
-import { checkPublicHttpUrl } from '$lib/server/net/public-url';
-import { isTaskBrowserProvider } from '$lib/import-tasks/readiness';
+import { checkPublicHttpUrl } from '#lib/server/net/public-url.ts';
+import { isTaskBrowserProvider } from '#lib/import-tasks/readiness.ts';
 import {
 	LOGIN_PAGE_URL_MAX,
 	SEARCH_PAGE_URL_MAX,
 	resolveCustomSiteSearchUrl
-} from '$lib/import-tasks/custom-site';
-import { toLoginMode } from '$lib/import-tasks/sign-in';
+} from '#lib/import-tasks/custom-site.ts';
+import { toLoginMode } from '#lib/import-tasks/sign-in.ts';
 import { z } from 'zod';
-import { preferredPlaceSchema } from '$lib/server/validation/api-schemas';
-import type { PreferredPlace } from '$lib/data/places';
+import { preferredPlaceSchema } from '#lib/server/validation/api-schemas.ts';
+import type { PreferredPlace } from '#lib/data/places.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

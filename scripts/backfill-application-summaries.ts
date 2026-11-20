@@ -32,12 +32,12 @@
  *   … --apply --limit 20        # cap the spend on a first run
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, isNull, not, or, sql } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
-import { CONTRACT_PREFIX, summarizeApplication } from '$lib/server/ai-chat/application-summary';
-import { isComparedStatus } from '$lib/application-status';
-import { summaryIsWorthWriting } from '$lib/application-records';
+import { application_records, applications } from '#lib/server/db/schema.ts';
+import { CONTRACT_PREFIX, summarizeApplication } from '#lib/server/ai-chat/application-summary.ts';
+import { isComparedStatus } from '#lib/application-status.ts';
+import { summaryIsWorthWriting } from '#lib/application-records.ts';
 
 const APPLY = process.argv.includes('--apply');
 const LIMIT = (() => {

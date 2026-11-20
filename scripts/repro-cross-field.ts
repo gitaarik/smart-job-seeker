@@ -60,13 +60,13 @@
  * into.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { work_experiences } from '$lib/server/db/schema';
-import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
-import { buildProposalSchema, renderCapabilityPrompt } from '$lib/server/ai-chat/capabilities';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
-import type { ChatMessage } from '$lib/server/llm';
+import { work_experiences } from '#lib/server/db/schema.ts';
+import { resolveChatContext } from '#lib/server/ai-chat/chat-context.ts';
+import { buildProposalSchema, renderCapabilityPrompt } from '#lib/server/ai-chat/capabilities.ts';
+import { createAndGenerateAiChat } from '#lib/server/ai-chat/utils.ts';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
 import { EMPTY_CONTEXT_VARIABLES } from '../src/routes/api/ai/agent/placeholders';
 
 const PROFILE_ID = Number(process.env.REPRO_PROFILE_ID ?? 12);

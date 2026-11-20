@@ -39,7 +39,7 @@
  * ones). Either way the target also needs a row in PROVIDER_COSTS, in both
  * copies of that file, or its calls price as null.
  */
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 
 export interface FallbackTarget {
 	provider: string;

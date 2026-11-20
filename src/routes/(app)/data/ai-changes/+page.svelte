@@ -11,15 +11,15 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
-	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
-	import DiffSegments from '$lib/components/DiffSegments.svelte';
+	import ChangeDiff from '#lib/components/ChangeDiff.svelte';
+	import DiffSegments from '#lib/components/DiffSegments.svelte';
 	import {
 		inlineDiff,
 		shrinkage,
 		summarizeValue,
 		type FieldChange,
 		type OrderGroup
-	} from '$lib/utils/change-analysis';
+	} from '#lib/utils/change-analysis.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { track } from '$lib/tools/analytics';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { track } from '#lib/tools/analytics.ts';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -50,7 +50,7 @@
 			// The fallback is resolved; `redirectTo` is the ?redirect= param the login
 			// page was reached with, so it is a runtime string and not a route id.
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
-			goto(data.redirectTo || resolve('/home'));
+			goto(data.redirectTo || resolve('home'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'An error occurred';
 		} finally {
@@ -112,7 +112,7 @@
 			<div class="flex items-center justify-between">
 				<div class="text-sm">
 					<a
-						href={resolve('/forgot-password')}
+						href={resolve('forgot-password')}
 						class="font-medium text-[var(--dash-primary)] hover:opacity-80"
 					>
 						Forgot your password?
@@ -141,9 +141,9 @@
 		</p>
 
 		<p class="text-center text-xs text-[var(--dash-text-muted)]">
-			<a class="underline" href={resolve('/privacy')}>Privacy</a>
+			<a class="underline" href={resolve('privacy')}>Privacy</a>
 			&middot;
-			<a class="underline" href={resolve('/terms')}>Terms</a>
+			<a class="underline" href={resolve('terms')}>Terms</a>
 		</p>
 	</div>
 </div>

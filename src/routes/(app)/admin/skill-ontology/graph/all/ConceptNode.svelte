@@ -20,7 +20,7 @@
 	// Spelled out in the attribute rather than built in a $derived:
 	// `svelte/no-navigation-without-resolve` can only see resolve() when the call
 	// is in the href itself, and a derived string reads to it as a bare path.
-	const GRAPH = resolve('/admin/skill-ontology/graph');
+	const GRAPH = resolve('admin/skill-ontology/graph');
 
 	const dimmed = $derived(hl.dimmed(data.island, data.label));
 	const matched = $derived(hl.matches(data.label));

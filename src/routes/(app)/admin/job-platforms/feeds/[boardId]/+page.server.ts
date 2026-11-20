@@ -1,11 +1,11 @@
 /** One career-site board: its health, its postings, and "sweep now". */
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { desc, eq, sql } from 'drizzle-orm';
-import { ats_boards, ats_postings, job_platforms } from '$lib/server/db/schema';
-import { requireAdmin } from '$lib/server/auth/guards';
-import { enqueueAtsBoard } from '$lib/server/queue';
+import { ats_boards, ats_postings, job_platforms } from '#lib/server/db/schema.ts';
+import { requireAdmin } from '#lib/server/auth/guards.ts';
+import { enqueueAtsBoard } from '#lib/server/queue/index.ts';
 
 const POSTINGS_LIMIT = 50;
 

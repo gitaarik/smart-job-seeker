@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => ({
 	removeActiveRescrapeJob: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: { jobs: { findFirst: mocks.jobsFindFirst } },
 		update: () => ({ set: () => ({ where: mocks.updateWhere }) }),
@@ -32,7 +32,7 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-vi.mock('$lib/server/queue/rescrape-queue', () => ({
+vi.mock('#lib/server/queue/rescrape-queue.ts', () => ({
 	addRescrapeJob: mocks.addRescrapeJob,
 	isJobRescraping: mocks.isJobRescraping,
 	removeWaitingRescrapeJob: mocks.removeWaitingRescrapeJob,

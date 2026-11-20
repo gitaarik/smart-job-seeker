@@ -11,9 +11,9 @@
 		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
 	import ScoreBadge from '../../components/ScoreBadge.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { portalToBody } from '$lib/actions/portal';
-	import { isSkillReachLow } from '$lib/profile-completeness';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { portalToBody } from '#lib/actions/portal.ts';
+	import { isSkillReachLow } from '#lib/profile-completeness.ts';
 
 	let { data }: { data: PageData } = $props();
 
@@ -279,7 +279,7 @@
 						on jobs you want and add the ones you genuinely have.
 					</p>
 					<a
-						href={resolve('/profile/skills')}
+						href={resolve('profile/skills')}
 						class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 						>Edit skills</a
 					>
@@ -303,7 +303,7 @@
 				{#if matchedCount > 0}
 					<div class="mt-2 flex flex-wrap items-center gap-2">
 						<a
-							href="{resolve('/jobs')}?minScore=1"
+							href="{resolve('jobs')}?minScore=1"
 							class="inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 							>View</a
 						>
@@ -337,7 +337,7 @@
 				{#if noMatchCount > 0}
 					<div class="mt-2 flex flex-wrap items-center gap-2">
 						<a
-							href="{resolve('/jobs')}?minScore=0"
+							href="{resolve('jobs')}?minScore=0"
 							class="inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 							>View</a
 						>
@@ -363,7 +363,7 @@
 				<div class="text-xs text-[var(--dash-text-muted)]">waiting to be processed</div>
 				{#if unmatchedCount > 0}
 					<a
-						href="{resolve('/jobs')}?minScore=unmatched"
+						href="{resolve('jobs')}?minScore=unmatched"
 						class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 						>View</a
 					>
@@ -375,7 +375,7 @@
 				<div class="mb-1 text-sm text-[var(--dash-text-secondary)]">Total Jobs</div>
 				<div class="text-2xl font-bold text-[var(--dash-text)]">{totalJobs}</div>
 				<a
-					href={resolve('/jobs')}
+					href={resolve('jobs')}
 					class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 					>View</a
 				>
@@ -520,7 +520,7 @@
 						<span class="text-xs text-[var(--dash-text-secondary)]">Show no-match</span>
 					</label>
 					<a
-						href={resolve('/jobs/matches')}
+						href={resolve('jobs/matches')}
 						class="text-xs text-[var(--dash-primary)] hover:underline">View all matches</a
 					>
 				</div>

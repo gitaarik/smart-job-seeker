@@ -10,10 +10,10 @@
  * Run inside the app container: npx vite-node scripts/create-dev-seed.ts
  */
 
-import { auth } from '$lib/server/auth/better-auth';
-import { dbDirect as db } from '$lib/server/db';
+import { auth } from '#lib/server/auth/better-auth.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profiles, users } from '$lib/server/db/schema';
+import { profiles, users } from '#lib/server/db/schema.ts';
 import { execFileSync } from 'child_process';
 import { dirname, join } from 'path';
 import { fileURLToPath, URL } from 'url';

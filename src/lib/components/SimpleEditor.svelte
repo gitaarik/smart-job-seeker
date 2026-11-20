@@ -3,9 +3,9 @@
 	import type { Editor, Extensions } from '@tiptap/core';
 	// For the module augmentation that adds getMarkdown() to Editor.
 	import type {} from '@tiptap/markdown';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { decodeMarkdownEntities } from '$lib/utils/markdown-entities';
+	import { decodeMarkdownEntities } from '#lib/utils/markdown-entities.ts';
 	import {
 		faBold,
 		faItalic,

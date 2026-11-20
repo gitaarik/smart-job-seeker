@@ -8,7 +8,7 @@
  * layouts cannot disagree about what a brief project still shows.
  */
 
-import { formatDateRangeVerbose } from '$lib/tools/date-utils';
+import { formatDateRangeVerbose } from '#lib/tools/date-utils.ts';
 import type { Row, SiteLists } from './site-lists';
 
 export interface BriefEntry {

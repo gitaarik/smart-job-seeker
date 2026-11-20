@@ -24,7 +24,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { getEnv } from '$lib/tools/get-env';
+import { getEnv } from '#lib/tools/get-env.ts';
 
 export interface LegalMeta {
 	/** True while the texts are placeholders; the pages say so at the top. */

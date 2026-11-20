@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -17,7 +17,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// Follows `data`: every change below ends in invalidateAll().
+	// Follows `data`: every change below ends in refreshAll().
 	let contacts = $derived(data.contacts);
 	let showAddForm = $state(false);
 	let inviteEmail = $state('');
@@ -57,7 +57,7 @@
 			successMessage = `Contact request sent to ${inviteEmail.trim()}`;
 			inviteEmail = '';
 			showAddForm = false;
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			errorMessage = 'Failed to send contact request';
 		} finally {
@@ -74,7 +74,7 @@
 			});
 
 			if (res.ok) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to accept contact request';
@@ -90,7 +90,7 @@
 			});
 
 			if (res.ok) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to decline contact request';
@@ -106,7 +106,7 @@
 			});
 
 			if (res.ok) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		} catch {
 			errorMessage = 'Failed to remove contact';
@@ -289,7 +289,7 @@
 										<span class="text-xs text-[var(--dash-text-muted)]">Shared:</span>
 										{#each devices as device (device.id)}
 											<a
-												href={resolve('/jobs/import/devices')}
+												href={resolve('jobs/import/devices')}
 												class="inline-flex items-center gap-1 rounded-full bg-[var(--dash-primary)]/10 px-2 py-0.5 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/20"
 												title="Manage on the Devices page"
 											>

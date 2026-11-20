@@ -16,13 +16,13 @@
  */
 
 import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { certificates } from '$lib/server/db/schema';
-import { uploadFile } from '$lib/server/files';
-import { reapFileRefs } from '$lib/server/uploads/reap';
-import { sniffUploadKind } from '$lib/server/documents/sniff';
-import { normalizeImage } from '$lib/server/documents/media';
-import { MAX_CERTIFICATE_FILE_BYTES } from '$lib/certificate-files';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { certificates } from '#lib/server/db/schema.ts';
+import { uploadFile } from '#lib/server/files.ts';
+import { reapFileRefs } from '#lib/server/uploads/reap.ts';
+import { sniffUploadKind } from '#lib/server/documents/sniff.ts';
+import { normalizeImage } from '#lib/server/documents/media.ts';
+import { MAX_CERTIFICATE_FILE_BYTES } from '#lib/certificate-files.ts';
 
 /** What the page shows about a stored file. */
 export interface CertificateFileInfo {

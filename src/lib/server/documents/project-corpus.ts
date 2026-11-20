@@ -14,14 +14,14 @@
  */
 
 import { asc, desc, eq, inArray } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	profile_document_files,
 	profile_document_projects,
 	side_projects,
 	work_experience_projects
-} from '$lib/server/db/schema';
-import type { ProjectContext } from '$lib/server/github/project-proposals';
+} from '#lib/server/db/schema.ts';
+import type { ProjectContext } from '#lib/server/github/project-proposals.ts';
 
 export type ProjectKind = 'side_project' | 'work_experience_project';
 

@@ -20,18 +20,18 @@ import {
 	fitMatchedCapabilities,
 	renderCapabilityPrompt,
 	resolveCapabilities
-} from '$lib/server/ai-chat/capabilities';
-import { CAPABILITY_PROMPT_BUDGET_CHARS } from '$lib/server/ai-chat/capabilities';
-import { chatToolSet } from '$lib/server/ai-chat/agent/tools';
-import { TOOL_DEFINITIONS_BUDGET_CHARS } from '$lib/server/ai-chat/agent/turn';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { CAPABILITY_PROMPT_BUDGET_CHARS } from '#lib/server/ai-chat/capabilities.ts';
+import { chatToolSet } from '#lib/server/ai-chat/agent/tools.ts';
+import { TOOL_DEFINITIONS_BUDGET_CHARS } from '#lib/server/ai-chat/agent/turn.ts';
 import {
 	admissionOrder,
 	scopeForRoute,
 	tieredCapabilities
-} from '$lib/server/ai-chat/chat-context';
-import type { ContextEntity } from '$lib/server/ai-chat/generation-context';
-import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
-import { readOwnedRows } from '$lib/server/profile/write';
+} from '#lib/server/ai-chat/chat-context.ts';
+import type { ContextEntity } from '#lib/server/ai-chat/generation-context.ts';
+import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '#lib/server/profile/resources.ts';
+import { readOwnedRows } from '#lib/server/profile/write.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId))

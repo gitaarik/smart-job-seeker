@@ -32,21 +32,21 @@
  *     failure mode of a confused model is proposing nothing, never wiping a row.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
-import { application_records, applications, jobs } from '$lib/server/db/schema';
+import { application_records, applications, jobs } from '#lib/server/db/schema.ts';
 import type { ContextEntity } from './generation-context';
-import { coerceValue, WIRE_TYPES, type FieldKind } from '$lib/server/utils/field-kinds';
+import { coerceValue, WIRE_TYPES, type FieldKind } from '#lib/server/utils/field-kinds.ts';
 import { PROFILE_CAPABILITIES, type ProfileCapability } from './profile-capabilities';
 import {
 	isOfferedField,
 	languageList,
 	parseTranslationField
-} from '$lib/server/profile/section-translations';
-import { localeLabel } from '$lib/resume-translations';
+} from '#lib/server/profile/section-translations.ts';
+import { localeLabel } from '#lib/resume-translations.ts';
 import { describeFieldChanges, labelFor, renderValue } from './field-changes';
-import type { OrderGroup } from '$lib/utils/change-analysis';
+import type { OrderGroup } from '#lib/utils/change-analysis.ts';
 import { TEXT_CAPABILITIES, type TextCapability } from './text-version-capabilities';
 import { rowsNamedInMessage } from './profile-matching';
 import {
@@ -56,14 +56,14 @@ import {
 	canEditJob,
 	type JobFieldValues,
 	validateJobFields
-} from '$lib/server/jobs/edit-job';
+} from '#lib/server/jobs/edit-job.ts';
 import {
 	clampRecordTitle,
 	deriveRecordTitle,
 	getRecordTypeLabel,
 	recordTypeValues,
 	today
-} from '$lib/application-records';
+} from '#lib/application-records.ts';
 import {
 	blankRound,
 	currentRoundIndex,
@@ -79,7 +79,7 @@ import {
 	stepsByStatus,
 	stepsFor,
 	type InterviewRound
-} from '$lib/application-status';
+} from '#lib/application-status.ts';
 import {
 	applicationStatusError,
 	describeNextStepForModel,
@@ -90,7 +90,7 @@ import {
 	settleStatusChange,
 	STAGE_COLUMNS,
 	writeApplicationStatus
-} from '$lib/server/applications/status';
+} from '#lib/server/applications/status.ts';
 import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
 import { MATCH_CONFIG_CAPABILITIES, type MatchConfigCapability } from './match-config-capability';
 import { BASIC_INFO_CAPABILITIES, type BasicInfoCapability } from './basic-info-capability';
@@ -101,9 +101,9 @@ import { DELETE_CAPABILITIES, type DeleteCapability } from './delete-capabilitie
 import { TAG_CAPABILITIES, type TagCapability } from './tag-capabilities';
 import { VERSION_CAPABILITIES, type VersionCapability } from './version-capabilities';
 import type { EditSource } from './edit-log';
-import type { TierDecision } from '$lib/server/mcp/tiers';
-import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
-import { listProfileApplications } from '$lib/server/applications/profile-applications';
+import type { TierDecision } from '#lib/server/mcp/tiers.ts';
+import { createApplication, parseForNewApplication } from '#lib/server/applications/create.ts';
+import { listProfileApplications } from '#lib/server/applications/profile-applications.ts';
 import { deriveRecordMetadata } from './record-derivation';
 import { summarizeApplication } from './application-summary';
 

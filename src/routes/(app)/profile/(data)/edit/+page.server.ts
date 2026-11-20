@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { getProfileByIdentifier } from '$lib/server/profile/default';
+import { getProfileByIdentifier } from '#lib/server/profile/default.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

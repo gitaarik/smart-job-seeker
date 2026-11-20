@@ -20,10 +20,10 @@
  *   docker compose exec app node dist-scripts/audit-job-regions.mjs
  */
 
-import { dbDirect as db } from '$lib/server/db';
-import { jobs } from '$lib/server/db/schema';
-import { classifyRegion, isNonLocation } from '$lib/data/job-taxonomy';
-import { normalizeWorkLocation } from '$lib/data/job-normalize';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { jobs } from '#lib/server/db/schema.ts';
+import { classifyRegion, isNonLocation } from '#lib/data/job-taxonomy.ts';
+import { normalizeWorkLocation } from '#lib/data/job-normalize.ts';
 
 function isRemote(workLocation: unknown): boolean {
 	return Array.isArray(workLocation) && workLocation.includes('remote');

@@ -9,8 +9,8 @@
 		faFont,
 		faRotateLeft
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { DocType } from '$lib/utils/profile-doc-url';
-	import { overrideEntityLabel, OVERRIDE_ENTITIES } from '$lib/version-overrides';
+	import type { DocType } from '#lib/utils/profile-doc-url.ts';
+	import { overrideEntityLabel, OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
 	import type { Decision, LastRun } from './types';
 
 	/**

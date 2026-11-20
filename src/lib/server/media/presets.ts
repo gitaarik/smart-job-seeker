@@ -7,8 +7,8 @@
  */
 
 import { and, asc, desc, eq, isNull, or } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { media_presets, media_renditions } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { media_presets, media_renditions } from '#lib/server/db/schema.ts';
 import {
 	isMediaKind,
 	isMediaMask,
@@ -18,7 +18,7 @@ import {
 	type MediaPresetView,
 	type OutputFormat,
 	type SafeZone
-} from '$lib/media-library';
+} from '#lib/media-library.ts';
 import { deleteUnusedRenditions } from './renditions';
 
 type PresetRow = typeof media_presets.$inferSelect;

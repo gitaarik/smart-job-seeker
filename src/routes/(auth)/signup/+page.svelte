@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { track } from '$lib/tools/analytics';
-	import TermsCheckbox from '$lib/components/legal/TermsCheckbox.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { track } from '#lib/tools/analytics.ts';
+	import TermsCheckbox from '#lib/components/legal/TermsCheckbox.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -106,7 +106,7 @@
 			}
 
 			track('signup_completed');
-			goto(resolve('/signup/pending'));
+			goto(resolve('signup/pending'));
 		} catch (err) {
 			track('signup_failed', { code: 'network' });
 			error = err instanceof Error ? err.message : 'An error occurred';
@@ -132,7 +132,7 @@
 			<p class="mt-2 text-center text-sm text-[var(--dash-text-secondary)]">
 				Already have an account?
 				<a
-					href={resolve('/login')}
+					href={resolve('login')}
 					class="font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 				>
 					Sign in
@@ -235,9 +235,9 @@
 		</form>
 
 		<p class="text-center text-xs text-[var(--dash-text-muted)]">
-			<a class="underline" href={resolve('/privacy')}>Privacy</a>
+			<a class="underline" href={resolve('privacy')}>Privacy</a>
 			&middot;
-			<a class="underline" href={resolve('/terms')}>Terms</a>
+			<a class="underline" href={resolve('terms')}>Terms</a>
 		</p>
 	</div>
 </div>

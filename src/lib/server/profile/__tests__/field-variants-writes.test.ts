@@ -107,10 +107,10 @@ const { tables, versions, selects, inserts, deletes, dbMock } = vi.hoisted(() =>
 	};
 });
 
-vi.mock('$lib/server/db', () => ({ db: dbMock, dbDirect: dbMock }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: dbMock, dbDirect: dbMock }));
 
-import { profile_field_variants, profile_version_overrides } from '$lib/server/db/schema';
-import { variantTargetKey } from '$lib/field-variants';
+import { profile_field_variants, profile_version_overrides } from '#lib/server/db/schema.ts';
+import { variantTargetKey } from '#lib/field-variants.ts';
 import {
 	createFieldVariant,
 	loadFieldVariants,

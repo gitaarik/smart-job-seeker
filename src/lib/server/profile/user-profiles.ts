@@ -4,9 +4,9 @@
  * Functions for querying profiles owned by a specific user.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, count, asc, desc } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { profiles } from '#lib/server/db/schema.ts';
 
 /**
  * Lightweight profile data for dashboard navigation

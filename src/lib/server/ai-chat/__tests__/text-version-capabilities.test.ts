@@ -7,9 +7,9 @@
  * would pass just as happily for an implementation that overwrote the letter.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { serializeStarMarkdown } from '$lib/interview/star';
+import { serializeStarMarkdown } from '#lib/interview/star.ts';
 
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
 const recordVersion = vi.fn();
 const ensureBaselineVersion = vi.fn();
@@ -41,8 +41,8 @@ const ROWS: Record<string, Record<string, unknown>> = {
 /** What the trail looks like, per test. Empty by default. */
 let trail: { count: number; content: string | null } | null = null;
 
-vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/texts/profile-texts')>()),
+vi.mock('#lib/server/texts/profile-texts.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/texts/profile-texts.ts')>()),
 	readOwnedText: (kind: string, id: number, profileId: number) =>
 		Promise.resolve(profileId === 12 ? (ROWS[`${kind}:${id}`] ?? null) : null),
 	summarizeTextVersions: (_kind: string, ids: number[]) =>
@@ -62,8 +62,8 @@ vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => ({
 }));
 
 const { TEXT_CAPABILITIES } = await import('../text-version-capabilities');
-const { TEXT_READ_CHARS } = await import('$lib/server/texts/profile-texts');
-const { tierForWrite } = await import('$lib/server/mcp/tiers');
+const { TEXT_READ_CHARS } = await import('#lib/server/texts/profile-texts.ts');
+const { tierForWrite } = await import('#lib/server/mcp/tiers.ts');
 
 const ACTOR = { profileId: 12, isStaff: false };
 const LETTER = { id: 3, label: 'Cover letter', path: '/applications/44/texts/3' };

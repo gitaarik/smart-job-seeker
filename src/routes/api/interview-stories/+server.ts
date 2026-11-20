@@ -1,17 +1,17 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc } from 'drizzle-orm';
-import { profiles, project_stories } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { touchProfile } from '$lib/server/profile/touch-profile';
+import { profiles, project_stories } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
 import {
 	interviewStoryCreateSchema,
 	interviewStoryUpdateSchema,
 	interviewStoryDeleteSchema,
 	interviewStoryReorderSchema,
 	parseBody
-} from '$lib/server/validation/api-schemas';
-import { projectBelongsToProfile } from '$lib/server/profile/project-ownership';
+} from '#lib/server/validation/api-schemas.ts';
+import { projectBelongsToProfile } from '#lib/server/profile/project-ownership.ts';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);

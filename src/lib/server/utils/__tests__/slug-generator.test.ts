@@ -8,7 +8,7 @@ const { mockFindFirst } = vi.hoisted(() => ({
 	mockFindFirst: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			profiles: { findFirst: mockFindFirst }
@@ -22,7 +22,7 @@ vi.mock('drizzle-orm', () => ({
 	ne: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: {
 		slug: 'profiles.slug',
 		id: 'profiles.id'

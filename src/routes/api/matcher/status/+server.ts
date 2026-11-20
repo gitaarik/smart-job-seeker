@@ -10,12 +10,12 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, desc, isNull, ne, or } from 'drizzle-orm';
-import { profiles, match_config, job_matches } from '$lib/server/db/schema';
-import { getMatcherState, isMatcherAlive } from '$lib/server/job/matcher-state';
-import { getMatchCounts, getEligibleUnmatchedCount } from '$lib/server/job/match-counts';
-import { recommendationOf } from '$lib/match-recommendation';
+import { profiles, match_config, job_matches } from '#lib/server/db/schema.ts';
+import { getMatcherState, isMatcherAlive } from '#lib/server/job/matcher-state.ts';
+import { getMatchCounts, getEligibleUnmatchedCount } from '#lib/server/job/match-counts.ts';
+import { recommendationOf } from '#lib/match-recommendation.ts';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const user = locals.user;

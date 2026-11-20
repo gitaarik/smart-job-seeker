@@ -66,18 +66,18 @@
 		type PortfolioPage,
 		type PortfolioSection,
 		type PortfolioTheme
-	} from '$lib/portfolio-themes';
-	import { assetUrl } from '$lib/presentation-templates';
-	import { formatDateRangeVerbose } from '$lib/tools/date-utils';
-	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
-	import { getEducationLogoUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
-	import type { PortfolioContactGate } from '$lib/server/profile/portfolio-contact';
-	import type { PortfolioBusiness } from '$lib/server/profile/portfolio-business';
+	} from '#lib/portfolio-themes.ts';
+	import { assetUrl } from '#lib/presentation-templates.ts';
+	import { formatDateRangeVerbose } from '#lib/tools/date-utils.ts';
+	import { getProfilePhotoUrl } from '#lib/utils/profile-photo-url.ts';
+	import { getEducationLogoUrl, getWorkExperienceLogoUrl } from '#lib/utils/entity-media-url.ts';
+	import type { PortfolioContactGate } from '#lib/server/profile/portfolio-contact.ts';
+	import type { PortfolioBusiness } from '#lib/server/profile/portfolio-business.ts';
 	import { careerView, siteLists, splitAchievements, type Row } from '../site-lists';
 	import { keySkillLines } from '../key-skills';
 	import { briefRole, briefRoleProject, briefSideProject } from '../brief-entries';
 	import { iconFor } from './icons';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import Card from './Card.svelte';
 	import AgentTrace from './AgentTrace.svelte';
 	import CodeMinimap from './CodeMinimap.svelte';
@@ -87,13 +87,13 @@
 	import { workSlides } from './work-slides';
 	import PortfolioNav from './PortfolioNav.svelte';
 	import PortfolioSeo from '../PortfolioSeo.svelte';
-	import type { PortfolioSeoUrls } from '$lib/portfolio-seo';
+	import type { PortfolioSeoUrls } from '#lib/portfolio-seo.ts';
 	import BriefList from './BriefList.svelte';
 	import ContactButton from './ContactButton.svelte';
 	import SchemeSwitcher from './SchemeSwitcher.svelte';
 	import { ContactState } from './contact-state.svelte';
 	import { loadSchemePreference, saveSchemePreference, type SchemePreference } from './scheme';
-	import { rolePlace } from '$lib/work-mode';
+	import { rolePlace } from '#lib/work-mode.ts';
 	import 'aos/dist/aos.css';
 
 	interface Props {
@@ -1219,8 +1219,7 @@
 					<div>
 						<span>Copyright © {year} {business?.name ?? profile.name}</span>
 						·
-						<a href={resolve('/privacy')} class="underline hover:text-(--pf-band-accent)">Privacy</a
-						>
+						<a href={resolve('privacy')} class="underline hover:text-(--pf-band-accent)">Privacy</a>
 					</div>
 					{#if config.footerNote}
 						{@const note = footerNoteParts(config.footerNote)}

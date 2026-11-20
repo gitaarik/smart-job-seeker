@@ -31,11 +31,16 @@ import {
 	START,
 	StateGraph
 } from '@langchain/langgraph';
-import type { ChatMessage, CompletionResult, ToolCall, ToolDefinition } from '$lib/server/llm';
-import type { ReadRecord } from '$lib/server/documents/retrieval-record';
-import { isReadTool } from '$lib/server/mcp/tools';
-import { traced } from '$lib/server/monitoring/langgraph';
-import { glance, traceStep } from '$lib/server/monitoring/telemetry';
+import type {
+	ChatMessage,
+	CompletionResult,
+	ToolCall,
+	ToolDefinition
+} from '#lib/server/llm/index.ts';
+import type { ReadRecord } from '#lib/server/documents/retrieval-record.ts';
+import { isReadTool } from '#lib/server/mcp/tools.ts';
+import { traced } from '#lib/server/monitoring/langgraph.ts';
+import { glance, traceStep } from '#lib/server/monitoring/telemetry.ts';
 import { describeToolCall, TURN_EVENT, type TurnEvent, type TurnNode } from './events';
 import type { ExecutedCall } from './executor';
 import type { StoredProposal } from './proposals';

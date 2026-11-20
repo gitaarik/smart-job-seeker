@@ -2,14 +2,14 @@
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import { timeAgo } from '$lib/format';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
+	import { timeAgo } from '#lib/format.ts';
 	import {
 		ATS_BOARD_STATUS_LABEL,
 		ATS_BOARD_STATUSES,
 		atsCareersUrl,
 		type AtsBoardStatus
-	} from '$lib/job-platforms/ats-boards';
+	} from '#lib/job-platforms/ats-boards.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,

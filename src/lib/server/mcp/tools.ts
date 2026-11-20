@@ -37,71 +37,74 @@
  * nothing it does not already get.
  */
 
-import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
-import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
-import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
+import { APP_AREAS } from '#lib/server/ai-chat/ability-manifest.ts';
+import { CAPABILITIES, type Capability } from '#lib/server/ai-chat/capabilities.ts';
+import { PROFILE_CAPABILITY_NAMES } from '#lib/server/ai-chat/profile-capabilities.ts';
 import {
 	isReorderCapability,
 	REORDER_CAPABILITY_NAMES
-} from '$lib/server/ai-chat/reorder-capabilities';
+} from '#lib/server/ai-chat/reorder-capabilities.ts';
 import {
 	DELETE_CAPABILITY_NAMES,
 	isDeleteCapability
-} from '$lib/server/ai-chat/delete-capabilities';
+} from '#lib/server/ai-chat/delete-capabilities.ts';
 import {
 	isTagCapability,
 	libraryVersions,
 	TAG_CAPABILITY_NAMES
-} from '$lib/server/ai-chat/tag-capabilities';
+} from '#lib/server/ai-chat/tag-capabilities.ts';
 import {
 	APPLICATION_COLLECTION,
 	ENTITY_CAPABILITY_NAMES,
 	RESUME_VERSIONS_PAGE,
 	targetingFor
 } from './entities';
-import { isVersionCapability } from '$lib/server/ai-chat/version-capabilities';
-import { isTextCommitCapability } from '$lib/server/ai-chat/text-commit-capabilities';
+import { isVersionCapability } from '#lib/server/ai-chat/version-capabilities.ts';
+import { isTextCommitCapability } from '#lib/server/ai-chat/text-commit-capabilities.ts';
 import {
 	TEXT_CREATE_CAPABILITY_NAMES,
 	isTextCreateCapability,
 	kindForTextCreateCapability,
 	textCreateOwner
-} from '$lib/server/ai-chat/text-create-capabilities';
-import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
+} from '#lib/server/ai-chat/text-create-capabilities.ts';
+import { TEXT_KINDS } from '#lib/server/texts/profile-texts.ts';
 import type { McpReadScope, McpScope } from './keys';
 import {
 	APPLICATION_PAGE_DEFAULT,
 	APPLICATION_PAGE_MAX
-} from '$lib/server/applications/profile-applications';
-import { RELABELLED_STATUSES, settableStatuses } from '$lib/server/applications/status';
-import { JOB_PAGE_DEFAULT, JOB_PAGE_MAX } from '$lib/server/jobs/profile-jobs';
-import { DOCUMENT_PAGE_DEFAULT, DOCUMENT_PAGE_MAX } from '$lib/server/documents/read';
+} from '#lib/server/applications/profile-applications.ts';
+import { RELABELLED_STATUSES, settableStatuses } from '#lib/server/applications/status.ts';
+import { JOB_PAGE_DEFAULT, JOB_PAGE_MAX } from '#lib/server/jobs/profile-jobs.ts';
+import { DOCUMENT_PAGE_DEFAULT, DOCUMENT_PAGE_MAX } from '#lib/server/documents/read.ts';
 import {
 	TEXT_KIND_NAMES,
 	TEXT_PAGE_DEFAULT,
 	TEXT_PAGE_MAX,
 	TEXT_READ_CHARS
-} from '$lib/server/texts/profile-texts';
+} from '#lib/server/texts/profile-texts.ts';
 import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResource,
 	type ProfileResourceName
-} from '$lib/server/profile/resources';
-import { parentNames, type ProfileActor } from '$lib/server/profile/write';
-import { parseTranslationField, translatedLocales } from '$lib/server/profile/section-translations';
-import { localeLabel } from '$lib/resume-translations';
-import type { FieldKind } from '$lib/server/utils/field-kinds';
-import { MATCH_CONFIG_CAPABILITY_NAMES } from '$lib/server/ai-chat/match-config-capability';
+} from '#lib/server/profile/resources.ts';
+import { parentNames, type ProfileActor } from '#lib/server/profile/write.ts';
+import {
+	parseTranslationField,
+	translatedLocales
+} from '#lib/server/profile/section-translations.ts';
+import { localeLabel } from '#lib/resume-translations.ts';
+import type { FieldKind } from '#lib/server/utils/field-kinds.ts';
+import { MATCH_CONFIG_CAPABILITY_NAMES } from '#lib/server/ai-chat/match-config-capability.ts';
 import {
 	BASIC_INFO_CAPABILITY_NAMES,
 	isBasicInfoCapability
-} from '$lib/server/ai-chat/basic-info-capability';
-import { BASIC_INFO_PAGE, PROFILE_ROW } from '$lib/server/profile/basic-info';
+} from '#lib/server/ai-chat/basic-info-capability.ts';
+import { BASIC_INFO_PAGE, PROFILE_ROW } from '#lib/server/profile/basic-info.ts';
 import {
 	DIRECTIVE_CAPABILITY_NAMES,
 	DIRECTIVES_PAGE
-} from '$lib/server/ai-chat/directive-capability';
+} from '#lib/server/ai-chat/directive-capability.ts';
 
 /** Where the match preferences are seen and edited by hand. */
 const MATCH_CONFIG_PAGE = { name: 'Match Config', path: '/jobs/import/config' };

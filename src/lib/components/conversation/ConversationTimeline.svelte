@@ -8,7 +8,7 @@
 	 * show/hide, busy/error, scroll-to-last) and the busy/scroll/error
 	 * orchestration. It owns NO persistence: every mutation is delegated to a
 	 * callback the host page supplies, which performs the fetch/action and
-	 * `invalidateAll()`s before resolving. Callbacks throw on failure with a
+	 * `refreshAll()`s before resolving. Callbacks throw on failure with a
 	 * user-facing message, which this component surfaces.
 	 */
 	import { afterNavigate } from '$app/navigation';
@@ -27,21 +27,21 @@
 		faRotateRight,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
-	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
-	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
-	import { computeDiff } from '$lib/utils/word-diff';
-	import { sameText } from '$lib/utils/same-text';
+	import AutoGrowTextarea from '#lib/components/AutoGrowTextarea.svelte';
+	import { renderSafeMarkdown } from '#lib/utils/safe-markdown.ts';
+	import { computeDiff } from '#lib/utils/word-diff.ts';
+	import { sameText } from '#lib/utils/same-text.ts';
 	import Card from '../../../routes/(app)/components/Card.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import GenerationStatus from '$lib/components/GenerationStatus.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import GenerationStatus from '#lib/components/GenerationStatus.svelte';
 	import RetrievalSources from './RetrievalSources.svelte';
-	import SimpleEditor from '$lib/components/SimpleEditor.svelte';
+	import SimpleEditor from '#lib/components/SimpleEditor.svelte';
 	import ConfirmModal from '../../../routes/(app)/profile/components/ConfirmModal.svelte';
 	import type {
 		ConversationEntry,
 		DeleteScope,
 		TurnLabels
-	} from '$lib/server/ai-chat/entity-versions';
+	} from '#lib/server/ai-chat/entity-versions.ts';
 
 	type BusyMode = 'generate' | 'advice' | 'auto' | 'followup' | 'review' | 'apply';
 

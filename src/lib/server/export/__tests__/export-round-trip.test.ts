@@ -37,7 +37,7 @@ function chain(result: unknown) {
 	return obj;
 }
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: new Proxy(
 			{},
@@ -61,7 +61,7 @@ vi.mock('$lib/server/db', () => ({
 
 // The sidecars have tests of their own (export-sidecars.test.ts); here they
 // carry nothing.
-vi.mock('$lib/server/files', () => ({ getFile: vi.fn(), uploadFile: vi.fn() }));
+vi.mock('#lib/server/files.ts', () => ({ getFile: vi.fn(), uploadFile: vi.fn() }));
 vi.mock('../export-translations', async (original) => ({
 	...(await original<typeof import('../export-translations')>()),
 	buildTranslationExport: () => Promise.resolve([])
@@ -83,11 +83,11 @@ vi.mock('../import-templates', () => ({
 	deleteProfilePresentationTemplates: () => Promise.resolve(),
 	importResumeTemplates: () => Promise.resolve({ imported: 0 })
 }));
-vi.mock('$lib/server/profile/certificate-file', () => ({
+vi.mock('#lib/server/profile/certificate-file.ts', () => ({
 	certificateFilesByName: () => Promise.resolve(new Map()),
 	restoreCertificateFiles: () => Promise.resolve()
 }));
-vi.mock('$lib/server/profile/generate-version-pdfs', () => ({
+vi.mock('#lib/server/profile/generate-version-pdfs.ts', () => ({
 	generateVersionPdfs: () => Promise.resolve()
 }));
 

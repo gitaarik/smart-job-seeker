@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { hasDeviceAccess } from '$lib/server/device-shares';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { hasDeviceAccess } from '#lib/server/device-shares.ts';
 
 /**
  * POST /api/tunnel/input/:apiKeyId — Forward raw input events to the device.

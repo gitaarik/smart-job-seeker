@@ -1,10 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
-import type { ParsedJobDescription } from '$lib/server/jobs/parse-job-description';
-import { parseCacheKey, recallParse } from '$lib/server/jobs/parse-cache';
-import { parseIntOrNull, strArrayOrNull, strOrNull } from '$lib/server/jobs/job-fields';
-import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
+import type { ParsedJobDescription } from '#lib/server/jobs/parse-job-description.ts';
+import { parseCacheKey, recallParse } from '#lib/server/jobs/parse-cache.ts';
+import { parseIntOrNull, strArrayOrNull, strOrNull } from '#lib/server/jobs/job-fields.ts';
+import { createApplication, parseForNewApplication } from '#lib/server/applications/create.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

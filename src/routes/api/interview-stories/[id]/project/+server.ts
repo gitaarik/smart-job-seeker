@@ -14,13 +14,13 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { profiles, project_stories } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { touchProfile } from '$lib/server/profile/touch-profile';
-import { projectBelongsToProfile } from '$lib/server/profile/project-ownership';
-import { interviewStoryLinkSchema, parseBody } from '$lib/server/validation/api-schemas';
+import { profiles, project_stories } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
+import { projectBelongsToProfile } from '#lib/server/profile/project-ownership.ts';
+import { interviewStoryLinkSchema, parseBody } from '#lib/server/validation/api-schemas.ts';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

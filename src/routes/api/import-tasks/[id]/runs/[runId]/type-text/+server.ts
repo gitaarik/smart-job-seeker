@@ -1,10 +1,10 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { search_task_runs, search_tasks } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { submitPendingAction } from '$lib/server/scraper/pending-action';
+import { search_task_runs, search_tasks } from '#lib/server/db/schema.ts';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { submitPendingAction } from '#lib/server/scraper/pending-action.ts';
 
 /**
  * POST /api/import-tasks/[id]/runs/[runId]/type-text

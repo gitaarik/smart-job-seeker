@@ -4,13 +4,13 @@
  */
 
 import { z } from 'zod';
-import { generateChatCompletionTracked } from '$lib/server/llm';
-import type { ChatMessage } from '$lib/server/llm';
-import { config } from '$lib/server/config';
+import { generateChatCompletionTracked } from '#lib/server/llm/index.ts';
+import type { ChatMessage } from '#lib/server/llm/index.ts';
+import { config } from '#lib/server/config.ts';
 import type { ResumeData } from './types';
 import { liftWorkMode } from './work-mode-from-location';
-import { tokensToCost, chargeCredits } from '$lib/server/billing/credits';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
+import { tokensToCost, chargeCredits } from '#lib/server/billing/credits.ts';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
 
 const SYSTEM_PROMPT = `You are a resume parser that extracts structured information from resume text.
 

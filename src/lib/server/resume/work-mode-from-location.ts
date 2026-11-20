@@ -13,8 +13,8 @@
  * between commas, bars, slashes, middots or a spaced dash. "Remoteville" stays a
  * place, and so does anything the vocabulary does not know.
  */
-import { WORK_LOCATIONS, buildNormalizeMap } from '$lib/data/job-taxonomy';
-import { asWorkMode, type WorkMode } from '$lib/work-mode';
+import { WORK_LOCATIONS, buildNormalizeMap } from '#lib/data/job-taxonomy.ts';
+import { asWorkMode, type WorkMode } from '#lib/work-mode.ts';
 
 const ARRANGEMENTS = buildNormalizeMap(WORK_LOCATIONS);
 

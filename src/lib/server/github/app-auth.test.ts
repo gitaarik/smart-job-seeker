@@ -19,8 +19,8 @@ const h = vi.hoisted(() => ({
 		githubAppClientSecret: ''
 	}
 }));
-vi.mock('$lib/server/config', () => ({ config: h.config }));
-vi.mock('$lib/server/db', () => ({ dbDirect: {} }));
+vi.mock('#lib/server/config.ts', () => ({ config: h.config }));
+vi.mock('#lib/server/db/index.ts', () => ({ dbDirect: {} }));
 
 import {
 	appInstallUrl,

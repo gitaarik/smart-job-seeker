@@ -11,7 +11,7 @@
 	 */
 	import { onMount, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { armOn } from '$lib/actions/arm-on';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -23,15 +23,15 @@
 		faPenToSquare,
 		faRightToBracket
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import CredentialSelector from './CredentialSelector.svelte';
 	import SignInPageField from './SignInPageField.svelte';
 	import BrowserProviderToggle from './BrowserProviderToggle.svelte';
-	import { autoSaveField } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import { buildHourOptions } from '$lib/format-date';
-	import { toLoginMode } from '$lib/import-tasks/sign-in';
-	import type { TimeFormat } from '$lib/format-date';
+	import { autoSaveField } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import { buildHourOptions } from '#lib/format-date.ts';
+	import { toLoginMode } from '#lib/import-tasks/sign-in.ts';
+	import type { TimeFormat } from '#lib/format-date.ts';
 
 	/**
 	 * The fields of a `search_tasks` row this component reads.
@@ -934,7 +934,7 @@
 								Device connected
 							{:else}
 								No device connected — <a
-									href={resolve('/jobs/import/devices')}
+									href={resolve('jobs/import/devices')}
 									class="underline hover:text-amber-700">Setup guide</a
 								>
 							{/if}
@@ -1132,7 +1132,7 @@
 										>{userTimezone.split('/').pop()?.replace(/_/g, ' ')}</span
 									>
 									<a
-										href="{resolve('/settings')}#timezone"
+										href="{resolve('settings')}#timezone"
 										class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 										title="Change timezone"
 									>
@@ -1140,7 +1140,7 @@
 									</a>
 								{:else}
 									<a
-										href="{resolve('/settings')}#timezone"
+										href="{resolve('settings')}#timezone"
 										class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]"
 										>Set timezone</a
 									>

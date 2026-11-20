@@ -14,7 +14,7 @@
  *  3. What comes back says what was destroyed, not only what arrived.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
+import { CAPABILITIES } from '#lib/server/ai-chat/capabilities.ts';
 
 /** One work experience with an authored summary, and one with none. */
 const ROWS: Record<string, Record<string, unknown>[]> = {
@@ -49,7 +49,7 @@ const recentDirectWrites = vi.fn();
 const readRequests = vi.fn();
 const countRequests = vi.fn();
 
-vi.mock('$lib/server/profile/write', () => ({
+vi.mock('#lib/server/profile/write.ts', () => ({
 	readOwnedRows: (name: string) => Promise.resolve(ROWS[name] ?? []),
 	readOwnedRow: (name: string, _actor: unknown, id: number) =>
 		Promise.resolve(ROWS[name]?.find((row) => row.id === id) ?? null),
@@ -72,8 +72,8 @@ const translations = {
 // Partial: the field names and the refusals are the real ones, and only the
 // reads are stubbed — a translatable section asks which languages the profile
 // writes in on every read and every write.
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>()),
 	translatedLocales: () => Promise.resolve(translations.languages),
 	readTranslations: (_profileId: number, _name: string, ids: number[]) =>
 		Promise.resolve(
@@ -86,8 +86,8 @@ vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
 }));
 
 // Partial: the real CAPABILITIES and the real coercion, only the write stubbed.
-vi.mock('$lib/server/ai-chat/capabilities', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/ai-chat/capabilities')>()),
+vi.mock('#lib/server/ai-chat/capabilities.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/ai-chat/capabilities.ts')>()),
 	executeCapability: (...args: unknown[]) => executeCapability(...args)
 }));
 
@@ -100,11 +100,11 @@ vi.mock('../requests', async (importOriginal) => ({
 	countRequests: (...args: unknown[]) => countRequests(...args)
 }));
 
-vi.mock('$lib/server/notifications', () => ({
+vi.mock('#lib/server/notifications.ts', () => ({
 	createNotification: (...args: unknown[]) => createNotification(...args)
 }));
 
-vi.mock('$lib/server/ai-chat/profile-edit-manifest', () => ({
+vi.mock('#lib/server/ai-chat/profile-edit-manifest.ts', () => ({
 	profileEditCounts: () =>
 		Promise.resolve([
 			{ name: 'work_experience', rows: 2 },
@@ -112,7 +112,7 @@ vi.mock('$lib/server/ai-chat/profile-edit-manifest', () => ({
 		])
 }));
 
-vi.mock('$lib/server/ai-chat/edit-log', () => ({ readEditLog: () => Promise.resolve([]) }));
+vi.mock('#lib/server/ai-chat/edit-log.ts', () => ({ readEditLog: () => Promise.resolve([]) }));
 
 /** The profile row's own texts: two written, one empty, for the two tiers. */
 const BASIC_INFO = {
@@ -122,8 +122,8 @@ const BASIC_INFO = {
 	summary: 'What the applicant wrote about themselves.',
 	about_me_text: 'A longer bio.'
 };
-vi.mock('$lib/server/profile/basic-info', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/basic-info')>()),
+vi.mock('#lib/server/profile/basic-info.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/basic-info.ts')>()),
 	readBasicInfo: () => Promise.resolve(BASIC_INFO)
 }));
 
@@ -132,8 +132,8 @@ vi.mock('$lib/server/profile/basic-info', async (importOriginal) => ({
 // is built from.
 let directiveRows: unknown[] = [];
 let directivesFail = false;
-vi.mock('$lib/server/ai-chat/directives', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/ai-chat/directives')>()),
+vi.mock('#lib/server/ai-chat/directives.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/ai-chat/directives.ts')>()),
 	loadDirectives: async () => {
 		if (directivesFail) throw new Error('connection reset');
 		return directiveRows;
@@ -200,7 +200,7 @@ const APPLICATION = {
 /** What `add_activity_record.current` reads to render the chronology. */
 const RECORDS = [{ id: 7, record_type: 'note', title: 'Recruiter call', event_date: '2026-08-02' }];
 
-vi.mock('$lib/server/jobs/profile-jobs', () => ({
+vi.mock('#lib/server/jobs/profile-jobs.ts', () => ({
 	JOB_PAGE_DEFAULT: 20,
 	JOB_PAGE_MAX: 50,
 	listProfileJobs: (_profileId: number, opts?: { editableOnly?: boolean }) =>
@@ -215,7 +215,7 @@ vi.mock('$lib/server/jobs/profile-jobs', () => ({
 /** A long entry, so the slicing and the "there is more" line are exercised. */
 const ENTRY_TEXT = 'The transcript. '.repeat(20);
 
-vi.mock('$lib/server/applications/profile-applications', () => ({
+vi.mock('#lib/server/applications/profile-applications.ts', () => ({
 	APPLICATION_PAGE_DEFAULT: 20,
 	APPLICATION_PAGE_MAX: 50,
 	ENTRY_READ_CHARS: 100,
@@ -268,7 +268,7 @@ const DOCUMENT = {
 	total_chars: 400
 };
 
-vi.mock('$lib/server/documents/read', () => ({
+vi.mock('#lib/server/documents/read.ts', () => ({
 	DOCUMENT_PAGE_DEFAULT: 20,
 	DOCUMENT_PAGE_MAX: 50,
 	DOCUMENT_READ_CHARS: 100,
@@ -318,8 +318,8 @@ const LETTER_ROW = {
 	path: '/applications/44/texts/3'
 };
 
-vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/texts/profile-texts')>()),
+vi.mock('#lib/server/texts/profile-texts.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/texts/profile-texts.ts')>()),
 	listProfileTexts: (profileId: number) => Promise.resolve(profileId === 12 ? [LETTER_TEXT] : []),
 	readProfileText: (kind: string, id: number, profileId: number) =>
 		Promise.resolve(
@@ -387,7 +387,7 @@ const APPLICATION_ROW = {
 	application_seen_date: null
 };
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			jobs: { findFirst: () => Promise.resolve(JOB_ROW) },

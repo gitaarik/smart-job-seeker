@@ -28,7 +28,7 @@ const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 const mockDeleteWhere = vi.fn().mockResolvedValue({ rowCount: 0 });
 const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			profiles: { findMany: (...a: unknown[]) => mockProfilesFindMany(...a) },
@@ -62,7 +62,7 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn((col: unknown) => ({ kind: 'desc', col }))
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	api_keys: { id: 'api_keys.id', user_id: 'api_keys.user_id' },
 	credential_shares: {
 		id: 'credential_shares.id',
@@ -83,12 +83,12 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 const mockAreContacts = vi.fn();
-vi.mock('$lib/server/contacts', () => ({
+vi.mock('#lib/server/contacts.ts', () => ({
 	areContacts: (...a: unknown[]) => mockAreContacts(...a)
 }));
 
 const mockCreateNotification = vi.fn().mockResolvedValue(undefined);
-vi.mock('$lib/server/notifications', () => ({
+vi.mock('#lib/server/notifications.ts', () => ({
 	createNotification: (...a: unknown[]) => mockCreateNotification(...a)
 }));
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faClock, faTimesCircle } from '@fortawesome/free-regular-svg-icons';
-	import { getScoreGradient } from '$lib/score-colors';
+	import { getScoreGradient } from '#lib/score-colors.ts';
 
 	interface Props {
 		score: number | null;

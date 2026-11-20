@@ -25,12 +25,12 @@
  * or from cloud/: npm run db:verify-match-history-prune
  */
 import { inArray } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { job_match_history, jobs, profiles } from '$lib/server/db/schema';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { job_match_history, jobs, profiles } from '#lib/server/db/schema.ts';
 import {
 	AGREED_RETENTION_DAYS,
 	prunableMatchHistorySql
-} from '$lib/server/match-history/retention';
+} from '#lib/server/match-history/retention.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 const cutoff = new Date(Date.now() - AGREED_RETENTION_DAYS * DAY);

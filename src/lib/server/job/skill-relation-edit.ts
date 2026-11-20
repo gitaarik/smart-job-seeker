@@ -9,7 +9,7 @@
  * when the code is copied rather than called.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { refuseNewRelation, type RelationRefusal } from './skill-relation-guards';
 
 export type EditResult = { ok: true } | { ok: false; refusal: RelationRefusal };

@@ -12,11 +12,11 @@
  */
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { requireRowActor } from '$lib/server/profile/write-http';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { loadProjectContext, parseProjectKind } from '$lib/server/documents/project-corpus';
-import { achievementFromAnswer } from '$lib/server/github/project-proposals';
+import { parseIntParam, requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { requireRowActor } from '#lib/server/profile/write-http.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { loadProjectContext, parseProjectKind } from '#lib/server/documents/project-corpus.ts';
+import { achievementFromAnswer } from '#lib/server/github/project-proposals.ts';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);

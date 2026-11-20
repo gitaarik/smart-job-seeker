@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { and, count, eq, gt } from 'drizzle-orm';
-import { dbDirect as db, queryRaw, sql, sqlJoin } from '$lib/server/db';
+import { dbDirect as db, queryRaw, sql, sqlJoin } from '#lib/server/db/index.ts';
 import {
 	accounts,
 	credit_balances,
@@ -10,23 +10,23 @@ import {
 	usage_counters,
 	users as usersTable,
 	verifications
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	cancelAccountDeletion,
 	requestAccountDeletion,
 	SubscriptionCancelError
-} from '$lib/server/account/delete';
-import { suspendAccount, unsuspendAccount } from '$lib/server/account/suspend';
-import { sendEmail } from '$lib/server/email';
-import { getEnv } from '$lib/tools/get-env';
-import { getActiveSubscription } from '$lib/server/billing/subscription';
-import { getBalance, getRecentTransactions } from '$lib/server/billing/credits';
-import { PLAN_LIMITS, type PlanId } from '$lib/server/billing/plans';
+} from '#lib/server/account/delete.ts';
+import { suspendAccount, unsuspendAccount } from '#lib/server/account/suspend.ts';
+import { sendEmail } from '#lib/server/email/index.ts';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { getActiveSubscription } from '#lib/server/billing/subscription.ts';
+import { getBalance, getRecentTransactions } from '#lib/server/billing/credits.ts';
+import { PLAN_LIMITS, type PlanId } from '#lib/server/billing/plans.ts';
 import {
 	addMonths,
 	cancelActiveSubscriptions,
 	insertAdminGrant
-} from '$lib/server/auth/invite-grants';
+} from '#lib/server/auth/invite-grants.ts';
 import crypto from 'crypto';
 
 export const load: PageServerLoad = async ({ params, parent }) => {

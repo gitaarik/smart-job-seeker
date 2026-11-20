@@ -42,7 +42,7 @@
  * to avoid stacking a second proposal on top of one nobody has looked at.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq } from 'drizzle-orm';
 import {
 	application_letters,
@@ -50,7 +50,7 @@ import {
 	applications,
 	cheat_sheets,
 	project_stories
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	CHEATSHEET_VERSIONS,
 	LETTER_VERSIONS,
@@ -61,12 +61,12 @@ import {
 	type VersionBinding,
 	type VersionSource,
 	type VersionTrailSummary
-} from '$lib/server/ai-chat/entity-versions';
-import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
-import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
-import { LETTER_ORDER, QUESTION_ORDER } from '$lib/server/texts/text-order';
-import { touchProfile } from '$lib/server/profile/touch-profile';
-import { sameText } from '$lib/utils/same-text';
+} from '#lib/server/ai-chat/entity-versions.ts';
+import { parseStarMarkdown, serializeStarMarkdown } from '#lib/interview/star.ts';
+import { LETTER_TYPE_LABELS, letterLabel } from '#lib/texts/letter-label.ts';
+import { LETTER_ORDER, QUESTION_ORDER } from '#lib/server/texts/text-order.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
+import { sameText } from '#lib/utils/same-text.ts';
 
 /** How much of one text comes back in a single read. Same slice as a document. */
 export const TEXT_READ_CHARS = 60000;
@@ -290,7 +290,7 @@ type CreatableKindDef = TextKindDef & { create: TextCreateDef };
  * ------------------------------------------------------------------ */
 
 /*
- * The labels and the title-over-type rule live in `$lib/texts/letter-label`,
+ * The labels and the title-over-type rule live in `#lib/texts/letter-label.ts`,
  * because the pages that list letters need the same answer this module gives an
  * agent, and they cannot import a module that opens a database connection.
  */

@@ -41,7 +41,7 @@
  * `write` does not make a Tier 2 overwrite direct. The tier is the floor.
  */
 
-import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
+import { CAPABILITIES, type Capability } from '#lib/server/ai-chat/capabilities.ts';
 import type { McpScope } from './keys';
 
 export type Tier = 0 | 1 | 2;

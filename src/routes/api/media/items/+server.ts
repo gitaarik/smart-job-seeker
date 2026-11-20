@@ -9,11 +9,11 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { createMediaItem, listMediaItemViews, toItemView } from '$lib/server/media/items';
-import { MediaUploadError } from '$lib/server/media/originals';
-import { isMediaKind } from '$lib/media-library';
+import { requireAuth, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { createMediaItem, listMediaItemViews, toItemView } from '#lib/server/media/items.ts';
+import { MediaUploadError } from '#lib/server/media/originals.ts';
+import { isMediaKind } from '#lib/media-library.ts';
 
 async function profileFor(
 	raw: string | null,

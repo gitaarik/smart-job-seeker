@@ -9,7 +9,7 @@ import {
 	skillDecisionRequest,
 	skillProbabilities
 } from '../skill-decisions';
-import type { SystemOneResponse } from '$lib/server/llm/typesafe';
+import type { SystemOneResponse } from '#lib/server/llm/typesafe.ts';
 
 const answers = (values: Record<string, number>): SystemOneResponse => ({
 	model: SKILL_MATCH_MODEL,

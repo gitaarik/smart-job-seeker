@@ -3,7 +3,7 @@
  * Only modifies the fields/items the user has enabled.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq, and, isNull, max, or } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import {
@@ -23,7 +23,7 @@ import {
 	certificate_skills,
 	certificates,
 	references
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import type {
 	ResumeBasics,
 	WorkExperience,
@@ -34,8 +34,8 @@ import type {
 	Certificate,
 	Reference
 } from './types';
-import { reapCertificateFiles } from '$lib/server/profile/certificate-file';
-import { asWorkMode } from '$lib/work-mode';
+import { reapCertificateFiles } from '#lib/server/profile/certificate-file.ts';
+import { asWorkMode } from '#lib/work-mode.ts';
 
 export interface DiffApplyPayload {
 	/** Basic profile fields to update (only changed+enabled ones) */

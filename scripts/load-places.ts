@@ -34,10 +34,10 @@ import os from 'node:os';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { places } from '$lib/server/db/schema';
-import { foldPlaceName, type PlaceKind } from '$lib/data/places';
-import { REGIONS } from '$lib/data/regions';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { places } from '#lib/server/db/schema.ts';
+import { foldPlaceName, type PlaceKind } from '#lib/data/places.ts';
+import { REGIONS } from '#lib/data/regions.ts';
 
 const APPLY = process.argv.includes('--apply');
 const dirArg = process.argv.indexOf('--dir');

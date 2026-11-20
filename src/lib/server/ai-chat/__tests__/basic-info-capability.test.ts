@@ -27,10 +27,10 @@ let held: Record<string, string> = {};
 const columnWrites: { profileId: number; values: Record<string, unknown> }[] = [];
 const translationWrites: { profileId: number; name: string; id: number; values: unknown }[] = [];
 
-vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
+vi.mock('#lib/server/db/index.ts', () => ({ db: {}, dbDirect: {} }));
 
-vi.mock('$lib/server/profile/basic-info', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/basic-info')>()),
+vi.mock('#lib/server/profile/basic-info.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/basic-info.ts')>()),
 	readBasicInfo: async () => stored,
 	writeBasicInfo: async (profileId: number, values: Record<string, unknown>) => {
 		if (Object.keys(values).length > 0) columnWrites.push({ profileId, values });
@@ -39,8 +39,8 @@ vi.mock('$lib/server/profile/basic-info', async (importOriginal) => ({
 
 // Partial: the field names and the refusals are the real ones; only the reads
 // and the write of the overlay are stubbed.
-vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+vi.mock('#lib/server/profile/section-translations.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/profile/section-translations.ts')>()),
 	translatedLocales: async () => languages,
 	readTranslations: async (_profileId: number, _name: string, ids: number[]) =>
 		new Map(ids.map((id) => [id, held])),

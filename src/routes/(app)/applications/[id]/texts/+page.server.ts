@@ -1,9 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and } from 'drizzle-orm';
-import { applications, application_letters, application_questions } from '$lib/server/db/schema';
-import { compareTexts, parseTextKey, placeInOrder, textKey } from '$lib/texts/text-order';
+import { applications, application_letters, application_questions } from '#lib/server/db/schema.ts';
+import { compareTexts, parseTextKey, placeInOrder, textKey } from '#lib/texts/text-order.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
 
 export const load: PageServerLoad = async () => {

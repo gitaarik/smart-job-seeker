@@ -6,10 +6,10 @@
  * Uses the same visibility scope (match_community_jobs) as the matcher itself.
  */
 
-import { queryRaw, sql, sqlJoin } from '$lib/server/db';
-import { buildEligibilityFilter } from '$lib/server/job/eligibility';
-import { getExpandedProfileSkills } from '$lib/server/job/match-utils';
-import { normalizeSkill } from '$lib/skills';
+import { queryRaw, sql, sqlJoin } from '#lib/server/db/index.ts';
+import { buildEligibilityFilter } from '#lib/server/job/eligibility.ts';
+import { getExpandedProfileSkills } from '#lib/server/job/match-utils.ts';
+import { normalizeSkill } from '#lib/skills.ts';
 
 export interface MatchCounts {
 	totalJobs: number;

@@ -25,8 +25,8 @@
  * its English had.
  */
 
-import type { FieldKind } from '$lib/server/utils/field-kinds';
-import { TRANSLATION_LOCALES } from '$lib/resume-translations';
+import type { FieldKind } from '#lib/server/utils/field-kinds.ts';
+import { TRANSLATION_LOCALES } from '#lib/resume-translations.ts';
 import {
 	BASIC_INFO_COLUMNS,
 	basicInfoError,
@@ -35,7 +35,7 @@ import {
 	readBasicInfo,
 	writeBasicInfo,
 	type BasicInfoColumn
-} from '$lib/server/profile/basic-info';
+} from '#lib/server/profile/basic-info.ts';
 import {
 	LANGUAGES_KEY,
 	languagesOf,
@@ -47,7 +47,7 @@ import {
 	translationRefusal,
 	translationsIn,
 	writeTranslations
-} from '$lib/server/profile/section-translations';
+} from '#lib/server/profile/section-translations.ts';
 import type { CapabilityDef, CapabilityTarget } from './capabilities';
 
 export type BasicInfoCapability = 'edit_profile';

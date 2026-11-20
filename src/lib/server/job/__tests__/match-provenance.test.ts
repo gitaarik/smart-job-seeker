@@ -22,7 +22,7 @@ vi.mock('../skill-ontology', () => ({
 }));
 // `getProfileSkills` runs two queries: tech skills join their category,
 // languages hang straight off the profile. `from()` answers both shapes.
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: () => ({
 			from: () => ({
@@ -32,7 +32,7 @@ vi.mock('$lib/server/db', () => ({
 		})
 	}
 }));
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	tech_skills: { name: 'name', category_id: 'category_id' },
 	tech_skill_categories: { id: 'id', profile_id: 'profile_id' },
 	languages: { name: 'name', proficiency: 'proficiency', profile_id: 'profile_id' }
@@ -44,7 +44,7 @@ import {
 	adjacentFor,
 	matchExplanation,
 	provenanceFor
-} from '$lib/match-provenance';
+} from '#lib/match-provenance.ts';
 
 /** A reach built by hand, so attribution is tested without the database. */
 function reachOf(

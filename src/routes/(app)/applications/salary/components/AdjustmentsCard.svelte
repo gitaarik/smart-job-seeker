@@ -6,14 +6,14 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faSliders } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
-	import type { SaveStatus } from '$lib/components/auto-save.svelte';
-	import { formatCurrency } from '$lib/salary/conversion';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
+	import type { SaveStatus } from '#lib/components/auto-save.svelte.ts';
+	import { formatCurrency } from '#lib/salary/conversion.ts';
 	import type {
 		EmployedSettings,
 		FreelanceSettings,
 		SalaryAdjustments
-	} from '$lib/salary/settings';
+	} from '#lib/salary/settings.ts';
 	import { INPUT_CLASS, numberOrNull, periodLabel, unitLabel } from './salary-ui';
 
 	interface Props {

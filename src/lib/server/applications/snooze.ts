@@ -10,13 +10,13 @@
  * reason: the pause is visible on the card while it lasts, and says nothing
  * once it has elapsed.
  *
- * See `$lib/application-snooze` for why this is a date beside the status rather
+ * See `#lib/application-snooze.ts` for why this is a date beside the status rather
  * than a status of its own.
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { applications } from '$lib/server/db/schema';
+import { applications } from '#lib/server/db/schema.ts';
 
 export interface SnoozeChange {
 	/** The day it comes back, or null to resume it now. */

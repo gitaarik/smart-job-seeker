@@ -10,8 +10,8 @@
  * them on every page.
  */
 
-import type { PortfolioTheme } from '$lib/portfolio-themes';
-import { themeLayout } from '$lib/portfolio-themes';
+import type { PortfolioTheme } from '#lib/portfolio-themes.ts';
+import { themeLayout } from '#lib/portfolio-themes.ts';
 
 /** What the footer prints. Each line null when its column is empty. */
 export interface PortfolioBusiness {

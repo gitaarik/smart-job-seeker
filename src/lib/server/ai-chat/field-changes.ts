@@ -9,7 +9,7 @@
  * history shows for a deletion afterwards.
  */
 
-import { localeLabel, TRANSLATION_LOCALES } from '$lib/resume-translations';
+import { localeLabel, TRANSLATION_LOCALES } from '#lib/resume-translations.ts';
 import type { ProposedChange } from './capabilities';
 
 const FIELD_LABELS: Record<string, string> = {

@@ -47,7 +47,7 @@
  * `applications.date_updated` does not record: it moves when you generate a
  * cover letter, edit salary expectations, snooze, or retitle a note. An
  * application the employer went silent on five weeks ago looks fresh under it
- * the moment you open the thing. `$lib/server/applications/activity` derives
+ * the moment you open the thing. `#lib/server/applications/activity.ts` derives
  * the real value from the timeline, the activity records and the notes; this
  * module takes it as given and falls back to `date_created`.
  *
@@ -55,8 +55,8 @@
  * after an optimistic update without a round trip.
  */
 
-import { today } from '$lib/application-records';
-import { isSnoozed, type Snoozable } from '$lib/application-snooze';
+import { today } from '#lib/application-records.ts';
+import { isSnoozed, type Snoozable } from '#lib/application-snooze.ts';
 import {
 	currentRoundIndex,
 	finishedStatuses,
@@ -64,7 +64,7 @@ import {
 	nextStep,
 	stageRanksFor,
 	type InterviewRound
-} from '$lib/application-status';
+} from '#lib/application-status.ts';
 
 /**
  * What ranking reads. Every field but `id` and `status` is optional, so a

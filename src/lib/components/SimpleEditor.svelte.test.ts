@@ -14,7 +14,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { Content, Editor as EditorType, Extensions } from '@tiptap/core';
-import { decodeMarkdownEntities } from '$lib/utils/markdown-entities';
+import { decodeMarkdownEntities } from '#lib/utils/markdown-entities.ts';
 
 let Editor: typeof EditorType;
 let extensions: Extensions;

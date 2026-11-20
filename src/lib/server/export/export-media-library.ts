@@ -10,11 +10,11 @@
  */
 
 import { asc, eq, inArray } from 'drizzle-orm';
-import { dbDirect } from '$lib/server/db';
-import { media_items, media_presets, media_renditions } from '$lib/server/db/schema';
-import { getFile } from '$lib/server/files';
-import { isOutputFormat, OUTPUT_EXTENSIONS } from '$lib/media-library';
-import { FORMAT_EXTENSIONS, type StoredFormat } from '$lib/server/media/originals';
+import { dbDirect } from '#lib/server/db/index.ts';
+import { media_items, media_presets, media_renditions } from '#lib/server/db/schema.ts';
+import { getFile } from '#lib/server/files.ts';
+import { isOutputFormat, OUTPUT_EXTENSIONS } from '#lib/media-library.ts';
+import { FORMAT_EXTENSIONS, type StoredFormat } from '#lib/server/media/originals.ts';
 import {
 	MEDIA_ITEM_COLUMNS,
 	MEDIA_PRESET_COLUMNS,

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Cookies } from '@sveltejs/kit';
 
 const mockValidate = vi.fn();
-vi.mock('$lib/server/auth/token-validation', () => ({
+vi.mock('#lib/server/auth/token-validation.ts', () => ({
 	validateToken: (...a: unknown[]) => mockValidate(...a)
 }));
 

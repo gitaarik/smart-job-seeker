@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
 		Background,
@@ -27,7 +27,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const GRAPH = resolve('/admin/skill-ontology/graph');
+	const GRAPH = resolve('admin/skill-ontology/graph');
 
 	setGraphHighlight();
 
@@ -122,7 +122,7 @@
 		body.set('id', retiring.id);
 		await fetch('?/retireRelation', { method: 'POST', body });
 		retiring = null;
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	const edges = $derived<Edge[]>(
@@ -168,7 +168,7 @@
 				Focus one
 			</a>
 			<a
-				href={resolve('/admin/skill-ontology')}
+				href={resolve('admin/skill-ontology')}
 				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
 			>
 				Review queue

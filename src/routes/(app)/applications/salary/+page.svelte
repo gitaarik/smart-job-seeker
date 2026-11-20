@@ -6,21 +6,21 @@
 	 */
 	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
-	import { armOn } from '$lib/actions/arm-on';
+	import { armOn } from '#lib/actions/arm-on.ts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faBuilding, faLaptop, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import { resolve } from '$app/paths';
-	import { autoSaveField, type AutoSaveField } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import { autoSaveField, type AutoSaveField } from '#lib/components/auto-save.svelte.ts';
+	import AutoSaveIndicator from '#lib/components/AutoSaveIndicator.svelte';
 	import {
 		normalizeAdjustments,
 		normalizeEmployed,
 		normalizeFreelance,
 		type EmployedSettings,
 		type FreelanceSettings
-	} from '$lib/salary/settings';
+	} from '#lib/salary/settings.ts';
 	import AdjustmentsCard from './components/AdjustmentsCard.svelte';
 	import Comparison from './components/Comparison.svelte';
 	import EmployedPane from './components/EmployedPane.svelte';

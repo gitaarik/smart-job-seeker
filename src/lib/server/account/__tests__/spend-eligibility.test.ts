@@ -28,7 +28,7 @@ vi.mock('drizzle-orm', () => ({
 	and: (...args: unknown[]) => ({ op: 'and', args }),
 	eq: (a: unknown, b: unknown) => ({ op: 'eq', a, b })
 }));
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			users: {
@@ -41,7 +41,7 @@ vi.mock('$lib/server/db', () => ({
 		}
 	}
 }));
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	users: { id: 'users.id' },
 	profiles: { user_id: 'profiles.user_id', email_digest_enabled: 'profiles.email_digest_enabled' }
 }));

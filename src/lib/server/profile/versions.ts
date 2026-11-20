@@ -9,14 +9,14 @@
  * without widening an item (retagVersionSlug).
  */
 import { and, asc, eq, isNull, ne, or, sql } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	applications,
 	profile_version_extensions,
 	profile_versions,
 	profiles
-} from '$lib/server/db/schema';
-import { isReservedVersionSlug, isTailoredSlug } from '$lib/version-overrides';
+} from '#lib/server/db/schema.ts';
+import { isReservedVersionSlug, isTailoredSlug } from '#lib/version-overrides.ts';
 import { retagVersionSlug } from './version-tags';
 
 /** A rule a version change broke, worded for the person who asked for it. */

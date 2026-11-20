@@ -14,10 +14,10 @@
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
-	import VersionWordings from '$lib/components/VersionWordings.svelte';
+	import VersionWordings from '#lib/components/VersionWordings.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
-	import { CONTACT_FIELDS, isContactHidden } from '$lib/resume-contact-fields';
-	import { ANONYMOUS_DESCRIPTION, isAnonymous } from '$lib/resume-anonymity';
+	import { CONTACT_FIELDS, isContactHidden } from '#lib/resume-contact-fields.ts';
+	import { ANONYMOUS_DESCRIPTION, isAnonymous } from '#lib/resume-anonymity.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -103,7 +103,7 @@
 	<!-- Header with back link -->
 	<div>
 		<a
-			href={resolve('/profile/resume')}
+			href={resolve('profile/resume')}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
@@ -230,7 +230,7 @@
 					</h3>
 					<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
 						For trackable links with view limits and expiration, use <a
-							href={resolve('/profile/share')}
+							href={resolve('profile/share')}
 							class="text-[var(--dash-primary)] hover:underline">Share Links</a
 						>.
 					</p>
@@ -456,7 +456,7 @@
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each tagUsage.skills as item (item.id)}
-								<a href={resolve('/profile/skills')} class="dash-link-ext"
+								<a href={resolve('profile/skills')} class="dash-link-ext"
 									>{item.name || 'Untitled'}</a
 								>
 							{/each}

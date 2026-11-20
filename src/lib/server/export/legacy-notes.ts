@@ -8,7 +8,7 @@
  * that still carries it, so the import makes the same move rather than losing
  * them.
  */
-import { deriveRecordTitle } from '$lib/application-records';
+import { deriveRecordTitle } from '#lib/application-records.ts';
 
 export interface LegacyNoteEntry {
 	title: string;

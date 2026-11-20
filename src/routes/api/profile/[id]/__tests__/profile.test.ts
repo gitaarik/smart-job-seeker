@@ -14,7 +14,7 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			profiles: {
@@ -40,7 +40,7 @@ vi.mock('drizzle-orm', () => ({
 	asc: vi.fn()
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	profiles: {
 		id: 'profiles.id',
 		user_id: 'profiles.user_id',

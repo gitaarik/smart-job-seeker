@@ -29,8 +29,8 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import EmptyState from '../../profile/components/EmptyState.svelte';
-	import CategoryPill from '$lib/components/CategoryPill.svelte';
-	import { formatSalaryRange, timeAgo } from '$lib/format';
+	import CategoryPill from '#lib/components/CategoryPill.svelte';
+	import { formatSalaryRange, timeAgo } from '#lib/format.ts';
 	import {
 		statusOptions,
 		currentRoundIndex,
@@ -40,9 +40,14 @@
 		getStatusDotColor,
 		nextStep,
 		stageLabel
-	} from '$lib/application-status';
-	import { daysQuiet, isFollowUpDue, sortOptions } from '$lib/application-ranking';
-	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
+	} from '#lib/application-status.ts';
+	import { daysQuiet, isFollowUpDue, sortOptions } from '#lib/application-ranking.ts';
+	import {
+		describeSnooze,
+		isSnoozed,
+		snoozePresets,
+		snoozeUntil
+	} from '#lib/application-snooze.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -443,7 +448,7 @@
 				{/if}
 
 				<a
-					href={resolve('/applications/new')}
+					href={resolve('applications/new')}
 					class="flex items-center gap-2 rounded-md bg-[var(--dash-primary)] px-2.5 py-1.5 text-xs text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 				>
 					<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />

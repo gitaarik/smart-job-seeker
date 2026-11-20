@@ -4,13 +4,13 @@
 	 *
 	 * The in-flight state is tracked server-side (see ai-generation-status.ts), so
 	 * unlike the ephemeral client-side spinner it survives a page refresh, a
-	 * second tab, or coming back later. While `active`, this polls (invalidateAll)
+	 * second tab, or coming back later. While `active`, this polls (refreshAll)
 	 * so the result appears on its own when the generation finishes. It's
 	 * self-terminating: the poll re-reads the server flag, which clears when the
 	 * generation ends (or after the staleness TTL), flipping `active` to false.
 	 */
-	import { invalidateAll } from '$app/navigation';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import { refreshAll } from '$app/navigation';
+	import Spinner from '#lib/components/Spinner.svelte';
 
 	let {
 		active = false,
@@ -25,7 +25,7 @@
 	$effect(() => {
 		if (!active) return;
 		const id = setInterval(() => {
-			invalidateAll();
+			refreshAll();
 		}, intervalMs);
 		return () => clearInterval(id);
 	});

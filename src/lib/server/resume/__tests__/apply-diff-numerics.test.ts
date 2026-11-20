@@ -18,7 +18,7 @@ const state = {
 	inserts: [] as Record<string, unknown>[]
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const dbMock = {
 		query: {
 			profiles: { findFirst: () => Promise.resolve({ id: 1 }) },

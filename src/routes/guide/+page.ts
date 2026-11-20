@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { guideSections } from '$lib/guide';
+import { guideSections } from '#lib/guide/index.ts';
 import type { PageLoad } from './$types';
 
 // /guide → first section

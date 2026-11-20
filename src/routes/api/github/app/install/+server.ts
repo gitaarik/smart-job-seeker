@@ -13,9 +13,9 @@
  */
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { appInstallUrl, isGitHubAppConfigured } from '$lib/server/github/app-auth';
-import { signInstallState } from '$lib/server/github/app-state';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { appInstallUrl, isGitHubAppConfigured } from '#lib/server/github/app-auth.ts';
+import { signInstallState } from '#lib/server/github/app-state.ts';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = requireAuth(locals);
@@ -27,5 +27,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const returnTo = url.searchParams.get('return_to') || '/profile/side-projects';
 	const target = appInstallUrl(signInstallState(user.id, returnTo));
 	if (!target) error(503, 'GitHub is not connected on this server yet.');
-	redirect(302, target);
+	// SvelteKit 3 refuses an external redirect unless its origin is listed.
+	redirect(302, target, { external: ['https://github.com'] });
 };

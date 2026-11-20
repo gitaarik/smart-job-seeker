@@ -23,7 +23,7 @@
 		shownOnTemplate,
 		shownTemplates,
 		templateNames
-	} from '$lib/profile-visibility';
+	} from '#lib/profile-visibility.ts';
 
 	interface Props {
 		/** The item's tags as stored, version tags and all. */

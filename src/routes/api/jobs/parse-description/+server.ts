@@ -14,16 +14,16 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { parseJobDescription } from '$lib/server/jobs/parse-job-description';
-import { parseCacheKey, rememberParse } from '$lib/server/jobs/parse-cache';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { parseJobDescription } from '#lib/server/jobs/parse-job-description.ts';
+import { parseCacheKey, rememberParse } from '#lib/server/jobs/parse-cache.ts';
 import {
 	normalizeExperienceLevels,
 	normalizeJobType,
 	normalizeWorkLocation
-} from '$lib/data/job-normalize';
-import { normalizeSalaryPeriod } from '$lib/salary/conversion';
+} from '#lib/data/job-normalize.ts';
+import { normalizeSalaryPeriod } from '#lib/salary/conversion.ts';
 
 /** Guards against pasting an entire site into the LLM prompt. */
 const MAX_DESCRIPTION_CHARS = 100_000;

@@ -15,12 +15,17 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Job } from 'bullmq';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, inArray } from 'drizzle-orm';
-import { jobs, scraper_logs, search_task_run_items, search_task_runs } from '$lib/server/db/schema';
-import { getDesktopQueue, getFeedQueue, getQueueStats } from '$lib/server/queue/scraper-queue';
-import { getRedisClient } from '$lib/server/queue/redis';
-import { getAllMatcherStates, isMatcherAlive } from '$lib/server/job/matcher-state';
+import {
+	jobs,
+	scraper_logs,
+	search_task_run_items,
+	search_task_runs
+} from '#lib/server/db/schema.ts';
+import { getDesktopQueue, getFeedQueue, getQueueStats } from '#lib/server/queue/scraper-queue.ts';
+import { getRedisClient } from '#lib/server/queue/redis.ts';
+import { getAllMatcherStates, isMatcherAlive } from '#lib/server/job/matcher-state.ts';
 
 const ACTIVE_RUN_STATUSES = ['pending', 'queued', 'running', 'blocked', 'stopping'] as const;
 const TERMINAL_RUN_STATUSES = ['success', 'error', 'cancelled', 'partial'] as const;

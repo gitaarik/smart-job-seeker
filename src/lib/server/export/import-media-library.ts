@@ -10,10 +10,10 @@
 
 import { isHttpError } from '@sveltejs/kit';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { dbDirect, queryRawDirect } from '$lib/server/db';
-import { media_items, media_presets, media_renditions, profiles } from '$lib/server/db/schema';
-import { deleteFile, uploadFile } from '$lib/server/files';
-import { reapFileRefs } from '$lib/server/uploads/reap';
+import { dbDirect, queryRawDirect } from '#lib/server/db/index.ts';
+import { media_items, media_presets, media_renditions, profiles } from '#lib/server/db/schema.ts';
+import { deleteFile, uploadFile } from '#lib/server/files.ts';
+import { reapFileRefs } from '#lib/server/uploads/reap.ts';
 import {
 	clampCrop,
 	isMediaKind,
@@ -21,10 +21,14 @@ import {
 	isOutputFormat,
 	OUTPUT_EXTENSIONS,
 	type SafeZone
-} from '$lib/media-library';
-import { FORMAT_EXTENSIONS, FORMAT_MIME_TYPES, prepareOriginal } from '$lib/server/media/originals';
-import { OUTPUT_MIME_TYPES } from '$lib/server/media/renditions';
-import { insertWithinBudget } from '$lib/server/media/items';
+} from '#lib/media-library.ts';
+import {
+	FORMAT_EXTENSIONS,
+	FORMAT_MIME_TYPES,
+	prepareOriginal
+} from '#lib/server/media/originals.ts';
+import { OUTPUT_MIME_TYPES } from '#lib/server/media/renditions.ts';
+import { insertWithinBudget } from '#lib/server/media/items.ts';
 import type { ExportedMediaLibrary } from './types';
 
 export interface MediaLibraryIdMaps {

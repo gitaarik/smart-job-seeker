@@ -11,8 +11,8 @@
 	import { onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faDesktop, faSync, faTimes } from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { portalToBody } from '$lib/actions/portal';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { portalToBody } from '#lib/actions/portal.ts';
 
 	interface Props {
 		open: boolean;

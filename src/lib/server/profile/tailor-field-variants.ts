@@ -62,16 +62,16 @@ import {
 	variantTargetKey,
 	type FieldVariant,
 	type VariantEntity
-} from '$lib/field-variants';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import type { Decision } from '$lib/tailoring';
+} from '#lib/field-variants.ts';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+import type { Decision } from '#lib/tailoring.ts';
 import {
 	semanticScoreUnits,
 	poolKey,
 	type ContentUnit
-} from '$lib/server/documents/content-embeddings';
-import { scoreUnitAgainstQuery } from '$lib/server/documents/content-retrieval';
-import { listFieldVariants } from '$lib/server/profile/field-variants';
+} from '#lib/server/documents/content-embeddings.ts';
+import { scoreUnitAgainstQuery } from '#lib/server/documents/content-retrieval.ts';
+import { listFieldVariants } from '#lib/server/profile/field-variants.ts';
 
 /**
  * How much better a variant must score than the standing answer before it

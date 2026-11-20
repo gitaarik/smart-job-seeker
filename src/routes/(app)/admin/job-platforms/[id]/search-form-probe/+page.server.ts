@@ -1,9 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { desc, eq } from 'drizzle-orm';
-import { job_platforms, search_form_probe_runs } from '$lib/server/db/schema';
-import { loadSearchFormProbeFormData } from '$lib/server/job-platforms/search-form-probe-form-data';
+import { job_platforms, search_form_probe_runs } from '#lib/server/db/schema.ts';
+import { loadSearchFormProbeFormData } from '#lib/server/job-platforms/search-form-probe-form-data.ts';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const platformId = parseInt(params.id, 10);

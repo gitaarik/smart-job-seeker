@@ -14,7 +14,7 @@
 		faTrash,
 		faUserSecret
 	} from '@fortawesome/free-solid-svg-icons';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
 	import Card from '../../../components/Card.svelte';
 
@@ -88,7 +88,7 @@
 	<!-- Header with back link -->
 	<div class="flex items-center gap-3">
 		<a
-			href={resolve('/admin/users')}
+			href={resolve('admin/users')}
 			class="p-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

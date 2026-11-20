@@ -12,7 +12,7 @@
  * and the values object is cast at the single insert site — the surface is tiny
  * and covered by unit tests.
  */
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, max } from 'drizzle-orm';
 import {
 	ai_chats,
@@ -20,17 +20,17 @@ import {
 	letter_versions,
 	question_versions,
 	story_versions
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	crowdedOut,
 	lookedAndFoundNothing,
 	mentionsFor,
 	type RetrievalMention,
 	type RetrievalRecord
-} from '$lib/server/documents/retrieval-record';
-import { scoreGeneration } from '$lib/server/monitoring/product-scores';
-import { sendsToLangfuse } from '$lib/server/monitoring/telemetry';
-import { sameText } from '$lib/utils/same-text';
+} from '#lib/server/documents/retrieval-record.ts';
+import { scoreGeneration } from '#lib/server/monitoring/product-scores.ts';
+import { sendsToLangfuse } from '#lib/server/monitoring/telemetry.ts';
+import { sameText } from '#lib/utils/same-text.ts';
 
 /**
  * Provenance of a version. Plain varchar in the DB; enforced here in TS.

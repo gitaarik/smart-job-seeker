@@ -14,7 +14,7 @@ const mockRecordVersion = vi.fn();
 // What the model "answered", fed to the module's own updateEntity.
 let reply: string | null = null;
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const chain = { set: () => chain, where: async () => undefined };
 	return {
 		db: {
@@ -31,7 +31,7 @@ vi.mock('drizzle-orm', () => ({
 	eq: () => ({}),
 	isNotNull: () => ({})
 }));
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	application_questions: {},
 	question_versions: {},
 	application_letters: {},
@@ -55,7 +55,7 @@ vi.mock('../profile-cheatsheet', () => ({
 	buildSheetContext: () => '',
 	CHEATSHEET_PROFILE_FIELDS: []
 }));
-vi.mock('$lib/server/profile/project-stories', () => ({ pinnedProjectForStory: () => null }));
+vi.mock('#lib/server/profile/project-stories.ts', () => ({ pinnedProjectForStory: () => null }));
 vi.mock('../create-followup', () => ({ createFollowupAiChat: vi.fn() }));
 // Hand the reply straight to the module's updateEntity, as the real
 // createEntityFollowup does once the model has answered. Errors are left to

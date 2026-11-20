@@ -14,7 +14,7 @@
  *   npx dotenvx run -f /app/.env -- npx tsx scripts/verify-mcp-entities.ts <profileId>
  */
 import { and, eq, gte, inArray, sql } from 'drizzle-orm';
-import { db, queryRaw } from '$lib/server/db';
+import { db, queryRaw } from '#lib/server/db/index.ts';
 import {
 	application_records,
 	application_status_log,
@@ -26,15 +26,15 @@ import {
 	mcp_keys,
 	notifications,
 	profiles
-} from '$lib/server/db/schema';
-import { canEditJob } from '$lib/server/jobs/edit-job';
-import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
-import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
-import { CAPABILITIES, executeCapability } from '$lib/server/ai-chat/capabilities';
-import { callTool } from '$lib/server/mcp/call';
-import { createMcpKey } from '$lib/server/mcp/keys';
-import { toolsFor } from '$lib/server/mcp/tools';
-import type { VerifiedMcpKey } from '$lib/server/mcp/keys';
+} from '#lib/server/db/schema.ts';
+import { canEditJob } from '#lib/server/jobs/edit-job.ts';
+import { listProfileJobs, readProfileJob } from '#lib/server/jobs/profile-jobs.ts';
+import { readEditLog, revertEdit } from '#lib/server/ai-chat/edit-log.ts';
+import { CAPABILITIES, executeCapability } from '#lib/server/ai-chat/capabilities.ts';
+import { callTool } from '#lib/server/mcp/call.ts';
+import { createMcpKey } from '#lib/server/mcp/keys.ts';
+import { toolsFor } from '#lib/server/mcp/tools.ts';
+import type { VerifiedMcpKey } from '#lib/server/mcp/keys.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {

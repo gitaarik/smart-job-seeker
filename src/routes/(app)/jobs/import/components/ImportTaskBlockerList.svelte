@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-	import type { ImportTaskBlocker } from '$lib/import-tasks/readiness';
+	import type { ImportTaskBlocker } from '#lib/import-tasks/readiness.ts';
 
 	let { blockers, showDetail = true }: { blockers: ImportTaskBlocker[]; showDetail?: boolean } =
 		$props();

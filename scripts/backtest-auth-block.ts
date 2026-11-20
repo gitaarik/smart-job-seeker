@@ -38,8 +38,8 @@ import {
 	DEFAULT_BACKOFF_HOURS,
 	decideAuthBlockRemedy,
 	type RunOutcome
-} from '$lib/import-tasks/failure-policy';
-import { classifyLegacyErrorMessage, toFailureKind } from '$lib/import-tasks/failure-kinds';
+} from '#lib/import-tasks/failure-policy.ts';
+import { classifyLegacyErrorMessage, toFailureKind } from '#lib/import-tasks/failure-kinds.ts';
 
 const EXPORT_QUERY = `
 SELECT r.search_task_id, r.id, r.status, r.error_message, r.failure_kind,
@@ -73,8 +73,8 @@ async function loadRows(): Promise<Row[]> {
 		const path = process.argv[jsonFlag + 1];
 		return JSON.parse(readFileSync(path, 'utf8')) as Row[];
 	}
-	const { dbDirect: db } = await import('$lib/server/db');
-	const { search_task_runs, search_tasks } = await import('$lib/server/db/schema');
+	const { dbDirect: db } = await import('#lib/server/db/index.ts');
+	const { search_task_runs, search_tasks } = await import('#lib/server/db/schema.ts');
 	const { asc, eq } = await import('drizzle-orm');
 	return (await db
 		.select({

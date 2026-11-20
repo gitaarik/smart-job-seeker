@@ -24,7 +24,7 @@
  */
 
 import sharp from 'sharp';
-import { MetadataStripError, stripMetadataLossless } from '$lib/server/media/strip-metadata';
+import { MetadataStripError, stripMetadataLossless } from '#lib/server/media/strip-metadata.ts';
 
 export interface EntityImageOptions {
 	maxWidth?: number;

@@ -9,7 +9,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import ConversationTimeline from './ConversationTimeline.svelte';
-import type { ConversationEntry, TurnLabels } from '$lib/server/ai-chat/entity-versions';
+import type { ConversationEntry, TurnLabels } from '#lib/server/ai-chat/entity-versions.ts';
 
 // Scrolling to the latest turn after a navigation; there is no router here.
 vi.mock('$app/navigation', () => ({ afterNavigate: () => {} }));

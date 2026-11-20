@@ -50,7 +50,7 @@ import type {
 	work_experience_projects,
 	work_experience_technologies,
 	work_experiences
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 /** Every column of a table, each marked carried or left out. */
 type Decided<T extends { $inferSelect: object }> = Record<keyof T['$inferSelect'], boolean>;

@@ -20,18 +20,18 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { and, asc, desc, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles, tech_skill_categories, tech_skills } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles, tech_skill_categories, tech_skills } from '#lib/server/db/schema.ts';
 import {
 	EXPERIENCE_LEVEL_OPTIONS,
 	JOB_TYPE_OPTIONS,
 	WORK_LOCATION_OPTIONS,
 	readMatchPreferences,
 	writeMatchPreferences
-} from '$lib/server/job/match-preferences';
+} from '#lib/server/job/match-preferences.ts';
 import { touchProfile } from '../utils';
-import { isThinProfile } from '$lib/server/profile/thin-profile';
-import { placeSchema, preferredPlaceSchema } from '$lib/server/validation/api-schemas';
+import { isThinProfile } from '#lib/server/profile/thin-profile.ts';
+import { placeSchema, preferredPlaceSchema } from '#lib/server/validation/api-schemas.ts';
 
 /** Category for skills added here when the profile has none to put them in. */
 const NEW_CATEGORY_NAME = 'Skills';

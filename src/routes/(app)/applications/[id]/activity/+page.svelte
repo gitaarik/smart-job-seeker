@@ -5,7 +5,7 @@
 	 */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -25,16 +25,16 @@
 	import Card from '../../../components/Card.svelte';
 	import EmptyState from '../../../profile/components/EmptyState.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import {
 		getContactRoleLabel,
 		getRecordTypeColor,
 		getRecordTypeLabel,
 		recordTypes
-	} from '$lib/application-records';
-	import { formatRoundWhen, getStatusBgColor, getStatusLabel } from '$lib/application-status';
-	import { formatDate as fmtDate } from '$lib/format-date';
-	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
+	} from '#lib/application-records.ts';
+	import { formatRoundWhen, getStatusBgColor, getStatusLabel } from '#lib/application-status.ts';
+	import { formatDate as fmtDate } from '#lib/format-date.ts';
+	import { renderSafeMarkdown } from '#lib/utils/safe-markdown.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -237,7 +237,7 @@
 				const body = new FormData();
 				body.set('id', String(result.data.createdId));
 				await fetch('?/extract', { method: 'POST', body });
-				await invalidateAll();
+				await refreshAll();
 			}
 		};
 	}

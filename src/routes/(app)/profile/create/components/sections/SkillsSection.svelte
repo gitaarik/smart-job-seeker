@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp, faCode } from '@fortawesome/free-solid-svg-icons';
-	import type { SkillCategory } from '$lib/server/resume/types';
+	import type { SkillCategory } from '#lib/server/resume/types.ts';
 	import Card from '../../../../components/Card.svelte';
 	import SkillCategoriesEditor from '../../../../components/SkillCategoriesEditor.svelte';
 

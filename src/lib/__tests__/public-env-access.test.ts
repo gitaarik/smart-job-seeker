@@ -4,8 +4,9 @@
  * SvelteKit does not point Vite's `envPrefix` at `PUBLIC_`, so
  * `import.meta.env` carries only Vite's own keys — `BASE_URL`, `DEV`, `MODE`,
  * `PROD`, `SSR` and anything `VITE_`-prefixed. A `PUBLIC_` variable reaches
- * the browser through `$env/dynamic/public` (serialized per request by the
- * server) or `$env/static/public` (inlined at build), and through nothing else.
+ * the browser through `$app/env/public`, once it is declared in `src/env.ts`
+ * (serialized per request by the server, or inlined at build if `static`), and
+ * through nothing else.
  *
  * Read it the wrong way and there is no error, no warning and no missing
  * import: the value is simply `undefined`, and whatever it guarded silently
@@ -67,7 +68,7 @@ describe('import.meta.env', () => {
 
 		expect(
 			offenders.map((f) => relative(process.cwd(), f)),
-			'PUBLIC_ variables are undefined on import.meta.env; read them from $env/dynamic/public'
+			'PUBLIC_ variables are undefined on import.meta.env; declare them in src/env.ts and import from $app/env/public'
 		).toEqual([]);
 	});
 
@@ -84,7 +85,7 @@ describe('import.meta.env', () => {
 
 		expect(
 			offenders,
-			'only BASE_URL/DEV/MODE/PROD/SSR/VITE_* exist on import.meta.env; app config comes from $env or getEnv'
+			'only BASE_URL/DEV/MODE/PROD/SSR/VITE_* exist on import.meta.env; app config comes from $app/env or getEnv'
 		).toEqual([]);
 	});
 });

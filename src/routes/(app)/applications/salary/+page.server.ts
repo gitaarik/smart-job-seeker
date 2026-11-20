@@ -1,12 +1,12 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect, type Cookies } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { match_config, profiles } from '$lib/server/db/schema';
+import { match_config, profiles } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../profile/utils';
-import { getFxRates } from '$lib/server/salary/fx';
-import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
-import { buildNormalizeMap, JOB_TYPES } from '$lib/data/job-taxonomy';
+import { getFxRates } from '#lib/server/salary/fx.ts';
+import { refreshPayFitQuietly } from '#lib/server/salary/pay-fit-store.ts';
+import { buildNormalizeMap, JOB_TYPES } from '#lib/data/job-taxonomy.ts';
 import {
 	normalizeAdjustments,
 	normalizeEmployed,
@@ -14,7 +14,7 @@ import {
 	storedEmployed,
 	storedFreelance,
 	wantedModes
-} from '$lib/salary/settings';
+} from '#lib/salary/settings.ts';
 
 const jobTypeNormalize = buildNormalizeMap(JOB_TYPES);
 

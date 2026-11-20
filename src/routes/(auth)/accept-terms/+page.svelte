@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import TermsCheckbox from '$lib/components/legal/TermsCheckbox.svelte';
+	import TermsCheckbox from '#lib/components/legal/TermsCheckbox.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -52,8 +52,8 @@
 
 		<p class="text-center text-sm text-[var(--dash-text-secondary)]">
 			Don't agree? You can
-			<a class="underline" href={resolve('/logout')}>sign out</a>, or
-			<a class="underline" href={resolve('/data/delete')}>delete your account</a> and its data.
+			<a class="underline" href={resolve('logout')}>sign out</a>, or
+			<a class="underline" href={resolve('data/delete')}>delete your account</a> and its data.
 		</p>
 	</div>
 </div>

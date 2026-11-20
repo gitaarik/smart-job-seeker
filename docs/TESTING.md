@@ -83,12 +83,12 @@ The test suite covers (over 580 tests across 45 files):
 
 ### Database Mocking
 
-Tests mock the Drizzle client (`$lib/server/db`) using Vitest's `vi.mock()`.
+Tests mock the Drizzle client (`#lib/server/db/index.ts`) using Vitest's `vi.mock()`.
 For reads, mock the relational query API (`db.query.<table>.findFirst` /
 `findMany`):
 
 ```typescript
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			ai_chats: {
@@ -112,7 +112,7 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: { update: (...args: any[]) => mockUpdateFn(...args) }
 }));
 
@@ -155,14 +155,14 @@ mockInvoke.mockResolvedValueOnce(new AIMessage('Mocked AI response content'));
 ```
 
 Alternatively, you can stub a wrapper such as `getInterpolatedPrompts` (from
-`$lib/server/ai-chat/utils`) to control the prompts fed into the LLM call.
+`#lib/server/ai-chat/utils.ts`) to control the prompts fed into the LLM call.
 
 ### Importing Mocked Modules
 
 After mocking, import the actual module to get the mocked version:
 
 ```typescript
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 
 // db is now the mocked version
 const mockDb = db as any;
@@ -177,7 +177,7 @@ mockDb.query.profiles.findFirst.mockResolvedValueOnce({ id: 1 });
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock external dependencies
-vi.mock('$lib/path/to/module');
+vi.mock('#lib/path/to/module.ts');
 
 describe('Feature description', () => {
 	beforeEach(() => {
@@ -272,7 +272,7 @@ npm run test -- ai-chat-response-generate.test.ts
 **Testing Context Interpolation:**
 
 ```typescript
-import { interpolatePrompt } from '$lib/server/ai-chat/utils';
+import { interpolatePrompt } from '#lib/server/ai-chat/utils.ts';
 
 it('should interpolate profile data into template', () => {
 	const template = 'Hello ${name}, your email is ${email}';

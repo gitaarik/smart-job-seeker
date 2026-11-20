@@ -4,8 +4,8 @@
  * with a glance of what it is about and never its result, then the reply or
  * the error. The same words name a turn's reads under the reply afterwards.
  */
-import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
-import { isMcpCapability } from '$lib/server/mcp/tools';
+import { CAPABILITIES, type Capability } from '#lib/server/ai-chat/capabilities.ts';
+import { isMcpCapability } from '#lib/server/mcp/tools.ts';
 
 export type TurnNode = 'prepare' | 'agent' | 'tools' | 'finish';
 

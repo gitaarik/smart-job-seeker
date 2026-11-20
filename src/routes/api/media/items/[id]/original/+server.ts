@@ -7,14 +7,14 @@
 
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { itemOriginal, ownedItem } from '$lib/server/media/serve';
-import { contentDisposition } from '$lib/server/files';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { itemOriginal, ownedItem } from '#lib/server/media/serve.ts';
+import { contentDisposition } from '#lib/server/files.ts';
 import {
 	FORMAT_EXTENSIONS,
 	FORMAT_MIME_TYPES,
 	type StoredFormat
-} from '$lib/server/media/originals';
+} from '#lib/server/media/originals.ts';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = requireAuth(locals);

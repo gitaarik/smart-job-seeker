@@ -15,7 +15,7 @@ const { inserts, updates, mockGenerate } = vi.hoisted(() => ({
 	mockGenerate: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			profiles: { findFirst: vi.fn().mockResolvedValue({ user_id: null }) },
@@ -54,8 +54,8 @@ vi.mock('../profile-data', async (importOriginal) => ({
 	loadProfileData: vi.fn().mockResolvedValue({ schema: {}, data: {} })
 }));
 
-vi.mock('$lib/server/llm', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/llm')>()),
+vi.mock('#lib/server/llm/index.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/llm/index.ts')>()),
 	generateChatCompletionTracked: mockGenerate
 }));
 

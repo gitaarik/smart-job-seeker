@@ -7,15 +7,15 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, asc } from 'drizzle-orm';
 import {
 	scraper_agent_sessions,
 	scraper_agent_iterations,
 	search_task_runs
-} from '$lib/server/db/schema';
-import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
-import { searchTaskDisplayName } from '$lib/format';
+} from '#lib/server/db/schema.ts';
+import { requireAuth, parseIntParam } from '#lib/server/utils/api-helpers.ts';
+import { searchTaskDisplayName } from '#lib/format.ts';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = requireAuth(locals);

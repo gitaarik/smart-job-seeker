@@ -1,12 +1,12 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq, and, or, isNull, inArray, asc, desc } from 'drizzle-orm';
 import {
 	user_feedback,
 	user_feedback_subscribers,
 	users as usersTable,
 	feedback_replies
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { user } = await parent();

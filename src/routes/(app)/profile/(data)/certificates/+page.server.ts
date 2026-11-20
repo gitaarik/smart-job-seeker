@@ -1,10 +1,10 @@
 import type { Actions, PageServerLoad } from './$types';
 import { sectionActions } from '../section-actions';
-import { PROFILE_RESOURCES } from '$lib/server/profile/resources';
+import { PROFILE_RESOURCES } from '#lib/server/profile/resources.ts';
 import { redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, eq } from 'drizzle-orm';
-import { certificate_skills, certificates } from '$lib/server/db/schema';
+import { certificate_skills, certificates } from '#lib/server/db/schema.ts';
 import { CERTIFICATES_DEP } from './certificates-dep';
 
 export const load: PageServerLoad = async ({ parent, depends }) => {

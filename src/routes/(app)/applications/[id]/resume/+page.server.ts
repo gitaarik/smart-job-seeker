@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, eq, inArray, isNull, or } from 'drizzle-orm';
 import {
 	applications,
@@ -12,15 +12,15 @@ import {
 	profiles,
 	tech_skill_categories,
 	tech_skills
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
-import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
-import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
-import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
-import { getLatestExport } from '$lib/server/profile/export-files';
-import { exportKey } from '$lib/utils/profile-doc-url';
-import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
-import { specWarning } from '$lib/version-coverage';
+import { DEFAULT_TEMPLATE_ID, templateForStorage } from '#lib/resume-templates.ts';
+import { getResumeTemplatesForProfile } from '#lib/server/profile/resume-templates.ts';
+import { BASE_LOCALE, isKnownLocale, LOCALES } from '#lib/resume-translations.ts';
+import { getLatestExport } from '#lib/server/profile/export-files.ts';
+import { exportKey } from '#lib/utils/profile-doc-url.ts';
+import { getVersionCoverage } from '#lib/server/profile/hidden-required-skills.ts';
+import { specWarning } from '#lib/version-coverage.ts';
 import {
 	addSkillWordForApplication,
 	decisionsForVersion,
@@ -37,20 +37,20 @@ import {
 	undoDecision,
 	versionItemStates,
 	type VersionReach
-} from '$lib/server/profile/tailor-version';
-import { baseOnByItem, keptAsBase } from '$lib/tailoring';
-import { isOverrideEntity, OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import { isVariantEntity } from '$lib/field-variants';
-import { wordingStatesFor } from '$lib/server/profile/field-variants';
+} from '#lib/server/profile/tailor-version.ts';
+import { baseOnByItem, keptAsBase } from '#lib/tailoring.ts';
+import { isOverrideEntity, OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+import { isVariantEntity } from '#lib/field-variants.ts';
+import { wordingStatesFor } from '#lib/server/profile/field-variants.ts';
 import {
 	generateVersionPdfs,
 	regenerateStoredPdfs
-} from '$lib/server/profile/generate-version-pdfs';
-import { withAnonymous, type LeakHit } from '$lib/resume-anonymity';
-import { isAnonymousChain } from '$lib/server/profile/anonymity';
-import { checkStoredPdf } from '$lib/server/profile/anonymity-check';
-import { loadSkillWords, suggestPlace } from '$lib/server/profile/skill-words';
-import { provenanceFor } from '$lib/match-provenance';
+} from '#lib/server/profile/generate-version-pdfs.ts';
+import { withAnonymous, type LeakHit } from '#lib/resume-anonymity.ts';
+import { isAnonymousChain } from '#lib/server/profile/anonymity.ts';
+import { checkStoredPdf } from '#lib/server/profile/anonymity-check.ts';
+import { loadSkillWords, suggestPlace } from '#lib/server/profile/skill-words.ts';
+import { provenanceFor } from '#lib/match-provenance.ts';
 
 /** How the document going to this job is presented: which template, which language. */
 interface SentAs {

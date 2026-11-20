@@ -2,9 +2,9 @@
  * Create follow-up AI chat for application letters
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { and, desc, eq, isNotNull } from 'drizzle-orm';
-import { application_letters, letter_versions } from '$lib/server/db/schema';
+import { application_letters, letter_versions } from '#lib/server/db/schema.ts';
 import {
 	applicantMessage,
 	createEntityFollowup,

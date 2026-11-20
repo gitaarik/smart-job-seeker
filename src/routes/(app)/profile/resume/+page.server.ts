@@ -1,22 +1,22 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import {
 	profiles,
 	profile_versions,
 	profile_version_extensions,
 	profile_exports,
 	profile_translations
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import { eq, and, asc, inArray, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../utils';
-import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
-import { chargeCredits } from '$lib/server/billing/credits';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
-import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
-import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
-import { createVersion, VersionError } from '$lib/server/profile/versions';
+import { generateVersionPdfs } from '#lib/server/profile/generate-version-pdfs.ts';
+import { chargeCredits } from '#lib/server/billing/credits.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { DEFAULT_TEMPLATE_ID, templateForStorage } from '#lib/resume-templates.ts';
+import { getResumeTemplatesForProfile } from '#lib/server/profile/resume-templates.ts';
+import { BASE_LOCALE, isKnownLocale, LOCALES } from '#lib/resume-translations.ts';
+import { createVersion, VersionError } from '#lib/server/profile/versions.ts';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();

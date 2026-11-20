@@ -6,9 +6,9 @@
  * pointing at nothing would be invisible and unreachable.
  */
 
-import { dbDirect } from '$lib/server/db';
+import { dbDirect } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { profile_translations } from '$lib/server/db/schema';
+import { profile_translations } from '#lib/server/db/schema.ts';
 import type { ExportedTranslation, TranslationTarget } from './types';
 
 /** Ids assigned while importing profile entities, keyed by exported position. */

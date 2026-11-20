@@ -12,7 +12,7 @@
  * the dragging door was guarded.
  */
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
+import { queryRawDirect } from '#lib/server/db/index.ts';
 import { expandUpward, GRAPH_RELATIONS, MATCHING_RELATIONS } from './skill-ontology';
 
 /** How far to look for a loop. Deliberately far past `MAX_DEPTH`. */

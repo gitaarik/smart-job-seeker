@@ -25,10 +25,10 @@
 
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { files } from '$lib/server/db/schema';
-import { contentDisposition, getFile } from '$lib/server/files';
+import { files } from '#lib/server/db/schema.ts';
+import { contentDisposition, getFile } from '#lib/server/files.ts';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

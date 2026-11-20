@@ -1,10 +1,10 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { demo_links } from '$lib/server/db/schema';
-import { provisionDemoUser, resumeDemoUser } from '$lib/server/demo/provision';
-import { establishDemoSession } from '$lib/server/demo/session';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { demo_links } from '#lib/server/db/schema.ts';
+import { provisionDemoUser, resumeDemoUser } from '#lib/server/demo/provision.ts';
+import { establishDemoSession } from '#lib/server/demo/session.ts';
 
 /**
  * Public demo entry point. Validates the link, then on first open provisions a

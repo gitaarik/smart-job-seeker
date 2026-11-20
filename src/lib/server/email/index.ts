@@ -5,9 +5,9 @@
  * https://developers.smtp2go.com/docs/send-an-email
  */
 
-import { getEnv } from '$lib/tools/get-env';
-import { dbDirect as db } from '$lib/server/db';
-import { sent_emails } from '$lib/server/db/schema';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { sent_emails } from '#lib/server/db/schema.ts';
 
 const SMTP2GO_API_URL = 'https://api.smtp2go.com/v3/email/send';
 

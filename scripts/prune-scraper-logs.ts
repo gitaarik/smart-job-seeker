@@ -36,12 +36,12 @@
  * are freed immediately either way — --vacuum only concerns the tables.
  */
 import { sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
 import {
 	pruneScraperLogs,
 	pruneScraperScreenshots,
 	SCREENSHOTS_ROOT
-} from '$lib/server/scraper-logs/retention';
+} from '#lib/server/scraper-logs/retention.ts';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 

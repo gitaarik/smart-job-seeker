@@ -15,7 +15,7 @@ import type {
 	SideProject,
 	Certificate,
 	Reference
-} from '$lib/server/resume/types';
+} from '#lib/server/resume/types.ts';
 
 // --- Diff types ---
 

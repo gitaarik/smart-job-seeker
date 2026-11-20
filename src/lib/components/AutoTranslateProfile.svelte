@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { BASE_LOCALE, LOCALES } from '$lib/resume-translations';
-	import { translations } from '$lib/stores/translations.svelte';
+	import { BASE_LOCALE, LOCALES } from '#lib/resume-translations.ts';
+	import { translations } from '#lib/stores/translations.svelte.ts';
 
 	const targets = LOCALES.filter((l) => l.code !== BASE_LOCALE);
 

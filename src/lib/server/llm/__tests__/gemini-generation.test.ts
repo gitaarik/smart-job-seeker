@@ -10,11 +10,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AIMessage } from '@langchain/core/messages';
 
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn(() => 'test-api-key')
 }));
 
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		geminiApiKey: 'test-gemini-key',
 		geminiThinkingLevel: 'MEDIUM',
@@ -44,7 +44,7 @@ vi.mock('@langchain/google-genai', () => ({
 }));
 
 import { generateChatCompletion } from '../../llm';
-import { config } from '$lib/server/config';
+import { config } from '#lib/server/config.ts';
 
 async function construct(model: string, maxTokens = 1000): Promise<Record<string, unknown>> {
 	constructed.length = 0;

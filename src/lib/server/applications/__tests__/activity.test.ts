@@ -9,7 +9,7 @@
  * page that calls it.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { application_records, application_status_log } from '$lib/server/db/schema';
+import { application_records, application_status_log } from '#lib/server/db/schema.ts';
 
 let moves: { application: number; moved: Date | null }[] = [];
 let records: {
@@ -18,7 +18,7 @@ let records: {
 	recorded: Date | null;
 }[] = [];
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		select: () => ({
 			from: (table: unknown) => ({
@@ -37,7 +37,7 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-const { attachLastActivity } = await import('$lib/server/applications/activity');
+const { attachLastActivity } = await import('#lib/server/applications/activity.ts');
 
 beforeEach(() => {
 	moves = [];

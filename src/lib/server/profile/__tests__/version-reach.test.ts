@@ -29,20 +29,20 @@ const { find, dbMock, mockGetProfile, mockSemantic } = vi.hoisted(() => {
 	};
 });
 
-vi.mock('$lib/server/db', () => ({ dbDirect: dbMock, queryRaw: vi.fn() }));
-vi.mock('$lib/server/profile/default', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({ dbDirect: dbMock, queryRaw: vi.fn() }));
+vi.mock('#lib/server/profile/default.ts', () => ({
 	getProfileByIdentifier: (...args: unknown[]) => mockGetProfile(...args)
 }));
-vi.mock('$lib/server/ai-chat/utils', () => ({ createAndGenerateAiChat: vi.fn() }));
-vi.mock('$lib/server/documents/content-embeddings', () => ({
+vi.mock('#lib/server/ai-chat/utils.ts', () => ({ createAndGenerateAiChat: vi.fn() }));
+vi.mock('#lib/server/documents/content-embeddings.ts', () => ({
 	semanticScoreUnits: (...args: unknown[]) => mockSemantic(...args),
 	poolKey: (type: string, id: number) => `${type}:${id}`
 }));
-vi.mock('$lib/server/documents/content-retrieval', () => ({
+vi.mock('#lib/server/documents/content-retrieval.ts', () => ({
 	scoreUnitAgainstQuery: vi.fn(() => 0)
 }));
 
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
 import { relevantExclusionsByVersion, versionItemStates } from '../tailor-version';
 import {
 	bullet,

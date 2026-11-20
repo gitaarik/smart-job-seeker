@@ -23,7 +23,7 @@ const {
 	mockImportSettings: vi.fn()
 }));
 
-vi.mock('$lib/server/db', async () => {
+vi.mock('#lib/server/db/index.ts', async () => {
 	const { sql } = await import('drizzle-orm');
 	return {
 		dbDirect: {},
@@ -32,10 +32,10 @@ vi.mock('$lib/server/db', async () => {
 	};
 });
 
-vi.mock('$lib/server/auth/better-auth', () => ({ auth: { api: {} } }));
-vi.mock('$lib/tools/get-env', () => ({ getEnv: vi.fn(() => 'test-secret') }));
-vi.mock('$lib/server/device-shares', () => ({ insertDeviceShare: vi.fn() }));
-vi.mock('$lib/server/export', () => ({
+vi.mock('#lib/server/auth/better-auth.ts', () => ({ auth: { api: {} } }));
+vi.mock('#lib/tools/get-env.ts', () => ({ getEnv: vi.fn(() => 'test-secret') }));
+vi.mock('#lib/server/device-shares.ts', () => ({ insertDeviceShare: vi.fn() }));
+vi.mock('#lib/server/export/index.ts', () => ({
 	buildProfileExport: mockBuildProfileExport,
 	buildSettingsExport: mockBuildSettingsExport,
 	importExportData: mockImportExportData,

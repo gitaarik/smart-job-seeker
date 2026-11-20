@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockCharged } = vi.hoisted(() => ({ mockCharged: vi.fn() }));
 
-vi.mock('$lib/server/llm/charged', () => ({ generateChatCompletionCharged: mockCharged }));
+vi.mock('#lib/server/llm/charged.ts', () => ({ generateChatCompletionCharged: mockCharged }));
 
 import { parseVerificationEmail } from '../verification-parser';
 

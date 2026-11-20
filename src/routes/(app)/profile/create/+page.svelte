@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
-	import type { ResumeData } from '$lib/server/resume/types';
+	import type { ResumeData } from '#lib/server/resume/types.ts';
 	import { faUser } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../components/SectionHeader.svelte';
 

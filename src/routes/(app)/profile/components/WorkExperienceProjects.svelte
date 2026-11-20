@@ -23,10 +23,10 @@
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronRight, faGripVertical, faPlus } from '@fortawesome/free-solid-svg-icons';
-	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
-	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
-	import { sectionRows, type SectionRow } from '$lib/components/section-rows.svelte';
-	import { SITE_TEMPLATE_TAGS } from '$lib/profile-visibility';
+	import SectionSaveButton from '#lib/components/SectionSaveButton.svelte';
+	import VisibilityMark from '#lib/components/VisibilityMark.svelte';
+	import { sectionRows, type SectionRow } from '#lib/components/section-rows.svelte.ts';
+	import { SITE_TEMPLATE_TAGS } from '#lib/profile-visibility.ts';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import {
 		blankProject,

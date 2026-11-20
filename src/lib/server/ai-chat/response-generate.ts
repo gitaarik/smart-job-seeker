@@ -3,10 +3,10 @@
  * Handles generating responses for AI chats using the generic LLM interface
  */
 
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { ai_chats, profiles } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { ai_chats, profiles } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 import { getInterpolatedPrompts } from './utils';
 import {
 	generateChatCompletionTracked,
@@ -14,10 +14,10 @@ import {
 	LLMQuotaExceededError,
 	LLMRateLimitError,
 	writingFallback
-} from '$lib/server/llm';
-import { getErrorMessage } from '$lib/server/utils/errors';
-import { tokensToCost, chargeCredits } from '$lib/server/billing/credits';
-import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
+} from '#lib/server/llm/index.ts';
+import { getErrorMessage } from '#lib/server/utils/errors.ts';
+import { tokensToCost, chargeCredits } from '#lib/server/billing/credits.ts';
+import { estimateProviderCostUsd } from '#lib/server/billing/provider-costs.ts';
 
 /**
  * Generate response for a single AI chat using LLM provider

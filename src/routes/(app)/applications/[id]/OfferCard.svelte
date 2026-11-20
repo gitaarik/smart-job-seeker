@@ -26,9 +26,9 @@
 		faWandMagicSparkles
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
-	import { deadlineState, formatOfferAmount, type OfferTerms } from '$lib/application-offer';
-	import { formatDate } from '$lib/format-date';
-	import { timeAgo } from '$lib/format';
+	import { deadlineState, formatOfferAmount, type OfferTerms } from '#lib/application-offer.ts';
+	import { formatDate } from '#lib/format-date.ts';
+	import { timeAgo } from '#lib/format.ts';
 
 	let {
 		offer,

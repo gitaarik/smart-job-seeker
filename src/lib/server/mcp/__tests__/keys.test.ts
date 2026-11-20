@@ -16,7 +16,7 @@ const state = {
 	failUpdates: false
 };
 
-vi.mock('$lib/server/db', () => {
+vi.mock('#lib/server/db/index.ts', () => {
 	const dbMock = {
 		select: () => ({
 			from: () => ({
@@ -47,7 +47,7 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	mcp_keys: {
 		id: 'id',
 		key_hash: 'key_hash',
@@ -59,13 +59,13 @@ vi.mock('$lib/server/db/schema', () => ({
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id', name: 'profiles.name' }
 }));
 
-vi.mock('$lib/server/auth/crypto', () => ({
+vi.mock('#lib/server/auth/crypto.ts', () => ({
 	encryptCredential: (value: string) => `enc:${value}`,
 	decryptCredential: (value: string) => (value.startsWith('enc:') ? value.slice(4) : value)
 }));
 
 const recordSeen = vi.fn();
-vi.mock('$lib/server/account/last-seen', () => ({
+vi.mock('#lib/server/account/last-seen.ts', () => ({
 	recordSeen: (userId: string) => recordSeen(userId)
 }));
 

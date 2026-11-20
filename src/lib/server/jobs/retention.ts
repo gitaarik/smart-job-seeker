@@ -39,8 +39,8 @@
  */
 
 import { inArray, sql } from 'drizzle-orm';
-import { dbDirect as db, queryRawDirect } from '$lib/server/db';
-import { jobs } from '$lib/server/db/schema';
+import { dbDirect as db, queryRawDirect } from '#lib/server/db/index.ts';
+import { jobs } from '#lib/server/db/schema.ts';
 
 export interface JobRetentionResult {
 	rowsDeleted: number;

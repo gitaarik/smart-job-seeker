@@ -22,36 +22,36 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, desc, eq } from 'drizzle-orm';
-import { profile_document_projects, work_experiences } from '$lib/server/db/schema';
-import { projectBelongsToProfile } from '$lib/server/profile/project-ownership';
-import type { ProjectKind } from '$lib/server/documents/project-corpus';
-import { parseIntParam, requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { requireCredits } from '$lib/server/billing/require-credits';
-import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
+import { profile_document_projects, work_experiences } from '#lib/server/db/schema.ts';
+import { projectBelongsToProfile } from '#lib/server/profile/project-ownership.ts';
+import type { ProjectKind } from '#lib/server/documents/project-corpus.ts';
+import { parseIntParam, requireAuth, requireProfileAccess } from '#lib/server/utils/api-helpers.ts';
+import { requireCredits } from '#lib/server/billing/require-credits.ts';
+import { requireDocumentQuota } from '#lib/server/billing/require-document-quota.ts';
 import {
 	deriveNoteTitle,
 	DocumentExtractError,
 	type ExtractedProject,
 	extractNote,
 	extractUpload
-} from '$lib/server/documents/extract';
+} from '#lib/server/documents/extract.ts';
 import {
 	type SaveDocumentProjectInput,
 	type SaveMediaProjectInput,
 	saveExtractedProject,
 	saveMediaProject,
 	setProjectSummary
-} from '$lib/server/documents/store';
-import { summarizeProject } from '$lib/server/documents/summarize';
-import { extOf, isMediaExtension, sniffUploadKind } from '$lib/server/documents/sniff';
+} from '#lib/server/documents/store.ts';
+import { summarizeProject } from '#lib/server/documents/summarize.ts';
+import { extOf, isMediaExtension, sniffUploadKind } from '#lib/server/documents/sniff.ts';
 import {
 	MAX_MEDIA_UPLOAD_BYTES,
 	type NormalizedImage,
 	normalizeImage
-} from '$lib/server/documents/media';
-import { uploadFile } from '$lib/server/files';
+} from '#lib/server/documents/media.ts';
+import { uploadFile } from '#lib/server/files.ts';
 
 // Raw-upload safety cap (per file). Per-plan limits apply to extracted text.
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;

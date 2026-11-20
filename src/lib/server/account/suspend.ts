@@ -14,8 +14,8 @@
  */
 
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { users } from '#lib/server/db/schema.ts';
 import { revokeAccess } from './delete';
 
 /**

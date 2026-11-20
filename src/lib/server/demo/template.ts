@@ -11,9 +11,9 @@
 
 import { randomBytes } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles, users } from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth/better-auth';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles, users } from '#lib/server/db/schema.ts';
+import { auth } from '#lib/server/auth/better-auth.ts';
 import { cloneProfileInto } from './provision';
 
 /** Synthetic, non-routable address (welcome/admin emails skip this domain). */

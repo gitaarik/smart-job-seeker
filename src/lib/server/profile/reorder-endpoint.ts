@@ -18,10 +18,10 @@
 
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { parseBody, profileReorderSchema } from '$lib/server/validation/api-schemas';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { parseBody, profileReorderSchema } from '#lib/server/validation/api-schemas.ts';
 import { reorderRows } from './write';
 import type { ProfileResourceName } from './resources';
 

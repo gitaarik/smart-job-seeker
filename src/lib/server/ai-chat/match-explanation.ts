@@ -13,9 +13,9 @@
  * writes the row anew, text included.
  */
 import { and, eq, isNull } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { job_matches, jobs, match_config } from '$lib/server/db/schema';
-import { relevantSupportingEvidence } from '$lib/server/documents/retrieval';
+import { db } from '#lib/server/db/index.ts';
+import { job_matches, jobs, match_config } from '#lib/server/db/schema.ts';
+import { relevantSupportingEvidence } from '#lib/server/documents/retrieval.ts';
 import { runProfileAiChat } from './job-utils';
 import { factorVerdicts, type ScoreFactors } from './match-decisions';
 import { type MatchPreferences, matchPromptVariables } from './match-variables';

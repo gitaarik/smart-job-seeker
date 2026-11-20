@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { diffResumeData } from './resume-diff';
-import type { Certificate, ResumeData, SideProject } from '$lib/server/resume/types';
+import type { Certificate, ResumeData, SideProject } from '#lib/server/resume/types.ts';
 
 const withCertificates = (certificates: Certificate[]): ResumeData => ({
 	basics: { name: 'Alex Morgan' },

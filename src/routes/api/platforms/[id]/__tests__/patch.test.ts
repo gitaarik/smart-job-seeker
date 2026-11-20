@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => {
 	};
 });
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	dbDirect: {
 		query: {
 			job_platforms: { findFirst: mocks.platformsFindFirst },
@@ -38,7 +38,7 @@ vi.mock('drizzle-orm', () => ({
 	eq: (_col: unknown, val: unknown) => val
 }));
 
-vi.mock('$lib/server/db/schema', () => ({
+vi.mock('#lib/server/db/schema.ts', () => ({
 	job_platforms: { id: 'job_platforms.id' },
 	search_tasks: { platform_id: 'search_tasks.platform_id' }
 }));

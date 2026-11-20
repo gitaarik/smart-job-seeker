@@ -19,10 +19,10 @@
  * the one place every route hands the tree over.
  */
 
-import { isAnonymous } from '$lib/resume-anonymity';
-import { anonymiseTree, identityOf } from '$lib/server/profile/anonymity';
-import { withoutFieldVariants } from '$lib/server/profile/field-variants';
-import { versionChain } from '$lib/server/profile/skill-words';
+import { isAnonymous } from '#lib/resume-anonymity.ts';
+import { anonymiseTree, identityOf } from '#lib/server/profile/anonymity.ts';
+import { withoutFieldVariants } from '#lib/server/profile/field-variants.ts';
+import { versionChain } from '#lib/server/profile/skill-words.ts';
 
 /**
  * Profile columns a page may carry: what the renderers print, and the

@@ -11,10 +11,10 @@
  */
 
 import type { RequestHandler } from './$types';
-import { createRateLimitResponse, mcpRateLimiter } from '$lib/server/middleware/rate-limit';
-import { checkMcpAllowance, recordMcpCall } from '$lib/server/billing/require-mcp-allowance';
-import { callTool, type ToolResult } from '$lib/server/mcp/call';
-import { recordMcpClient, verifyMcpKey, type VerifiedMcpKey } from '$lib/server/mcp/keys';
+import { createRateLimitResponse, mcpRateLimiter } from '#lib/server/middleware/rate-limit.ts';
+import { checkMcpAllowance, recordMcpCall } from '#lib/server/billing/require-mcp-allowance.ts';
+import { callTool, type ToolResult } from '#lib/server/mcp/call.ts';
+import { recordMcpClient, verifyMcpKey, type VerifiedMcpKey } from '#lib/server/mcp/keys.ts';
 import {
 	isNotification,
 	isRpcRequest,
@@ -25,8 +25,8 @@ import {
 	SERVER_INFO,
 	type RpcRequest,
 	type RpcResponse
-} from '$lib/server/mcp/protocol';
-import { instructionsFor, toolsFor } from '$lib/server/mcp/tools';
+} from '#lib/server/mcp/protocol.ts';
+import { instructionsFor, toolsFor } from '#lib/server/mcp/tools.ts';
 
 /**
  * The bearer token, and only the bearer token.

@@ -6,8 +6,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const recordTermsAcceptance = vi.fn(async (_userId: string) => {});
-vi.mock('$lib/server/legal/texts', () => ({ termsVersion: () => '2026-11-13' }));
-vi.mock('$lib/server/legal/record', () => ({
+vi.mock('#lib/server/legal/texts.ts', () => ({ termsVersion: () => '2026-11-13' }));
+vi.mock('#lib/server/legal/record.ts', () => ({
 	acceptedTermsField: (form: FormData) => form.get('accept') === 'on',
 	recordTermsAcceptance
 }));

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { DELETION_GRACE_DAYS } from '$lib/server/account/delete';
+import { DELETION_GRACE_DAYS } from '#lib/server/account/delete.ts';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;

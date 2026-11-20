@@ -12,8 +12,8 @@
  * not stop the other.
  */
 
-import { getEnv } from '$lib/tools/get-env';
-import { sendEmail } from '$lib/server/email';
+import { getEnv } from '#lib/tools/get-env.ts';
+import { sendEmail } from '#lib/server/email/index.ts';
 
 export interface OpsNotice {
 	/** One line: the email subject, and the first line of the Telegram text. */

@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 // Mock environment variables globally
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn((key: string, defaultValue = '') => {
 		const envVars: Record<string, string> = {
 			SJS_DATABASE_URL: 'postgresql://test:test@localhost/test',
@@ -26,7 +26,7 @@ vi.mock('ioredis', async () => {
 });
 
 // Mock the database module globally
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		ai_chats: {
 			update: vi.fn(),

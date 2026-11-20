@@ -7,7 +7,7 @@
 		faRotate,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { DocType } from '$lib/utils/profile-doc-url';
+	import type { DocType } from '#lib/utils/profile-doc-url.ts';
 
 	/**
 	 * What can be done to the tailored version as a whole: build it again, keep

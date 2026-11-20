@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { listApiKeys } from '$lib/server/auth/api-key';
-import { listSharedWithMe } from '$lib/server/device-shares';
-import { getDesktopDownloads } from '$lib/server/desktop-release';
+import { listApiKeys } from '#lib/server/auth/api-key.ts';
+import { listSharedWithMe } from '#lib/server/device-shares.ts';
+import { getDesktopDownloads } from '#lib/server/desktop-release.ts';
 
 export const load: PageServerLoad = async ({ parent, cookies }) => {
 	const layoutData = await parent();

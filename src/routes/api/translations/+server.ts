@@ -1,13 +1,13 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { profile_translations } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
-import { isEntityOwned } from '$lib/server/profile/translations';
-import { touchProfile } from '$lib/server/profile/touch-profile';
-import { BASE_LOCALE, isKnownLocale, isTranslatable } from '$lib/resume-translations';
+import { profile_translations } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getSelectedProfileId } from '#lib/server/profile/selected-profile.ts';
+import { isEntityOwned } from '#lib/server/profile/translations.ts';
+import { touchProfile } from '#lib/server/profile/touch-profile.ts';
+import { BASE_LOCALE, isKnownLocale, isTranslatable } from '#lib/resume-translations.ts';
 
 /** All translation overlays for the caller's selected profile. */
 export const GET: RequestHandler = async ({ locals, cookies }) => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { track } from '$lib/tools/analytics';
+	import { track } from '#lib/tools/analytics.ts';
 
 	let classNames: string = '';
 	export { classNames as class };

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { autoApproveSignups } from '$lib/server/auth/registration';
+import { autoApproveSignups } from '#lib/server/auth/registration.ts';
 
 /**
  * Whether to tell the visitor to wait for approval.

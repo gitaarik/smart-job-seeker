@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail } from '@sveltejs/kit';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { application_questions, applications } from '$lib/server/db/schema';
+import { application_questions, applications } from '#lib/server/db/schema.ts';
 import { getSelectedProfileId } from '../../../../../profile/utils';
 import {
 	buildConversation,
@@ -15,10 +15,10 @@ import {
 	scoreVersionUse,
 	trimVersionsAfter,
 	type VersionSource
-} from '$lib/server/ai-chat/entity-versions';
-import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
-import { isStaffViewer } from '$lib/server/auth/guards';
-import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
+} from '#lib/server/ai-chat/entity-versions.ts';
+import { isGenerating } from '#lib/server/ai-chat/ai-generation-status.ts';
+import { isStaffViewer } from '#lib/server/auth/guards.ts';
+import { TEXT_KINDS } from '#lib/server/texts/profile-texts.ts';
 
 export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const layoutData = await parent();

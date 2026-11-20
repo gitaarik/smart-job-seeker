@@ -5,7 +5,7 @@
  * what SvelteKit knows (`load`, `actions` and the page options).
  */
 
-import { isSiteUrl } from '$lib/portfolio-seo';
+import { isSiteUrl } from '#lib/portfolio-seo.ts';
 import {
 	isHeaderArt,
 	PALETTE_ROLES,
@@ -13,7 +13,7 @@ import {
 	resolvePalette,
 	type PortfolioPalette,
 	type PortfolioThemeConfig
-} from '$lib/portfolio-themes';
+} from '#lib/portfolio-themes.ts';
 
 /** A hex colour, the only form a palette's CSS variable can take. */
 const HEX = /^#[0-9a-f]{6}$/i;

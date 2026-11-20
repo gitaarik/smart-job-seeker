@@ -3,7 +3,7 @@
  *
  * Neither is enforced by the schema — both columns are plain varchars — so
  * this list is the admin UI's, not a constraint. It lives outside
- * `$lib/server` because the forms that render it are components.
+ * `#lib/server` because the forms that render it are components.
  *
  * `status` is the one that does something: the suggestion flow, the jobs page
  * and the add-task query all filter on `published`, and everything else reads

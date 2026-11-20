@@ -1,6 +1,6 @@
 <script lang="ts">
 	import JobCard from './JobCard.svelte';
-	import type { PayBadge } from '$lib/salary/pay-fit';
+	import type { PayBadge } from '#lib/salary/pay-fit.ts';
 
 	interface Job {
 		id: number;

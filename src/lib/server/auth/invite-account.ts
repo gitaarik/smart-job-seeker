@@ -7,10 +7,10 @@
  * permission flags. Factored out so both routes provision accounts identically.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { accounts, sessions, users } from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth/better-auth';
+import { accounts, sessions, users } from '#lib/server/db/schema.ts';
+import { auth } from '#lib/server/auth/better-auth.ts';
 import { randomBytes, scrypt } from 'node:crypto';
 import { promisify } from 'node:util';
 

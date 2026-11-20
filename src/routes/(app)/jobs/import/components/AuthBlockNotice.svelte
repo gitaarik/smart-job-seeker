@@ -18,8 +18,8 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPlugCircleXmark, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
-	import { explainAuthBlock } from '$lib/import-tasks/failure-policy';
-	import { toFailureKind } from '$lib/import-tasks/failure-kinds';
+	import { explainAuthBlock } from '#lib/import-tasks/failure-policy.ts';
+	import { toFailureKind } from '#lib/import-tasks/failure-kinds.ts';
 
 	let {
 		kind,

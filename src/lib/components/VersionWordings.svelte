@@ -21,7 +21,7 @@
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { variantPreview, type WordingState } from '$lib/field-variants';
+	import { variantPreview, type WordingState } from '#lib/field-variants.ts';
 
 	interface Props {
 		versionId: number;

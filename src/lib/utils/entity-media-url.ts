@@ -10,7 +10,7 @@
  * `*_path` file until `scripts/migrate-media-library.ts` had converted a
  * database, and the columns went in migration 0091.
  */
-import { renditionUrl } from '$lib/media-library';
+import { renditionUrl } from '#lib/media-library.ts';
 
 export function getEntityMediaUrl(renditionId: string | null | undefined): string | null {
 	return renditionUrl(renditionId);

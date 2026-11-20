@@ -5,8 +5,8 @@
 	import '../app.css';
 	import './(app)/dashboard.css';
 	import { onMount, untrack } from 'svelte';
-	import { initializeTheme, themeState, updateDOM } from '$lib/stores/theme.svelte';
-	import { identify } from '$lib/tools/analytics';
+	import { initializeTheme, themeState, updateDOM } from '#lib/stores/theme.svelte.ts';
+	import { identify } from '#lib/tools/analytics.ts';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 

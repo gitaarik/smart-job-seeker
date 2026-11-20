@@ -10,7 +10,7 @@ const h = vi.hoisted(() => ({
 	evidence: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		query: {
 			job_matches: { findFirst: h.findMatch },
@@ -25,7 +25,7 @@ vi.mock('$lib/server/db', () => ({
 		})
 	}
 }));
-vi.mock('$lib/server/documents/retrieval', () => ({
+vi.mock('#lib/server/documents/retrieval.ts', () => ({
 	relevantSupportingEvidence: h.evidence
 }));
 vi.mock('../job-utils', () => ({ runProfileAiChat: h.run }));

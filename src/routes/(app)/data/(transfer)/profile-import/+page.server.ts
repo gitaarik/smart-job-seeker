@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect, isHttpError, isRedirect } from '@sveltejs/kit';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
-import { mediaLibraryBytes } from '$lib/server/media/items';
+import { requireMediaQuota } from '#lib/server/billing/require-media-quota.ts';
+import { mediaLibraryBytes } from '#lib/server/media/items.ts';
 import { getSelectedProfileId } from '../../../profile/utils';
 import {
 	importExportData,
@@ -10,16 +10,16 @@ import {
 	parseExportZip,
 	importMediaFiles,
 	type ExportData
-} from '$lib/server/export';
-import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
-import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
-import { getProfileAsResumeData } from '$lib/server/resume/profile-to-resume-data';
-import { applyDiffToProfile, type DiffApplyPayload } from '$lib/server/resume/apply-diff';
-import { logImportEvent } from '$lib/server/import-log';
-import { profileQuotaFailure } from '$lib/server/profile/quota';
-import { dbDirect as db } from '$lib/server/db';
+} from '#lib/server/export/index.ts';
+import { importProfileFromJson } from '#lib/server/profile/import-profile-json.ts';
+import type { ExportedProfile } from '#lib/server/profile/export-profile-json.ts';
+import { getProfileAsResumeData } from '#lib/server/resume/profile-to-resume-data.ts';
+import { applyDiffToProfile, type DiffApplyPayload } from '#lib/server/resume/apply-diff.ts';
+import { logImportEvent } from '#lib/server/import-log.ts';
+import { profileQuotaFailure } from '#lib/server/profile/quota.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { desc } from 'drizzle-orm';
-import { import_logs } from '$lib/server/db/schema';
+import { import_logs } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();

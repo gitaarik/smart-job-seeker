@@ -15,7 +15,7 @@
  *   npx dotenvx run -f /app/.env -- npx tsx scripts/verify-mcp-profile.ts <profileId>
  */
 import { and, eq, gte, inArray } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import {
 	capability_edits,
 	capability_requests,
@@ -23,19 +23,19 @@ import {
 	notifications,
 	profile_translations,
 	profiles
-} from '$lib/server/db/schema';
-import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
+} from '#lib/server/db/schema.ts';
+import { describeLoggedChange, readEditLog, revertEdit } from '#lib/server/ai-chat/edit-log.ts';
 import {
 	buildProposalSchema,
 	liveLanguages,
 	renderCapabilityPrompt,
 	resolveCapabilities
-} from '$lib/server/ai-chat/capabilities';
-import { callTool } from '$lib/server/mcp/call';
-import { createMcpKey, type VerifiedMcpKey } from '$lib/server/mcp/keys';
-import { approveRequest } from '$lib/server/mcp/requests';
-import { toolsFor } from '$lib/server/mcp/tools';
-import { BASIC_INFO_COLUMNS, type BasicInfo } from '$lib/server/profile/basic-info';
+} from '#lib/server/ai-chat/capabilities.ts';
+import { callTool } from '#lib/server/mcp/call.ts';
+import { createMcpKey, type VerifiedMcpKey } from '#lib/server/mcp/keys.ts';
+import { approveRequest } from '#lib/server/mcp/requests.ts';
+import { toolsFor } from '#lib/server/mcp/tools.ts';
+import { BASIC_INFO_COLUMNS, type BasicInfo } from '#lib/server/profile/basic-info.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {

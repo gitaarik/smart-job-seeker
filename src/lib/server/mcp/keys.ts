@@ -15,11 +15,11 @@
  */
 
 import crypto from 'crypto';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, desc, eq, type SQL } from 'drizzle-orm';
-import { mcp_keys, profiles } from '$lib/server/db/schema';
-import { decryptCredential, encryptCredential } from '$lib/server/auth/crypto';
-import { recordSeen } from '$lib/server/account/last-seen';
+import { mcp_keys, profiles } from '#lib/server/db/schema.ts';
+import { decryptCredential, encryptCredential } from '#lib/server/auth/crypto.ts';
+import { recordSeen } from '#lib/server/account/last-seen.ts';
 
 /**
  * Distinct from `sjs_` so the two kinds of credential are told apart before any

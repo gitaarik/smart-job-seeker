@@ -3,7 +3,7 @@
  * Centralized functions for default profile logic
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { asc, desc, eq } from 'drizzle-orm';
 import {
 	certificate_skills,
@@ -25,7 +25,7 @@ import {
 	work_experience_achievements,
 	work_experience_projects,
 	work_experience_technologies
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 
 /**
  * Standard include structure used across all profile queries.

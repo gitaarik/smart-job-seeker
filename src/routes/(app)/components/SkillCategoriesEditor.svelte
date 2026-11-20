@@ -19,11 +19,11 @@
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-	import { OpenRows } from '$lib/components/open-rows';
+	import { OpenRows } from '#lib/components/open-rows.ts';
 	import Card from './Card.svelte';
 	import SkillTagsEditor from './SkillTagsEditor.svelte';
 	import type { LevelOption, SkillItem } from './SkillTagsEditor.svelte';
-	import TranslatableField from '$lib/components/TranslatableField.svelte';
+	import TranslatableField from '#lib/components/TranslatableField.svelte';
 
 	export interface CategoryItem {
 		name: string;

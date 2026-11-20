@@ -16,7 +16,7 @@ const claimed = vi.hoisted(() => ({ rows: [{ id: 73 }] as Array<{ id: number }> 
 const calls = vi.hoisted(() => ({ order: [] as string[] }));
 
 const mockUpdateWhere = vi.hoisted(() => vi.fn());
-vi.mock('$lib/server/db', () => ({
+vi.mock('#lib/server/db/index.ts', () => ({
 	db: {
 		update: () => ({
 			set: (values: unknown) => ({
@@ -33,10 +33,10 @@ vi.mock('$lib/server/db', () => ({
 const mockUpload = vi.hoisted(() =>
 	vi.fn().mockResolvedValue({ id: 'file-uuid-1', filename_download: 'contract.pdf' })
 );
-vi.mock('$lib/server/files', () => ({ uploadFile: mockUpload }));
+vi.mock('#lib/server/files.ts', () => ({ uploadFile: mockUpload }));
 
 const mockExtract = vi.hoisted(() => vi.fn());
-vi.mock('$lib/server/ai-chat/application-activity', () => ({
+vi.mock('#lib/server/ai-chat/application-activity.ts', () => ({
 	extractRecordFile: (...a: unknown[]) => {
 		calls.order.push('extract');
 		return mockExtract(...a);
@@ -44,7 +44,7 @@ vi.mock('$lib/server/ai-chat/application-activity', () => ({
 }));
 
 const mockDerive = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
-vi.mock('$lib/server/ai-chat/record-derivation', () => ({
+vi.mock('#lib/server/ai-chat/record-derivation.ts', () => ({
 	deriveRecordMetadata: (...a: unknown[]) => {
 		calls.order.push('derive');
 		return mockDerive(...a);
@@ -52,7 +52,7 @@ vi.mock('$lib/server/ai-chat/record-derivation', () => ({
 }));
 
 const mockSummarize = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
-vi.mock('$lib/server/ai-chat/application-summary', () => ({
+vi.mock('#lib/server/ai-chat/application-summary.ts', () => ({
 	summarizeApplication: (...a: unknown[]) => {
 		calls.order.push('summarise');
 		return mockSummarize(...a);

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { redirectIfAuthenticated } from '$lib/server/auth/guards';
+import { redirectIfAuthenticated } from '#lib/server/auth/guards.ts';
 
 export const load: PageServerLoad = async (event) => {
 	// Get redirect URL from query params

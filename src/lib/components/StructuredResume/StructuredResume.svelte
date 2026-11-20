@@ -4,15 +4,15 @@
 	import { faEnvelope, faGlobe, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 	import { faGithub, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-	import { formatCertificateYears, formatDateRangeCompact } from '$lib/tools/date-utils';
+	import { formatCertificateYears, formatDateRangeCompact } from '#lib/tools/date-utils.ts';
 	import { createProfileFilter } from '../ProfileDisplay/profile-filter';
 	import type { VersionObj } from '../ProfileDisplay/profile-filter';
-	import { isContactHidden } from '$lib/resume-contact-fields';
-	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-	import { assetUrl, documentSections, type ResumeTemplateConfig } from '$lib/resume-templates';
-	import { templateLabel } from '$lib/resume-template-labels';
-	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
-	import { headlineWithPlace } from '$lib/work-mode';
+	import { isContactHidden } from '#lib/resume-contact-fields.ts';
+	import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+	import { assetUrl, documentSections, type ResumeTemplateConfig } from '#lib/resume-templates.ts';
+	import { templateLabel } from '#lib/resume-template-labels.ts';
+	import { resumeDocumentDescription, resumeDocumentTitle } from '#lib/resume-head.ts';
+	import { headlineWithPlace } from '#lib/work-mode.ts';
 
 	interface WorkExperience {
 		name: string | null;

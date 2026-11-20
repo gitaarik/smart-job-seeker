@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import type { PortfolioThemeConfig } from '$lib/portfolio-themes';
+import type { PortfolioThemeConfig } from '#lib/portfolio-themes.ts';
 import { applyCareerFields } from './portfolio-career-form';
 
 function form(fields: Record<string, string>): FormData {

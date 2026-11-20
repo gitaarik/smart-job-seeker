@@ -36,7 +36,7 @@
  * or from cloud/: npm run db:verify-tailor-run -- <profileId>
  */
 import { and, eq, inArray } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import {
 	applications,
 	jobs,
@@ -44,13 +44,13 @@ import {
 	profile_version_overrides,
 	profile_versions,
 	profiles
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	decisionsForVersion,
 	describeOverrides,
 	tailorVersionForApplication
-} from '$lib/server/profile/tailor-version';
-import { tailoredSlugFor } from '$lib/version-overrides';
+} from '#lib/server/profile/tailor-version.ts';
+import { tailoredSlugFor } from '#lib/version-overrides.ts';
 
 const profileId = Number(process.argv[2]);
 if (!Number.isInteger(profileId)) {

@@ -15,9 +15,9 @@
 
 import { createSign } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { github_app_installations } from '$lib/server/db/schema';
-import { config } from '$lib/server/config';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { github_app_installations } from '#lib/server/db/schema.ts';
+import { config } from '#lib/server/config.ts';
 
 export function isGitHubAppConfigured(): boolean {
 	return !!(config.githubAppId && config.githubAppPrivateKey);

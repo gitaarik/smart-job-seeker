@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
+import { dbDirect as db, queryRaw, sql } from '#lib/server/db/index.ts';
 import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
 import {
 	application_status_log,
@@ -14,14 +14,14 @@ import {
 	profiles,
 	search_task_run_items,
 	search_tasks
-} from '$lib/server/db/schema';
-import { getProfileSkillLevels } from '$lib/server/job/match-utils';
-import { getProfileSkillIndex } from '$lib/server/profile/skill-visibility';
-import { addMatchJob } from '$lib/server/queue/match-queue';
+} from '#lib/server/db/schema.ts';
+import { getProfileSkillLevels } from '#lib/server/job/match-utils.ts';
+import { getProfileSkillIndex } from '#lib/server/profile/skill-visibility.ts';
+import { addMatchJob } from '#lib/server/queue/match-queue.ts';
 import { getSelectedProfileId } from '../../profile/utils';
-import { isStaffViewer } from '$lib/server/auth/guards';
-import { parseJobDescription } from '$lib/server/jobs/parse-job-description';
-import { parseIntOrNull, strArrayOrNull, strOrNull } from '$lib/server/jobs/job-fields';
+import { isStaffViewer } from '#lib/server/auth/guards.ts';
+import { parseJobDescription } from '#lib/server/jobs/parse-job-description.ts';
+import { parseIntOrNull, strArrayOrNull, strOrNull } from '#lib/server/jobs/job-fields.ts';
 import {
 	applyJobDescription,
 	applyJobFields,
@@ -29,16 +29,16 @@ import {
 	canEditJobContent,
 	type JobFieldValues,
 	validateJobFields
-} from '$lib/server/jobs/edit-job';
-import { classifyRegion } from '$lib/data/job-taxonomy';
-import type { SkipReason } from '$lib/match-recommendation';
+} from '#lib/server/jobs/edit-job.ts';
+import { classifyRegion } from '#lib/data/job-taxonomy.ts';
+import type { SkipReason } from '#lib/match-recommendation.ts';
 import {
 	normalizeExperienceLevels,
 	normalizeJobType,
 	normalizeWorkLocation
-} from '$lib/data/job-normalize';
-import { normalizeSalaryPeriod } from '$lib/salary/conversion';
-import { isThinProfile } from '$lib/server/profile/thin-profile';
+} from '#lib/data/job-normalize.ts';
+import { normalizeSalaryPeriod } from '#lib/salary/conversion.ts';
+import { isThinProfile } from '#lib/server/profile/thin-profile.ts';
 
 /**
  * How long the inline re-score may block the form action. Shorter than

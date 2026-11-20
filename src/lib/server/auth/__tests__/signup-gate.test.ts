@@ -18,9 +18,9 @@ const verifyTurnstileToken = vi.hoisted(() => vi.fn());
 const termsVersion = vi.hoisted(() => vi.fn());
 const TERMS_VERSION = '2026-11-13';
 
-vi.mock('$lib/server/auth/registration', () => ({ autoApproveSignups, registrationOpen }));
-vi.mock('$lib/server/auth/turnstile', () => ({ verifyTurnstileToken }));
-vi.mock('$lib/server/legal/texts', () => ({ termsVersion }));
+vi.mock('#lib/server/auth/registration.ts', () => ({ autoApproveSignups, registrationOpen }));
+vi.mock('#lib/server/auth/turnstile.ts', () => ({ verifyTurnstileToken }));
+vi.mock('#lib/server/legal/texts.ts', () => ({ termsVersion }));
 
 const { approvesOnSignup, guardEmailChange, guardSignup, signupTermsFields } =
 	await import('../signup-gate');

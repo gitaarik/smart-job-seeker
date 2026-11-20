@@ -7,12 +7,12 @@
 
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getAllMatcherStates, isMatcherAlive } from '$lib/server/job/matcher-state';
-import { dbDirect as db } from '$lib/server/db';
+import { getAllMatcherStates, isMatcherAlive } from '#lib/server/job/matcher-state.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { inArray } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/api-helpers';
-import { getMatchCounts } from '$lib/server/job/match-counts';
+import { profiles } from '#lib/server/db/schema.ts';
+import { requireAuth } from '#lib/server/utils/api-helpers.ts';
+import { getMatchCounts } from '#lib/server/job/match-counts.ts';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = requireAuth(locals);

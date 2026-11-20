@@ -1,20 +1,20 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { json, redirect } from '@sveltejs/kit';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { building } from '$app/environment';
-import { auth } from '$lib/server/auth/better-auth';
-import type { User } from '$lib/server/auth/better-auth';
-import { config } from '$lib/server/config';
-import { internalRenderUserId } from '$lib/server/auth/internal-render';
-import { dbDirect as db } from '$lib/server/db';
+import { building } from '$app/env';
+import { auth } from '#lib/server/auth/better-auth.ts';
+import type { User } from '#lib/server/auth/better-auth.ts';
+import { config } from '#lib/server/config.ts';
+import { internalRenderUserId } from '#lib/server/auth/internal-render.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
-import { users } from '$lib/server/db/schema';
-import { Sentry } from '$lib/server/monitoring/sentry';
-import { initTelemetry } from '$lib/server/monitoring/telemetry';
-import { aiRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
-import { shapeHtmlShell } from '$lib/server/html-shell';
-import { isPublicApiRoute } from '$lib/server/auth/public-api-routes';
-import { recordSeen } from '$lib/server/account/last-seen';
+import { users } from '#lib/server/db/schema.ts';
+import { Sentry } from '#lib/server/monitoring/sentry.ts';
+import { initTelemetry } from '#lib/server/monitoring/telemetry.ts';
+import { aiRateLimiter, createRateLimitResponse } from '#lib/server/middleware/rate-limit.ts';
+import { shapeHtmlShell } from '#lib/server/html-shell.ts';
+import { isPublicApiRoute } from '#lib/server/auth/public-api-routes.ts';
+import { recordSeen } from '#lib/server/account/last-seen.ts';
 
 initTelemetry('sveltekit');
 
@@ -233,7 +233,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handleError: HandleServerError = ({ error, event }) => {
+export const handleError: HandleServerError = ({ kind, error, event }) => {
+	// SvelteKit 3 passes every error here, including a 404 or an `error(403, …)`
+	// a load function threw on purpose. Kit 2 never did, so keep reporting only
+	// what it used to: errors nobody threw on purpose, and anything at 500+.
+	if (kind === 'validation') return;
+	if (kind !== 'unknown' && error.status < 500) return;
 	if (process.env.SENTRY_DSN) {
 		Sentry.captureException(error, {
 			extra: { url: event.url.pathname }

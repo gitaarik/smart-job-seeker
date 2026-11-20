@@ -10,9 +10,9 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { search_tasks, search_task_runs } from '$lib/server/db/schema';
-import { addScrapeJob, getActiveJobForSearch } from '$lib/server/queue/scraper-queue';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { search_tasks, search_task_runs } from '#lib/server/db/schema.ts';
+import { addScrapeJob, getActiveJobForSearch } from '#lib/server/queue/scraper-queue.ts';
 
 async function main() {
 	const arg = process.argv[2];

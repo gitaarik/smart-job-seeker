@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { LOGIN_MODES } from '$lib/import-tasks/sign-in';
-import { TASK_BROWSER_PROVIDERS } from '$lib/import-tasks/readiness';
-import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
-import { MAX_CORPUS_PICKS_PER_DAY } from '$lib/server/job/match-preferences';
-import { WORK_MODES } from '$lib/work-mode';
+import { LOGIN_MODES } from '#lib/import-tasks/sign-in.ts';
+import { TASK_BROWSER_PROVIDERS } from '#lib/import-tasks/readiness.ts';
+import { MAX_BELOW_ASK_TOLERANCE_PCT } from '#lib/salary/pay-fit.ts';
+import { MAX_CORPUS_PICKS_PER_DAY } from '#lib/server/job/match-preferences.ts';
+import { WORK_MODES } from '#lib/work-mode.ts';
 import { error as httpError } from '@sveltejs/kit';
 
 const trimmedString = (maxLen = 255) => z.string().trim().max(maxLen);
@@ -174,7 +174,7 @@ export const techSkillUpdateSchema = z.object({
 
 // Job preferences
 
-/** A place as the picker hands it over (`Place`, `$lib/data/places`). */
+/** A place as the picker hands it over (`Place`, `#lib/data/places.ts`). */
 export const placeSchema = z.object({
 	id: z.number().int(),
 	kind: z.enum(['city', 'admin', 'country', 'region']),

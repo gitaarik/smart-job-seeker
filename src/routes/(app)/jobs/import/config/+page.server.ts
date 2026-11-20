@@ -1,19 +1,19 @@
 import type { PageServerLoad } from './$types';
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
 import {
 	EXPERIENCE_LEVEL_OPTIONS,
 	JOB_TYPE_OPTIONS,
 	WORK_LOCATION_OPTIONS,
 	readMatchPreferences
-} from '$lib/server/job/match-preferences';
-import { BELOW_ASK_TOLERANCE_OPTIONS, countBelowAsk } from '$lib/server/salary/pay-fit-store';
-import { storedEmployed, storedFreelance } from '$lib/salary/settings';
+} from '#lib/server/job/match-preferences.ts';
+import { BELOW_ASK_TOLERANCE_OPTIONS, countBelowAsk } from '#lib/server/salary/pay-fit-store.ts';
+import { storedEmployed, storedFreelance } from '#lib/salary/settings.ts';
 
 /**
  * The options and the get-or-create both moved to
- * `$lib/server/job/match-preferences`, which is also what `edit_match_config`
+ * `#lib/server/job/match-preferences`, which is also what `edit_match_config`
  * holds the model to. They used to be declared here under a comment saying
  * "Keep in sync manually for now"; a third copy behind a capability is what
  * made that worth fixing, because a model offered a value this form does not

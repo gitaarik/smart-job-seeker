@@ -1,7 +1,7 @@
-import { dbDirect as db } from '$lib/server/db';
-import { fx_rates } from '$lib/server/db/schema';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { fx_rates } from '#lib/server/db/schema.ts';
 import { eq } from 'drizzle-orm';
-import type { FxRates } from '$lib/salary/conversion';
+import type { FxRates } from '#lib/salary/conversion.ts';
 
 /**
  * Load the latest currency exchange rates from the DB.

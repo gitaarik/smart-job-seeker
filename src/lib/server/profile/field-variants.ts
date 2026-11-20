@@ -25,7 +25,7 @@
  * $lib/field-variants.ts for the vocabulary and for the rule that picks.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import {
 	profile_field_variants,
@@ -33,7 +33,7 @@ import {
 	profile_versions,
 	profiles,
 	work_experiences
-} from '$lib/server/db/schema';
+} from '#lib/server/db/schema.ts';
 import {
 	FIELD_VARIANT_ENTITY,
 	FIELD_VARIANT_VALUE,
@@ -48,10 +48,10 @@ import {
 	type VariantEntity,
 	type WordingPickRow,
 	type WordingState
-} from '$lib/field-variants';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import { versionChain } from '$lib/server/profile/skill-words';
-import type { Translator } from '$lib/server/profile/translations';
+} from '#lib/field-variants.ts';
+import { OVERRIDE_ENTITIES } from '#lib/version-overrides.ts';
+import { versionChain } from '#lib/server/profile/skill-words.ts';
+import type { Translator } from '#lib/server/profile/translations.ts';
 
 export interface FieldVariants {
 	/** The version these picks belong to, or null when nothing is picked. */

@@ -9,13 +9,13 @@
  *   docker compose exec app node dist-scripts/seed-test-user.mjs
  */
 
-import { auth } from '$lib/server/auth/better-auth';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles, users } from '$lib/server/db/schema';
+import { auth } from '#lib/server/auth/better-auth.ts';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles, users } from '#lib/server/db/schema.ts';
 import { eq } from 'drizzle-orm';
-import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
-import { recordTermsAcceptance } from '$lib/server/legal/record';
-import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
+import { importProfileFromJson } from '#lib/server/profile/import-profile-json.ts';
+import { recordTermsAcceptance } from '#lib/server/legal/record.ts';
+import type { ExportedProfile } from '#lib/server/profile/export-profile-json.ts';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';

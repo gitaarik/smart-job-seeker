@@ -29,24 +29,24 @@ import {
 	type JobLike,
 	type PinnedProject,
 	relevantProjectsBlock
-} from '$lib/server/documents/retrieval';
+} from '#lib/server/documents/retrieval.ts';
 import {
 	relevantApplicationTextsBlock,
 	relevantStoriesBlock
-} from '$lib/server/documents/content-retrieval';
+} from '#lib/server/documents/content-retrieval.ts';
 import {
 	QUERY_CLIP_CHARS,
 	type RankerKind,
 	type RetrievalItem,
 	type RetrievalRecord
-} from '$lib/server/documents/retrieval-record';
+} from '#lib/server/documents/retrieval-record.ts';
 import { type ActivityContextMode, applicationActivityText } from './application-activity';
 import { activityManifestText, type ManifestReader } from './activity-manifest';
 import { applicationPipelineText } from './application-pipeline';
 import { jobDetailsText } from './job-context';
 import { formatPageScope, type PageScope } from './page-scope';
-import type { ProfileResourceName } from '$lib/server/profile/resources';
-import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { ProfileResourceName } from '#lib/server/profile/resources.ts';
+import type { ExportedProfileKey } from '#lib/server/profile/export.ts';
 import type { DirectiveConsumer } from './directives';
 import {
 	fitProfileToBudget,

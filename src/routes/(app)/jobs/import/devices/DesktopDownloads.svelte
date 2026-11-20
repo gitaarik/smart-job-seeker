@@ -13,8 +13,8 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
 	import { faDownload } from '@fortawesome/free-solid-svg-icons';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import type { DesktopDownload, DesktopDownloads } from '$lib/server/desktop-release';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
+	import type { DesktopDownload, DesktopDownloads } from '#lib/server/desktop-release.ts';
 
 	interface Props {
 		downloads: Promise<DesktopDownloads>;

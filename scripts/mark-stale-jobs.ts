@@ -34,9 +34,9 @@
  *   npx dotenvx run -f ../.env -- npx tsx scripts/mark-stale-jobs.ts --days 90 --apply
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, count, eq, inArray, lt } from 'drizzle-orm';
-import { jobs } from '$lib/server/db/schema';
+import { jobs } from '#lib/server/db/schema.ts';
 
 const APPLY = process.argv.includes('--apply');
 

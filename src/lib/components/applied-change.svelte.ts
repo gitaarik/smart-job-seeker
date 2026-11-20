@@ -1,11 +1,11 @@
 import { onDestroy } from 'svelte';
-import { translations } from '$lib/stores/translations.svelte';
+import { translations } from '#lib/stores/translations.svelte.ts';
 
 /**
  * Mounting an editor again after the assistant's change to it is applied.
  *
  * `ProposalCard` applies an edit the assistant proposed and then reloads `data`
- * with `invalidateAll()`, because the page behind the chat panel is very often
+ * with `refreshAll()`, because the page behind the chat panel is very often
  * the record that just changed. That is enough for a page which derives what it
  * shows from `data`. It is not enough for an auto-saving editor: those seed
  * their fields, the fields' auto-save baselines and their row stores from
@@ -34,7 +34,7 @@ export function remountOnAppliedChange(): void {
 	});
 }
 
-/** Call once `data` holds the applied change, i.e. after `invalidateAll()`. */
+/** Call once `data` holds the applied change, i.e. after `refreshAll()`. */
 export function afterAppliedChange(): void {
 	if (editors > 0) epoch++;
 	// A change can carry translations too (`profile.summary.nl`), and the

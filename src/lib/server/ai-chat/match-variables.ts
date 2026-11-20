@@ -11,8 +11,8 @@
  * JSON indentation. It also loaded the blob either way, so the override was
  * paying twice in order to send the worse one.
  */
-import type { Jobs } from '$lib/server/db/schema';
-import { type Place, preferredLocationTexts } from '$lib/data/places';
+import type { Jobs } from '#lib/server/db/schema.ts';
+import { type Place, preferredLocationTexts } from '#lib/data/places.ts';
 
 /** The match settings a profile chose (`match_config`), as far as the prompts show them. */
 export interface MatchPreferences {

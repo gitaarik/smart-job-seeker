@@ -10,17 +10,17 @@
  * reproduce by accident.
  */
 
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db } from '#lib/server/db/index.ts';
 import { and, eq } from 'drizzle-orm';
-import { job_importers, job_matches, jobs as jobsTable } from '$lib/server/db/schema';
-import { classifyRegion } from '$lib/data/job-taxonomy';
+import { job_importers, job_matches, jobs as jobsTable } from '#lib/server/db/schema.ts';
+import { classifyRegion } from '#lib/data/job-taxonomy.ts';
 import {
 	normalizeExperienceLevels,
 	normalizeJobType,
 	normalizeWorkLocation
-} from '$lib/data/job-normalize';
-import { normalizeSalaryPeriod } from '$lib/salary/conversion';
-import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
+} from '#lib/data/job-normalize.ts';
+import { normalizeSalaryPeriod } from '#lib/salary/conversion.ts';
+import { refreshPayFitQuietly } from '#lib/server/salary/pay-fit-store.ts';
 import { datePostedOrNull, detectPlatformId } from './job-fields';
 
 /** Matches the `jobs.title` varchar width — a longer value errors at the DB. */

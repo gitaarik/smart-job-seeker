@@ -17,9 +17,9 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
-import { profileUpdateSchema } from '$lib/server/validation/api-schemas';
+import { dbDirect as db } from '#lib/server/db/index.ts';
+import { profiles } from '#lib/server/db/schema.ts';
+import { profileUpdateSchema } from '#lib/server/validation/api-schemas.ts';
 
 export const BASIC_INFO_COLUMNS = [
 	'title',

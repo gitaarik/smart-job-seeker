@@ -12,12 +12,12 @@ import { InMemorySpanExporter, type ReadableSpan } from '@opentelemetry/sdk-trac
 import { LangfuseSpanProcessor } from '@langfuse/otel';
 import { z } from 'zod';
 
-vi.mock('$lib/tools/get-env', () => ({
+vi.mock('#lib/tools/get-env.ts', () => ({
 	getEnv: vi.fn(() => 'test-api-key')
 }));
 
 // One attempt per provider, so a failure goes straight to the fallback.
-vi.mock('$lib/server/config', () => ({
+vi.mock('#lib/server/config.ts', () => ({
 	config: {
 		groqApiKey: 'test-groq-key',
 		geminiApiKey: 'test-gemini-key',
@@ -40,8 +40,8 @@ const { mockGroqInvoke, mockGeminiInvoke, mockGeminiBind, mockResolvePrompt } = 
 }));
 
 // The registry's own behaviour is prompt-registry.test.ts; here only what it answers.
-vi.mock('$lib/server/ai-chat/prompt-registry', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/server/ai-chat/prompt-registry')>()),
+vi.mock('#lib/server/ai-chat/prompt-registry.ts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('#lib/server/ai-chat/prompt-registry.ts')>()),
 	resolvePrompt: mockResolvePrompt
 }));
 
@@ -67,10 +67,10 @@ vi.mock('@langchain/google-genai', () => ({
 	}
 }));
 
-import { generateChatCompletionTracked } from '$lib/server/llm';
-import { promptRef } from '$lib/server/ai-chat/prompt-registry';
-import { llmCache } from '$lib/server/llm/cache';
-import { initTelemetry, type Telemetry } from '$lib/server/monitoring/telemetry';
+import { generateChatCompletionTracked } from '#lib/server/llm/index.ts';
+import { promptRef } from '#lib/server/ai-chat/prompt-registry.ts';
+import { llmCache } from '#lib/server/llm/cache.ts';
+import { initTelemetry, type Telemetry } from '#lib/server/monitoring/telemetry.ts';
 
 const exporter = new InMemorySpanExporter();
 let telemetry: Telemetry;

@@ -7,7 +7,7 @@
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import { hasDetails, type BriefEntry } from '../brief-entries';
 	import TechTags from './TechTags.svelte';
 

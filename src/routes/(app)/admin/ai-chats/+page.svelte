@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronLeft,
@@ -13,9 +13,9 @@
 		faUser
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
 	import Card from '../../components/Card.svelte';
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -59,17 +59,17 @@
 		// expression typed ResolvedPathname, and appending a query makes it a
 		// plain string. resolve() takes no query of its own.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${resolve('/admin/ai-chats')}${qs ? `?${qs}` : ''}`);
+		goto(`${resolve('admin/ai-chats')}${qs ? `?${qs}` : ''}`);
 	}
 
 	function goToPage(p: number) {
-		const params = new SvelteURLSearchParams($page.url.searchParams);
+		const params = new SvelteURLSearchParams(page.url.search);
 		params.set('page', String(p));
 		// The path IS resolved; the rule only accepts a bare `resolve()` call or an
 		// expression typed ResolvedPathname, and appending a query makes it a
 		// plain string. resolve() takes no query of its own.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${resolve('/admin/ai-chats')}?${params.toString()}`);
+		goto(`${resolve('admin/ai-chats')}?${params.toString()}`);
 	}
 
 	function formatDate(date: Date | string | null) {

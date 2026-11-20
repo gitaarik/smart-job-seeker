@@ -4,7 +4,7 @@
  * ## Why this is a date and not a status
  *
  * `status` is a position in a pipeline: it drives the stepper, and moving it
- * deliberately clears `status_step` (see `$lib/server/applications/status`). So
+ * deliberately clears `status_step` (see `#lib/server/applications/status.ts`). So
  * a "postponed" status would have to throw away the stage of the application
  * being paused, exactly what you need to pick it up again, and would then need
  * a `previous_status` column to put it back. Needing that column is the tell:
@@ -25,7 +25,7 @@
  * record that this was paused once, and it stops matching by itself.
  */
 
-import { today } from '$lib/application-records';
+import { today } from '#lib/application-records.ts';
 
 /** The columns this module reads. Anything holding both can be tested for. */
 export interface Snoozable {

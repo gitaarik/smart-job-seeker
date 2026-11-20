@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 export function getWindowVariable(
 	variableName: keyof Window | 'umami' | 'turnstile',

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import ExternalLink from '#lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -9,8 +9,8 @@
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import ReorderableList from '../../components/ReorderableList.svelte';
-	import { getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
-	import { rolePlace } from '$lib/work-mode';
+	import { getWorkExperienceLogoUrl } from '#lib/utils/entity-media-url.ts';
+	import { rolePlace } from '#lib/work-mode.ts';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 

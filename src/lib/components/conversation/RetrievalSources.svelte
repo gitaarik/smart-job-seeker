@@ -31,8 +31,11 @@
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
-	import type { RetrievalMention, RetrievalRecord } from '$lib/server/documents/retrieval-record';
-	import { describeVia, formatRetrievalScore } from '$lib/retrieval-display';
+	import type {
+		RetrievalMention,
+		RetrievalRecord
+	} from '#lib/server/documents/retrieval-record.ts';
+	import { describeVia, formatRetrievalScore } from '#lib/retrieval-display.ts';
 
 	let {
 		sources = [],
